@@ -1,0 +1,47 @@
+{% extends "base-admin.html" %}
+{% block main_content_section %}
+<div class="ui container">
+    <table class="ui six column table">
+        <thead>
+            <tr>
+                <th>code</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Category</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+	  {% for p in products %}
+	  <tr>
+		  <td>{{ p.code }}</td>
+		  <td>{{ p.name }}</td>
+          <td>{{ p.price }}</td>
+          <td>{{ p.stock }}</td>
+		  <td>{{ p.category }}</td>
+		  <td>
+			  <button type="button" class="ui circular icon button"><i class="edit icon"></i></a>
+			  <button type="button" class="ui circular icon button"><i class="remove icon"></i></a>
+		  </td>
+	  </tr>
+	  {% endfor %}
+	  </tbody>
+	  <tfoot>
+	  <tr>
+          <th>{{products|length}} Products</th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+	  </tr>
+	  </tfoot>
+	  </table>
+</div>
+<!--main content end-->
+{% endblock %}
+{% block special_script_section %}
+{% endblock %}
+{% block inline_script_section %}
+{% endblock %}

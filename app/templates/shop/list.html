@@ -1,0 +1,95 @@
+{% extends "base-user.html" %}
+{% block main_content_section %}
+<!--main content start-->
+<div style="padding-bottom: 90px;">
+	<div class="ui fluid centered card">{#ui centered#}
+		<div class="image">
+			<img src="/static/img/caro.jpg">
+		</div>
+		<div class="content">
+			<a class="header">CAROBakery</a>
+			<div class="meta">
+				<span class="date">卡诺烘焙只用100%天然乳脂奶油</span>
+			</div>
+			<div class="description">
+				电话: 18053214078
+			</div>
+		</div>
+		<div class="extra content">
+			<span>
+				<i class="birthday icon"></i>
+				{{products|length}} Products
+			</span>
+			<span class="right floated">
+				<i class="registered icon"></i>
+				 Since August 2014
+			</span>
+		</div>
+	</div>
+	<table class="ui unstackable table">
+		<tbody>
+	{% for product in products %}
+			<tr>
+				<td>
+					<div class="ui image top aligned header">
+					<img src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" class="ui small rounded image">
+						<div class="content">
+							{{ product.name }}
+							<div class="sub header">￥{{product.price}}</div>
+						</div>
+					</div>
+				</td>
+				<td class="bottom aligned">
+					<div class="ui right floated small icon brown button" data-code="{{product.code}}" data-name="{{product.name}}" data-image="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" data-price="{{product.price}}">
+						<i class="add to cart icon"></i>
+					</div>
+				</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+</div>
+				{#
+				  <p>
+	<p class="lead">这是我的故事，或许也有你的影子，因为我们都是善良的……</p>
+	<p class="lead">大学毕业后，和老公开始了北漂的生活，漂着漂着，买了房子，买了车子，有了两个可爱的孩子，就这样在北京生活了十来年，朋友啊，工作啊，挺好挺满足。</p> 
+	<p class="lead">可或许因为思乡情结一直隐藏在心底的某个地方，亦或者因为两个孩子受雾霾影响频繁的生病，亦或者考虑到父母们为了帮我们照顾孩子留守北京所感受的他乡的孤单陌生，不知道到底为了什么，就在某个时间，我们搬家了，带着那么多的北京记忆彻底的搬到了青岛，开始了新的生活。</p> 
+	<p class="lead">做HR的我，做IT的老公，回青岛后并没有找到合适的工作，心底里想自己闯闯的小想法慢慢萌芽，其实没有经过太多的深思熟虑，就破土而出了。</p>
+	<p class="lead">2015年2月，我的烘焙店，卡诺烘焙，开业了。</p> 
+	<p class="lead">用做给自己家人吃的健康新鲜原料，做给你吃，这是我的坚持，不是苦苦的坚持，是心甘情愿的幸福坚持着，只为了你和孩子吃时，我问心无愧。</p>
+	<p class="lead">一年啦，卡诺烘焙赢得了很多顾客的信任和喜爱，做为青岛烘焙市场100%使用天然乳脂奶油的倡导者，太多顾客爱上了这种天然健康的味道。</p> 
+	<p class="lead">2016年，我们将开始实现在线下单免费配送的模式，希望你和你的伙伴们能够喜欢并享受天然奶油蛋糕送到家的幸福感……</p>
+				  </p>
+				#}
+<!--main content end-->
+{% endblock %}
+{% block bottom_nav_section %}
+<div class="ui three item bottom fixed compact menu">
+	<a class="active item" href="/shop">
+		<i class="shopping bag icon"></i>选购
+	</a>
+	<a class="item" id="cart" href="/shop/cart">
+		<i class="shopping cart icon"></i>购物车
+	</a>
+	<a class="item" href="/shop/userinfo">
+		<i class="user icon"></i>我的
+	</a>
+</div>
+{% endblock %}
+{% block special_script_section %}
+	<script src="{{url_for('static', filename='js/shop.js')}}"></script>
+{% endblock %}
+{% block inline_script_section %}
+<script>
+$(".ui.button").on("click", function(e){
+	var code = $(this).data('code');
+	var name = $(this).data('name');
+	var image = $(this).data('image');
+	var price = $(this).data('price');
+	var p = new Product(code, name, image, price, 1);
+
+	var cart = new Cart('cart', 'session');
+	cart.addProduct(p);
+});
+</script>
+{% endblock %}

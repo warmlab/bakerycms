@@ -1,0 +1,91 @@
+{% extends "base-user.html" %}
+{% block main_content_section %}
+<div style="padding-bottom: 90px;">
+<div class="ui one cards">
+	<div class="card">{#ui centered#}
+		{#
+	<div class="image">
+		<img src="/static/img/logo/caro.jpg">
+	</div>
+	#}
+	<div class="content">
+		<a class="header">我的购物车</a>
+		<div class="meta">
+			<span class="date">卡诺烘焙只用100%天然乳脂奶油</span>
+		</div>
+		<div class="description">
+			电话: 18053214078
+		</div>
+	</div>
+	<div class="extra content">
+		<span>
+			<i class="birthday icon"></i>
+			{{products|length}} Products
+		</span>
+		<span class="right floated">
+			<i class="registered icon"></i>
+			 Since August 2014
+		</span>
+	</div>
+</div>
+</div>
+<form method="POST" action="/shop/checkout">
+	<table class="ui unstackable table">
+		<tbody id="product-area">
+		</tbody>
+		<tfoot>
+			<tr>
+				<th>
+					<div class="ui" id="total-cost">
+						共需支付￥120.00
+					</div>
+				</th>
+				<th colspan="2">
+					<button id="pay-button" class="ui right floated small brown labeled icon button">
+						<i class="payment icon"></i>去支付
+					</button>
+				</th>
+			</tr>
+		</tfoot>
+	</table>
+</form>
+</div>
+{% endblock %}
+{% block bottom_nav_section %}
+<div class="ui three item bottom fixed compact menu">
+	<a class="item" href="/shop">
+		<i class="shopping bag icon"></i>选购
+	</a>
+	<a class="active item" id="cart" href="/shop/cart">
+		<i class="shopping cart icon"></i>购物车
+	</a>
+	<a class="item" href="/shop/userinfo">
+		<i class="user icon"></i>我的
+	</a>
+</div>
+{% endblock %}
+{% block special_script_section %}
+	<script src="{{url_for('static', filename='js/shop.js')}}"></script>
+{% endblock %}
+{% block inline_script_section %}
+<script>
+$(document).ready(function(){
+	var cart = new Cart('cart', 'session');
+	//for (var product of cart.products) {
+	for (var i=0; i < cart.products.length; i++) {
+		var product = cart.products[i];
+		var line = '<tr><td><div class="ui image top aligned header"><img src="'
+				   + product.image
+				   + '" class="ui small rounded image"><input type="hidden" name="product-code" value="'
+				   + product.code
+				   +'"></div></td><td><div class="content">'
+				   + product.name
+				   + '<div class="sub header">￥'
+				   + product.price + '</div><div class="ui mini icon input"><input type="text" size="2" name="amount" value="1"><div class="ui buttons"><button class="ui icon mini button" type="button"><i class="minus icon"></i></button><div class="or"/><button class="ui mini icon brown button" type="button"><i class="plus icon"></i></button></div></div></div></td><td><div class="ui checkbox"><input type="checkbox" checked></div></td></tr>';
+		$("#product-area").append(line);
+		$("#total-cost").html('总消费额: ' + cart.calTotal() + '元');
+	}
+	$('.ui.checkbox').checkbox();
+});
+</script>
+{% endblock %}

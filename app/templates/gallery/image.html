@@ -1,0 +1,31 @@
+{% extends "base.html"%}
+{% block external_css %}
+{% endblock %}
+{% block main_content_section %}
+<div class="ui container">
+	<h2 class="ui icon header">
+		<i class="cloud icon"></i>
+        <div class="content">Image - {{image.upload_name}}
+		<div class="sub header">Manage your account settings and set e-mail preferences.</div>
+      </div>
+	</h2>
+    <form class="ui form" method="POST" action="/gallery/image/{{image.name}}">
+        <div class="inline field">
+            <label for="inputname">图片名称</label>
+            <input id="inputname" name="inputname" placeholder="Image name" type="text" value="{{ image.upload_name }}">
+        </div>
+        <div class="inline field">
+            <label for="inputtitle">图片标题</label>
+            <input id="inputtitle" name="inputtitle" placeholder="Image title" type="text" value="{{ image.title }}">
+        </div>
+        <div class="inline field">
+            <label for="inputdesc">描述</label>
+            <textarea id="inputdesc" name="inputdesc" rows="3">{{ image.description }}</textarea>
+        </div>
+        <div class="inline field">
+            <button type="submit" class="ui primary right button">保存</button>
+        </div>
+        <img class="ui fluid image" src="/gallery/media/{{image.name}}.{{image.ext}}">
+    </form>
+</div>
+{% endblock %}

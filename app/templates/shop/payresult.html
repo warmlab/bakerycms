@@ -1,0 +1,62 @@
+{% extends "base-user.html"%}
+{% block main_content_section %}
+<div class="ui fluid card">
+	<div class="content">
+		<div class="header">支付成功</div>
+		<div class="meta">
+			Friends
+		</div>
+		<div class="description">
+			李沧区九水路227号宝龙城市广场1层南门卡诺烘焙
+		</div>
+	</div>
+	<div class="extra content">
+		<span class="right floated">
+			Joined in 2013
+		</span>
+		<span>
+			<i class="user icon"></i>
+			75 Friends
+		</span>
+	</div>
+</div>
+<!-- page start-->
+	<table class="ui unstackable table">
+		<tbody>
+			{% for product in products %}
+			<tr>
+				<td>
+					<div class="ui image top aligned header">
+						<img src="{{product.image}}" class="ui small rounded image">
+					</div>
+				</td>
+				<td>
+					<div class="content">
+						{{product.name}} - <span class="ui label">￥{{product.price}}</span>
+						<div class="sub header">数量: 1</div>
+					</div>
+				</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+	<div class="ui divided selection list">
+		<a class="item">
+			使用日期
+			<div class="ui horizontal label">2017-12-23</div>
+		</a>
+		<a class="item">
+			具体时间
+			<div class="ui horizontal label">23:59:59</div>
+		</a>
+		<p class="item">
+			留言
+			<div class="ui label">dddddddddd
+				ddddddddddd ddddddddddddddd dddddddddddddddd ddddddddddddddddd dddddddddddddddd ddddddddddddddddd</div>
+		</p>
+	</div>
+	</div>
+</form>
+{% endblock %}
+{% block inline_script_section %}
+{% endblock %}

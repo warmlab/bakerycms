@@ -1,0 +1,280 @@
+{% extends "base-admin.html" %}
+{% block main_content_section %}
+<div class="ui container">
+  {% if product %}
+  <h2 class="ui dividing header">修改产品-{{product.name}}</h2>
+  {% else %}
+	  <h2 class="ui dividing header">新增产品</h2>
+	{% endif %}
+  <form class="ui form" method="POST" action="/product/{%if product %}{{ product.code }}{%else%}new-product{%endif%}">
+		  <div class="inline field">
+			  <label>产品编码</label>
+		  {% if product %}
+		  <input id="inputcode" name="inputcode" placeholder="0000000000000" type="text" value="{{ product.code }}" disabled="true">
+		  <input id="inputcode" name="inputcode" type="hidden" value="{{ product.code }}">
+		  {% else %}
+		  <input id="inputcode" name="inputcode" placeholder="0000000000000" type="text" value="{{ product.code }}">
+		  {% endif %}
+	  </div>
+	  <div class="inline field">
+		  <label for="inputname">产品名称</label>
+		  <input id="inputname" name="inputname" placeholder="面包" type="text" value="{{ product.name }}">
+	  </div>
+	  <div class="inline field">
+		  <label for="inputenglishname">英语名称</label>
+			  <input id="inputenglishname" name="inputenglishname" placeholder="Bread" type="text" value="{{ product.english_name }}">
+	  </div>
+	  <div class="inline field">
+		  <label for="inputpinyin">拼音</label>
+			  <input id="inputpinyin" name="inputpinyin" placeholder="请输入名称拼音首字母" type="text" value="{{ product.pinyin }}">
+	  </div>
+	  <div class="inline field">
+		  <label for="inputname">产品分类</label>
+		  <select name="categoryparameter" class="ui dropdown" value="{{ product.category_id }}">
+			  {% for c in categories %}<option value="{{ c.id }}">{{ c }}</option>{% endfor %}
+		  </select>
+	  </div>
+	  <div class="inline field">
+		  <label for="inputoriginal">原价</label>
+		  <div class="ui labeled input">
+			  <div class="ui label">￥</div>
+			  <input id="inputoriginalprice" name="inputoriginalprice" placeholder="5.8" type="text" value="{{ product.original_price }}">
+		  </div>
+	  </div>
+	  <div class="inline field">
+		  <label for="inputprice">现价</label>
+		  <div class="ui labeled input">
+			  <div class="ui label">￥</div>
+			  <input id="inputprice" name="inputprice" placeholder="5.8" type="text" value="{{ product.price }}">
+		  </div>
+	  </div>
+	  <div class="inline field">
+		  <label for="inputmemberprice">会员价</label>
+		  <div class="ui labeled input">
+			  <div class="ui label">￥</div>
+			  <input id="inputmemberprice" name="inputmemberprice" placeholder="5.8" type="text" value="{{ product.member_price }}">
+		</div>
+	  </div>
+	  <div class="inline field">
+		  <label for="inputstock">库存</label>
+			  <input id="inputstock" name="inputstock" placeholder="5.8" type="text" value="{{ product.stock }}">
+	  </div>
+	  <div class="ui segment">
+		  <div class="inline field">
+			  <div class="ui checkbox">
+				  <input type="checkbox" class="ui checkbox" name="checkweb" id="checkweb" {%if product.is_available_on_web%}checked{%endif%}>
+				  <label for="checkweb">WEB端显示</label>
+			  </div>
+		  </div>
+	  </div>
+	  <div class="ui segment">
+		  <div class="inline field">
+			  <div class="ui checkbox">
+				  <input type="checkbox" class="ui checkbox" name="checkpos" id="checkpos" {%if product.is_available_on_pos%}checked{%endif%}>
+				  <label>POS端显示</label>
+			  </div>
+		  </div>
+	  </div>
+	  <div class="ui segment">
+		  <div class="inline field">
+			  <div class="ui checkbox">
+				  <input type="checkbox" class="ui checkbox" id="checkpoint" name="checkpoint" {%if product.to_point%}checked{%endif%}>
+				  <label>参与积分</label>
+			  </div>
+		  </div>
+	  </div>
+	  <div class="fields">
+		  <div class="inline field">
+		  <label for="input-image">产品图片</label>
+		  <button id="product-image-new" type="button" class="mini circular ui icon button"><i class="plus icon"></i></button>
+		  </div>
+		  <div class="ui small images" id="product-images">
+		  </div>
+	  </div>
+	  {% for oc in parameter_categories %}
+	  {% if oc.parameters.all() %}
+	  <div class="fields">
+		  <div class="inline field">
+		  <label for="inputname-{{oc.id}}">{{oc}}</label>
+		  <button id="product-parameter-{{oc.id}}-new" type="button" class="mini circular ui icon button"><i class="icon plus"></i></button>
+		  </div>
+		  <div class="inline field" id="parameters-{{oc.id}}">
+		  </div>
+	  </div>
+	  {% endif %}
+	  {% endfor %}
+	  {#
+	  {% for oc in parameter_categories %}
+	  <div class="inline field">
+		  <label for="inputname">{{oc}}
+			  <button id="product-parameter-{{oc.id}}-new" class="btn" type="button"><i class="fa fa-plus"></i></button>
+		  </label>
+		  <div class="col-lg-10 adv-table editable-table">
+			  <table class="table table-striped table-hover table-bordered" id="editable-{{ oc.id }}">
+				  <tbody id="product-parameters-{{oc.id}}">
+			  {% for po in product.parameters %}
+					  <tr>
+						  <td>
+							  <select name="parameter-{{oc.id}}" class="form-control" value="{{ po.parameter.id }}">
+				  {% for o in oc.parameters %}
+				  {% if po.parameter.id == o.id %}
+				  <parameter value="{{ o.id }}" selected="selected">{{ o }}</parameter>
+				  {% else %}
+				  <parameter value="{{ o.id }}">{{ o }}</parameter>
+				  {% endif %}
+				  {% endfor %}
+			  </select>
+						  </td>
+						  <td>
+							  <input name="inputparameter-{{oc.id}}" type="text" value="{{ po.numeric_value }}">
+						  </td>
+						  <td>
+							  <button class="mini circular ui icon button" type="button" onclick="javascript:remove_line(this)"><i class="icon remove"></i></button>
+						  </td>
+					  </tr>
+			  {% endfor %}
+					  </tbody>
+			  </table>
+			  
+		  </div>
+	  </div>
+	  {% endfor %}
+	  #}
+	  <!--
+	  <div class="inline field">
+		  <div class="col-lg-offset-2 col-lg-10">
+			  <div class="checkbox">
+				  <label>
+					  <input type="checkbox"> Remember me
+				  </label>
+			  </div>
+		  </div>
+	  </div>
+	  -->
+	  <div class="inline field">
+          <button type="submit" class="ui primary right button">保存</button>
+	  </div>
+  <div id="image-selector" class="ui large modal">
+	  <i class="close icon"></i>
+	  <div class="header"><i class="image icon"></i>Product Image Selector</div>
+	  <div class="image content">
+		  <div class="ui four special cards">
+			{% for image in images %}
+			<div class="card">
+				<div class="blurring dimmable image" data-name="{{image.name}}" data-src="/gallery/media/{{image.name}}.{{image.ext}}">
+				  <div class="ui dimmer">
+					  <div class="content">
+						  <div class="center">
+							  <div class="ui inverted"><i class="checkmark huge icon"></i></div>
+						  </div>
+					  </div>
+				  </div>
+					<img src="/gallery/media/{{image.name}}.{{image.ext}}">
+			  </div>
+				<div class="extra center aligned">{{image.upload_name}}</div>
+			</div>
+			{% endfor %}
+		  </div>
+	  </div>
+	  <div class="actions">
+		  <div class="ui buttons">
+			  <div class="ui cancel red basic button">
+				  <i class="remove icon"></i>
+				  No
+			  </div>
+			  <div class="ui ok green basic button">
+				  <i class="checkmark icon"></i>
+				  Yes
+			  </div>
+		  </div>
+	  </div>
+  </div>
+  </form>
+  {#
+  <div class="ui bottom fixed brown huge three item inverted menu">
+	  <a class="active item">Home</a>
+	  <a class="item">Home</a>
+	  <a class="item">Home</a>
+  </div>
+  #}
+</div>
+{% endblock %}
+{% block inline_script_section %}
+<script>
+PRODUCT = {
+	setParameters: function(category_id, selected_option, option_values, options, price, stock) {
+		console.log(category_id);
+		var htmlString = '<div class="inline field"><select name="parameter-' + category_id + '" class="ui dropdown">';
+		for (var index in options) {
+			var option_html = '<option value="' +  option_values[index] + '"';
+			if (options[index] == selected_option)
+				option_html += ' selected="selected"'
+			option_html += '>' + options[index] +'</option>';
+			htmlString += option_html;
+		}
+		htmlString += '</select>';
+		htmlString += '<input name="inputparameter-' + category_id + '-price" type="text" value="' + price +'" placeholder="价格">';
+		htmlString += '<input name="inputparameter-' + category_id + '-stock" type="text" value="' + stock +'" placeholder="库存">';
+		htmlString += '<button class="mini circular ui icon orange button" type="button" onclick="javascript:remove_line(this)"><i class="icon remove"></i></button></div>';
+		$("#parameters-" + category_id).append(htmlString);
+		$('select.dropdown').dropdown();
+		console.log(category_id);
+	}
+};
+$(document).ready(function(){
+	var imageHtml = "";
+    {% for po in product.parameters %}
+	var option_values = [{% for o in po.parameter.parameter_category.parameters %}"{{o.id}}"{%endfor%}];
+	var options = [{% for o in po.parameter.parameter_category.parameters %}"{{o}}"{%endfor%}];
+	var category_id = "{{po.parameter.parameter_category_id}}";
+	var selected_option = "{{po.parameter_id}}";
+	var price = "{{po.plus_price}}";
+	var stock = "{{po.stock}}";
+	PRODUCT.setParameters(category_id, selected_option, option_values, options, price, stock);
+    {% endfor %}
+
+	{% for oc in parameter_categories %}
+	var option_values = [{% for o in oc.parameters %}"{{ o.id }}"{% endfor %}];
+	var options = [{% for o in oc.parameters %}"{{ o }}"{% endfor %}];
+	$("#product-parameter-{{oc.id}}-new").click(function(){
+		PRODUCT.setParameters("{{oc.id}}", '', option_values, options, '', '');
+	});
+	{% endfor %}
+	$("#product-image-new").click(function(){
+		$('#image-selector')
+		.modal({
+			closable: false,
+			onDeny: function(){
+				return false;
+			},
+			onApprove: function(){
+				$("#product-images").append(imageHtml);
+			}
+		})
+		.modal('show');
+	});
+
+	$('select.dropdown').dropdown();
+	$('div.dropdown').dropdown();
+	$('.ui.checkbox').checkbox();
+	$('.special.cards .image').dimmer({
+		on: 'click'
+	}).on('click', function(){
+		var imageSrc = $(this).data('src');
+		var imageName = $(this).data('name');
+		imageHtml += '<img src="' + imageSrc + '"><input type="hidden" value="' + imageName +'" name="product-image">';
+	});
+	{% for pi in product.images %}
+	imageHtml += '<img src="/gallery/media/{{pi.image.name}}.{{pi.image.ext}}"><input type="hidden" value="{{pi.image.name}}" name="product-image">';
+	{% endfor %}
+	$("#product-images").append(imageHtml);
+});
+
+function remove_line(line)
+{
+	var this_line = line.parentNode;
+	this_line.parentNode.removeChild(this_line);
+
+}
+</script>
+{% endblock %}
