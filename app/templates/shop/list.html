@@ -1,55 +1,49 @@
 {% extends "base-user.html" %}
 {% block main_content_section %}
 <!--main content start-->
-<div style="padding-bottom: 90px;">
-	<div class="ui fluid centered card">{#ui centered#}
-		<div class="image">
-			<img src="/static/img/caro.jpg">
-		</div>
-		<div class="content">
-			<a class="header">CAROBakery</a>
-			<div class="meta">
-				<span class="date">卡诺烘焙只用100%天然乳脂奶油</span>
+<div class="ui segment">
+	<img class="ui huge image" src="/static/img/caro.jpg">
+	<div class="ui items">
+		<div class="item">
+			<div class="content">
+				<div class="header">卡诺烘焙 CAROBakery</div>
+				<div class="meta">
+					<span>卡诺烘焙只用100%天然乳脂奶油</span>
+				</div>
+				<div class="description"><p>地址: 青岛市李沧区九水路227号宝龙城市广场一层南门卡诺烘焙</p></div>
+				<div class="extra"><span class="cinema">电话: 18053214078</span></div>
+				<div class="ui divider"></div>
+				<div class="extra">
+					<span class="ui basic icon label">
+						<i class="heart icon"></i>{{products|length}}
+						<div class="detail">Products</div>
+					</span>
+					<span class="ui basic label right floated"><i class="registered icon"></i>Since August 2014</span>
+				</div>
 			</div>
-			<div class="description">
-				电话: 18053214078
-			</div>
-		</div>
-		<div class="extra content">
-			<span>
-				<i class="birthday icon"></i>
-				{{products|length}} Products
-			</span>
-			<span class="right floated">
-				<i class="registered icon"></i>
-				 Since August 2014
-			</span>
 		</div>
 	</div>
-	<table class="ui unstackable table">
-		<tbody>
-	{% for product in products %}
-			<tr>
-				<td>
-					<div class="ui image top aligned header">
-					<img src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" class="ui small rounded image">
-						<div class="content">
-							{{ product.name }}
-							<div class="sub header">￥{{product.price}}</div>
-						</div>
-					</div>
-				</td>
-				<td class="bottom aligned">
-					<div class="ui right floated small icon brown button" data-code="{{product.code}}" data-name="{{product.name}}" data-image="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" data-price="{{product.price}}">
-						<i class="add to cart icon"></i>
-					</div>
-				</td>
-			</tr>
-			{% endfor %}
-		</tbody>
-	</table>
 </div>
-				{#
+<div class="ui segments">
+	{% for product in products %}
+	<div class="ui clearing segment">
+		<a href="/shop/product/{{product.code}}">
+			<div class="ui image middle aligned header">
+				<img src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" class="ui small rounded image">
+				<div class="content">
+					{{ product.name }}
+					<div class="sub header">￥{{product.price}}</div>
+					<div class="sub header">{{product.description}}</div>
+				</div>
+			</div>
+		</a>{#
+		<div class="ui right floated small icon orange button" data-code="{{product.code}}" data-name="{{product.name}}" data-image="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" data-price="{{product.price}}">
+			<i class="add to cart icon"></i>
+		</div>#}
+	</div>
+	{% endfor %}
+</div>
+<div style="padding-bottom: 40px;"></div>{#
 				  <p>
 	<p class="lead">这是我的故事，或许也有你的影子，因为我们都是善良的……</p>
 	<p class="lead">大学毕业后，和老公开始了北漂的生活，漂着漂着，买了房子，买了车子，有了两个可爱的孩子，就这样在北京生活了十来年，朋友啊，工作啊，挺好挺满足。</p> 
@@ -64,17 +58,7 @@
 <!--main content end-->
 {% endblock %}
 {% block bottom_nav_section %}
-<div class="ui three item bottom fixed compact menu">
-	<a class="active item" href="/shop">
-		<i class="shopping bag icon"></i>选购
-	</a>
-	<a class="item" id="cart" href="/shop/cart">
-		<i class="shopping cart icon"></i>购物车
-	</a>
-	<a class="item" href="/shop/userinfo">
-		<i class="user icon"></i>我的
-	</a>
-</div>
+{% include "includes/bottom_fixed.html" %}
 {% endblock %}
 {% block special_script_section %}
 	<script src="{{url_for('static', filename='js/shop.js')}}"></script>
@@ -90,6 +74,40 @@ $(".ui.button").on("click", function(e){
 
 	var cart = new Cart('cart', 'session');
 	cart.addProduct(p);
+});
+
+$('.ui.right.floated.small.icon.orange.button').click(function(e){
+	var _ = $(this);
+	var code = _.data('code');
+	var name = _.data('name');
+	var image = _.data('image');
+	var price = _.data('price');
+	//$('.ui.popup').popup('show');
+	//var obj = $("#banner-image").clone();
+	var obj = $('<img src="' + image + '" class="ui mini image">'); 
+	//obj.removeAttr('id');
+	//obj.removeClass('huge').addClass('mini');
+	//obj.insertBefore(_).fadeTo(10, 0.5);
+	obj.insertAfter(_).fadeTo(10, 0.9);
+
+	obj.css({
+		position: 'absolute',
+		left: e.pageX,
+		top: e.pageY,
+		zIndex: 1
+	}).animate({
+		top: $('#cart').offset().top,
+		left: $('#cart').offset().left + $('#cart').width() / 2
+	}, 1000, function(){
+		obj.remove();
+		// add product to cart
+		var p = new Product(code, name, image, price, 1);
+
+		var cart = new Cart('cart', 'session');
+		cart.addProduct(p);
+	});
+
+	//obj.offset({top: e.pageX, left: e.pageY, zIndex: 10});
 });
 </script>
 {% endblock %}

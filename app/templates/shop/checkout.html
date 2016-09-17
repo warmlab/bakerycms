@@ -1,101 +1,84 @@
 {% extends "base-user.html"%}
 {% block main_content_section %}
-<div class="ui fluid card">
-	<div class="image">
-		<img src="{{url_for('static', filename='img/profile-avatar.jpg')}}">
-	</div>
+<h2 class="ui center aligned icon header">{#ui centered#}
+	<i class="payment icon"></i>
 	<div class="content">
-		<div class="header">Matt Giampietro</div>
-		<div class="meta">
-			Friends
-		</div>
-		<div class="description">
-			李沧区九水路227号宝龙城市广场1层南门卡诺烘焙
-		</div>
+		订单信息
+		<div class="sub header">确认商品及数量，确认送货时间和收货地址</div>
 	</div>
-	<div class="extra content">
-		<span class="right floated">
-			Joined in 2013
-		</span>
-		<span>
-			<i class="user icon"></i>
-			75 Friends
-		</span>
-	</div>
-</div>
-<!-- page start-->
+</h2>
 <form class="ui form" action="/shop/dopay" method="POST">
-	<table class="ui unstackable table">
-		<tbody>
-			{% for product in products %}
-			<tr>
-				<td>
-					<div class="ui image top aligned header">
-						<img src="{{product.image}}" class="ui small rounded image">
-						<input type="hidden" name="product-code" value="{{product.code}}">
-					</div>
-				</td>
-				<td>
-					<div class="content">
-						{{product.name}}
-						<div class="sub header">￥{{product.price}}</div>
-						<div class="ui mini icon input">
-							<input type="text" size="2" name="amount" value="1">
-							<div class="ui buttons">
-								<button class="ui icon mini button" type="button">
-									<i class="minus icon"></i>
-								</button>
-								<div class="or"/>
-								<button class="ui mini icon brown button" type="button">
-									<i class="plus icon"></i>
-								</button>
-							</div>
-						</div>
-					</div>
-				</td>
-				<td>
-					<div class="ui checkbox"><input type="checkbox" checked></div>
-				</td>
-			</tr>
-			{% endfor %}
-		</tbody>
-	</table>
-	<div class="inline field">
-		<label>使用日期</label>
-		<input name="first-name" placeholder="First Name" type="text">
+	<div class="ui segments">
+		{% for product in products %}<div class="ui segment">
+			<div class="ui image middle aligned header">
+				<img src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" class="ui tiny image">
+				<input type="hidden" name="product-code" value="{{product.code}}">
+				<div class="content">
+					{{product.name}}
+					<div class="sub header">￥{{product.price}}</div>
+					<div class="sub header">购买数量: {{amounts[loop.index0]}}</div>
+					<input type="hidden" name="amount" value="{{amounts[loop.index0]}}">
+				</div>
+			</div>
+		</div>{% endfor %}
 	</div>
-	<div class="inline field">
-		<label>具体时间</label>
-		<input name="first-name" placeholder="First Name" type="text">
-	</div>
-	<div class="field">
-		<label>留言</label>
-		<textarea rows="2"></textarea>
-	</div>
-	<div class="inline fields">
-		<label for="payment">支付方式</label>
-		<div class="field">
-			<div class="ui radio checkbox">
-				<input class="hidden" tabindex="0" name="payment" type="radio">
-				<label>支付宝</label>
+	<div class="ui segments">
+		<div class="ui segment">
+			<div class="ui middle aligned image header">
+				<i class="marker icon"></i>
+				<div class="content">
+					李沧区九水路227号一层
+					<div class="sub header">李旭升 58806365</div>
+				</div>
+			</div>
+			<div class="ui right floated icon label button">
+				<i class="marker icon"></i>
+				更换配送地址
 			</div>
 		</div>
-		<div class="field">
-			<div class="ui radio checkbox">
-				<input class="hidden" tabindex="1" name="payment" checked type="radio">
-				<label>微信支付</label>
+		<div class="ui segment">
+			<div class="required inline field">
+				<label>使用日期</label>
+				<input name="date" type="date">
 			</div>
 		</div>
-	</div>
-	<div class="field">
-	<button class="ui fluid positive right labeled icon huge button">
-		<i class="payment icon"></i>确认支付￥120.00
-	</button>
+		<div class="ui segment">
+			<div class="required inline field">
+				<label>用餐时间</label>
+				<input name="time" type="time">
+			</div>
+		</div>
+		<div class="ui segment">
+			<div class="field">
+				<label>留言</label>
+				<textarea rows="2"></textarea>
+			</div>
+		</div>{#
+		<div class="inline fields">
+			<label for="payment">支付方式</label>
+			<div class="field">
+				<div class="ui radio checkbox">
+					<input class="hidden" tabindex="0" name="payment" type="radio">
+					<label>支付宝</label>
+				</div>
+			</div>
+			<div class="field">
+				<div class="ui radio checkbox">
+					<input class="hidden" tabindex="1" name="payment" checked type="radio">
+					<label>微信支付</label>
+				</div>
+			</div>
+		</div>#}
+		<div class="ui segment">
+			<button class="ui fluid orange right labeled icon huge button">
+				<i class="payment icon"></i>需支付￥{{total_cost}}元
+			</button>
+		</div>
 	</div>
 </form>
 {% endblock %}
 {% block inline_script_section %}
 <script>
-$('.ui.radio.checkbox').checkbox();
+//$('.ui.radio.checkbox').checkbox();
 </script>
 {% endblock %}

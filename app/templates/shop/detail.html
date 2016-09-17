@@ -1,0 +1,96 @@
+{% extends "base-user.html" %}
+{% block main_content_section %}
+<div class="ui segment">
+    <img id="banner-image" class="ui huge image" src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}"><p/>
+    <div class="ui tiny images">
+        {% for pi in product.images %}
+        <img src="/gallery/media/{{pi.image.name}}.{{pi.image.ext}}">
+        {% endfor %}
+    </div>
+    <h3 class="ui header">
+        <div class="content">
+          儿童可爱卡通生肖蛋糕100%乳脂奶油卡诺烘焙蛋糕
+          <div class="sub header">
+              ￥{{product.price}}
+          </div>
+        </div>
+    </h3>
+    <p>Audiam quaerendum eu sea, pro omittam definiebas ex. Te est latine definitiones. Quot wisi nulla ex duo. Vis sint solet expetenda ne, his te phaedrum referrentur consectetuer. Id vix fabulas oporteat, ei quo vide phaedrum, vim vivendum maiestatis in.</p>{#
+    <div class="ui labeled mini input">
+        <div class="ui label">购买数量</div>
+        <input id="amount" value="1" maxlength="5" size="6" placeholder="1" type="text">
+    </div>
+    <div class="ui mini buttons">
+        <button class="ui icon button" type="button">
+            <i class="minus icon"></i>
+        </button>
+        <button class="ui icon orange button" type="button">
+            <i class="plus icon"></i>
+        </button>
+    </div>#}
+    <div class="ui info icon message">
+        <i class="shipping icon"></i>
+        <div class="content">
+            <div class="header">
+                72小时发货
+            </div>
+            <p>付款后72小时内发货</p>
+        </div>
+    </div>
+	<div class="ui fluid orange right labeled icon huge button">
+		<i class="add to cart icon"></i>添加到购物车
+	</div>
+</div>
+{% include "includes/delivery.html" %}
+<div style="padding-bottom: 40px;"></div>
+{% endblock %}
+{% block bottom_nav_section %}
+{% include "includes/bottom_fixed.html" %}
+{% endblock %}
+{% block special_script_section %}
+<script src="{{url_for('static', filename='js/shop.js')}}"></script>
+{% endblock %}
+{% block inline_script_section %}
+<script>
+$(".ui.tiny.images img").click(function(){
+    var src = $(this).attr('src');
+    if ($("#banner-image").attr('src') != src) {
+        $("#banner-image").fadeOut('fast', function(){
+            $("#banner-image").attr('src', src);
+        });
+        $("#banner-image").fadeIn('fast');
+    }
+});
+
+$('.ui.fluid.button').click(function(e){
+	//$('.ui.popup').popup('show');
+	var obj = $("#banner-image").clone();
+	obj.removeAttr('id');
+	obj.removeClass('huge').addClass('tiny');
+	obj.insertAfter($(this)).fadeTo(10, 0.9);
+
+	obj.css({
+		position: 'absolute',
+		left: e.pageX,
+		top: e.pageY,
+		zIndex: 1
+	}).animate({
+		top: $('#cart').offset().top,
+		left: $('#cart').offset().left + $('#cart').width() / 2
+	}, 1000, function(){
+		obj.remove();
+		// add product to cart
+		var code = "{{product.code}}";
+		var name = "{{product.name}}";
+		var image = "/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}";
+		var price = "{{product.price}}";
+		var p = new Product(code, name, image, price, 1);
+
+		var cart = new Cart('cart', 'session');
+		cart.addProduct(p);
+	});
+
+	//obj.offset({top: e.pageX, left: e.pageY, zIndex: 10});
+});
+</script>
+{% endblock %}

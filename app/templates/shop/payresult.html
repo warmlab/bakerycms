@@ -1,25 +1,29 @@
 {% extends "base-user.html"%}
 {% block main_content_section %}
-<div class="ui fluid card">
+	<h2 class="ui center aligned icon header">{#ui centered#}
+		{#
+	<div class="image">
+		<img src="/static/img/logo/caro.jpg">
+	</div>
+	#}
+	<i class="ticket icon"></i>
 	<div class="content">
-		<div class="header">支付成功</div>
-		<div class="meta">
-			Friends
+		Pay Successfully
+		<div class="sub header">
+			Verify order details.
 		</div>
-		<div class="description">
-			李沧区九水路227号宝龙城市广场1层南门卡诺烘焙
-		</div>
-	</div>
+	</div>{#
 	<div class="extra content">
-		<span class="right floated">
-			Joined in 2013
-		</span>
 		<span>
-			<i class="user icon"></i>
-			75 Friends
+			<i class="birthday icon"></i>
+			{{products|length}} Products
 		</span>
-	</div>
-</div>
+		<span class="right floated">
+			<i class="registered icon"></i>
+			 Since August 2014
+		</span>
+	</div>#}
+	</h2>
 <!-- page start-->
 	<table class="ui unstackable table">
 		<tbody>

@@ -44,22 +44,33 @@ def payresult():
 @shop.route('/checkout', methods=['POST'])
 def checkout():
     # create an order to checkout
-    codes = request.form.getlist('code')
+    to_buy_products = []
+    to_buy_amounts = []
+    total_cost = 0
+    codes = request.form.getlist('product-code')
     amounts = request.form.getlist('amount')
-    products = Product.query.filter(Product.code.in_(codes))
+    for code,amount in zip(codes,amounts):
+        if request.form.get('-'.join(['is-buy', code])) == 'on':
+            product = Product.query.filter_by(code=code).first()
+            if product:
+                to_buy_products.append(product)
+                to_buy_amounts.append(amount)
+                total_cost += product.price * int(amount)
+
+    #products = Product.query.filter(Product.code.in_(to_buy_codes))
     #print('products: %s' % products)
-    print('codes: %s, amounts: %s' % (codes, amounts))
+    print('codes: %s, amounts: %s' % (to_buy_products, to_buy_amounts))
     now = datetime.utcnow()
     shoppoint_id = '9999'
     app_id = '2088711989941795'
     trade_number_format='%Y%m%d%H%M%S{0}%f'.format(shoppoint_id) 
     out_trade_no = now.strftime(trade_number_format)
     alipay_url = 'https://openapi.alipay.com/gateway.do'
-    return render_template('shop/checkout.html', products=products, amounts=amounts)
+    return render_template('shop/checkout.html', products=to_buy_products, amounts=to_buy_amounts, total_cost=total_cost)
 
-@shop.route('/userinfo', methods=['GET'])
+@shop.route('/memberinfo', methods=['GET'])
 def user_info():
-    return render_template('shop/userinfo.html')
+    return render_template('shop/memberinfo.html')
 
 @shop.route('/', methods=['GET', 'POST'])
 def index():
@@ -89,7 +100,7 @@ def index():
     return render_template('shop/list.html', products=products)
 
 
-@shop.route('/user/<username>')
+@shop.route('/member/<username>')
 def user(username):
     user = Member.query.filter_by(username=username).first_or_404()
     page = request.args.get('page', 1, type=int)
