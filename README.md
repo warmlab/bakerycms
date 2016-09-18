@@ -3,4 +3,5 @@
 ```shell
 DB_USER='user'
 DB_PASSWORD='password'
-export DB_USER DB_PASSWORD```
+export DB_USER DB_PASSWORD
+```
