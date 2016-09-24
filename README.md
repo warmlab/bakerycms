@@ -3,5 +3,6 @@
 ```shell
 DB_USER='user'
 DB_PASSWORD='password'
-export DB_USER DB_PASSWORD
+WINXIN_TOKEN='winxin token'
+export DB_USER DB_PASSWORD WINXIN_TOKEN
 ```

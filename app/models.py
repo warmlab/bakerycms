@@ -21,6 +21,7 @@ class Shoppoint(db.Model):
     mobile = db.Column(db.String(16))
     address = db.Column(db.String(1024))
     password = db.Column(db.String(64))
+    weixin_token = db.Column(db.String(32))
     description = db.Column(db.Text)
 
     def __repr__(self):

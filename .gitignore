@@ -70,7 +70,6 @@ target/
 scripts/
 keys/
 media/
-static/
 
 # IPython Notebook
 .ipynb_checkpoints

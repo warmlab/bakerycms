@@ -19,7 +19,9 @@ class Config:
     CARO_FOLLOWERS_PER_PAGE = 50
     CARO_COMMENTS_PER_PAGE = 30
     CARO_SLOW_DB_QUERY_TIME=0.5
-    UPLOAD_FOLDER = os.path.join(basedir, 'media')
+    UPLOAD_FOLDER = os.environ.get('BAKERYCMS_UPLOAD_DIR') or os.path.join(basedir, 'media')
+
+    WEIXIN_TOKEN = 'c8316ff603da422fb790142141543ce2'
 
     @staticmethod
     def init_app(app):

@@ -49,6 +49,9 @@ def create_app(config_name):
     from .gallery import gallery as gallery_blueprint
     app.register_blueprint(gallery_blueprint, url_prefix='/gallery')
 
+    from .weixin import weixin as weixin_blueprint
+    app.register_blueprint(weixin_blueprint, url_prefix='/weixin')
+
     #from .rest import rest as rest_blueprint
     #app.register_blueprint(rest_blueprint, url_prefix='/rest')
 
