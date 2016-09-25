@@ -317,7 +317,7 @@ class Ticket(db.Model):
 
 class TicketProduct(db.Model):
     #id = db.Column(db.Integer, primary_key=True)
-    ticket_code = db.Column(db.Integer, db.ForeignKey('ticket.code'), primary_key=True)
+    ticket_code = db.Column(db.String(64), db.ForeignKey('ticket.code'), primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'), primary_key=True)
     original_cost = db.Column(db.Numeric(7,2), default=0) # 商品原始总价格
     real_cost = db.Column(db.Numeric(7,2), default=0) # 商品原始总价格
@@ -330,7 +330,7 @@ class TicketProduct(db.Model):
 
 
 class TicketPayment(db.Model):
-    ticket_code = db.Column(db.Integer, db.ForeignKey('ticket.code'), primary_key=True)
+    ticket_code = db.Column(db.String(64), db.ForeignKey('ticket.code'), primary_key=True)
     payment_id = db.Column(db.Integer, db.ForeignKey('payment.id'), primary_key=True)
     #balance = db.Column(db.Numeric(7,2), default=0) # 该付款方式，收到的金额
     receive_balance = db.Column(db.Numeric(7,2), default=0) # 收银多少，现金一般会收到整钱，然后找零

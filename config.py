@@ -21,7 +21,9 @@ class Config:
     CARO_SLOW_DB_QUERY_TIME=0.5
     UPLOAD_FOLDER = os.environ.get('BAKERYCMS_UPLOAD_DIR') or os.path.join(basedir, 'media')
 
-    WEIXIN_TOKEN = 'c8316ff603da422fb790142141543ce2'
+    WEIXIN_TOKEN = os.environ.get('WEIXIN_TOKEN')
+    WEIXIN_APPID = os.environ.get('WEIXIN_APPID')
+    WEIXIN_APPSECRET = os.environ.get('WEIXIN_APPSECRET')
 
     @staticmethod
     def init_app(app):
