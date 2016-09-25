@@ -2,7 +2,7 @@ import hashlib
 from decimal import Decimal
 
 from flask import render_template
-from flask import request, current_app
+from flask import request, current_app, make_response
 
 from werkzeug.contrib.cache import MemcachedCache
 
@@ -36,7 +36,7 @@ def get_access_token():
 
         # TODO get access token
         import urllib
-        import json
+        from flask import json
         params = urllib.parse.urlencode({'grant_type': 'client_credential', 'appid': app_id, 'secret': app_secret})
         params = params.encode('ascii')
         with urllib.request.urlopen("https://api.weixin.qq.com/cgi-bin/token?%s", params) as f:
@@ -51,16 +51,67 @@ def get_access_token():
         print('access_token in memcached: ', access_token)
     return access_token
 
-@weixin.route('/access', methods=['GET'])
+def generate_xml_response(to_username, from_username):
+    from time import time
+    string = '''<xml>
+    <ToUserName><![CDATA[%s]]></ToUserName>
+    <FromUserName><![CDATA[%s]]></FromUserName>
+    <CreateTime>%d</CreateTime>
+    <MsgType><![CDATA[text]]></MsgType>
+    <Content><![CDATA[Hello]]></Content>
+    </xml>''' % (to_username, from_username, int(time()))
+
+    response = make_response()
+    response.headers['Content-type'] = 'application/xml'
+    print(string)
+    response.data = string.encode('utf-8')
+    print (response)
+
+    return response
+
+def parse_xml(xmlstring):
+    import xml.etree.ElementTree as etree
+    tree = etree.fromstring(xmlstring)
+    to_username = tree.find('ToUserName').text
+    from_username = tree.find('FromUserName').text
+    create_time = tree.find('CreateTime')
+    msg_type = tree.find('MsgType')
+
+    content = tree.find('Content')
+    msg_id = tree.find('MsgId')
+
+    return generate_xml_response(from_username, to_username)
+
+
+    #event = tree.find('Event')
+
+    #event_key = tree.find('EventKey')
+    #ticket = tree.find('Ticket')
+
+    #latitude = tree.find('Latitude')
+    #longitude = tree.find('Longitude')
+    #precision = tree.find('Precision')
+
+    #print (to_username, from_username, create_time,
+    #       msg_type, event, event_key, latitude, longitude, precision)
+    #return to_username, from_username, create_time, msg_type,
+    #       event, event_key, latitude, longitude, precision;
+
+@weixin.route('/access', methods=['GET', 'POST'])
 def access():
     signature = request.args.get("signature")
     timestamp = request.args.get("timestamp")
     nonce = request.args.get("nonce")
-    echostr = request.args.get('echostr')
+    if request.method == 'GET':
+        echostr = request.args.get('echostr')
+        if check_signature('TODO', signature, timestamp, nonce):
+            return echostr
+        return "you're not weixin"
+    else:
+        openid = request.args.get('openid')
+        result = parse_xml(request.data.decode('utf-8'))
+        return result
 
-    if check_signature('TODO', signature, timestamp, nonce):
-        return echostr
-    return "you're not weixin"
 
 @weixin.route('/pay/', methods=['POST'])
 def pay():

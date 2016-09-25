@@ -74,7 +74,7 @@ class Member(UserMixin, db.Model):
     email = db.Column(db.String(64), unique=True, index=True)
     mobile = db.Column(db.String(16), unique=True, index=True) #手机号码
     member_name = db.Column(db.String(64), unique=True, index=True) # 会员登录号
-    openid = db.Column(db.String(64), unique=True, nullable=True)
+    weixin_openid = db.Column(db.String(64), unique=True, nullable=True) # used in weixin
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default=False)
     name = db.Column(db.String(128), index=True) # 会员姓名
