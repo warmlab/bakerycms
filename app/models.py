@@ -66,6 +66,42 @@ class MemberGrade(db.Model): # 会员等级或分类
     def __repr__(self):
         return self.name
 
+class WeixinMember(db.Model):
+    __tablename__ = 'weixin_member'
+
+    openid = db.Column(db.String(64), primary_key=True) # used in weixin
+    unionid = db.Column(db.String(64), unique=True, nullable=True) # used in weixin
+    subscribe = db.Column(db.Boolean)
+    subscribe_time = db.Column(db.DateTime)
+    nickname = db.Column(db.String(64))
+    sex = db.Column(db.SmallInteger)
+    city = db.Column(db.String(64))
+    country = db.Column(db.String(64))
+    province = db.Column(db.String(64))
+    language = db.Column(db.String(64))
+    headimgurl = db.Column(db.String(2048))
+    remark = db.Column(db.String(64))
+    groupid = db.Column(db.String(64))
+    tagid = db.Column(db.BigInteger)
+
+    member = db.relationship("Member", uselist=False, back_populates="weixin_member")
+
+    def __init__(self, openid, unionid, subscribe, nickname, sex, city, country, province, headimgurl,
+                 remark=None, groupid=None, tagid=None, language=None, subscribe_time=None):
+        self.openid = openid
+        self.unionid = unionid 
+        self.subscribe = subscribe 
+        self.subscribe_time = subscribe_time 
+        self.nickname = nickname 
+        self.sex = sex 
+        self.city = city 
+        self.country = country 
+        self.province = province 
+        self.language = language 
+        self.headimgurl = headimgurl 
+        self.remark = remark 
+        self.groupid = groupid 
+        self.tagid = tagid 
 
 class Member(UserMixin, db.Model):
     __tablename__ = 'member'
@@ -74,7 +110,6 @@ class Member(UserMixin, db.Model):
     email = db.Column(db.String(64), unique=True, index=True)
     mobile = db.Column(db.String(16), unique=True, index=True) #手机号码
     member_name = db.Column(db.String(64), unique=True, index=True) # 会员登录号
-    weixin_openid = db.Column(db.String(64), unique=True, nullable=True) # used in weixin
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default=False)
     name = db.Column(db.String(128), index=True) # 会员姓名
@@ -89,6 +124,9 @@ class Member(UserMixin, db.Model):
     grade_id = db.Column(db.Integer, db.ForeignKey('member_grade.id'))
     grade = db.relationship('MemberGrade',
                          backref=db.backref('members', lazy='dynamic'))
+
+    weixin_openid = db.Column(db.String(64), db.ForeignKey('weixin_member.openid'))
+    weixin_member = db.relationship("WeixinMember", back_populates='member')
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
