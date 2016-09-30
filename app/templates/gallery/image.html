@@ -2,11 +2,11 @@
 {% block external_css %}
 {% endblock %}
 {% block main_content_section %}
-<div class="ui container">
-	<h2 class="ui icon header">
-		<i class="cloud icon"></i>
-        <div class="content">Image - {{image.upload_name}}
-		<div class="sub header">Manage your account settings and set e-mail preferences.</div>
+<div class="ui basic segment">
+	<h2 class="ui dividing header">
+		<i class="photo icon"></i>
+        <div class="content">{{image.upload_name}}
+		<div class="sub header">Modify image meta data.</div>
       </div>
 	</h2>
     <form class="ui form" method="POST" action="/gallery/image/{{image.name}}">
@@ -23,9 +23,11 @@
             <textarea id="inputdesc" name="inputdesc" rows="3">{{ image.description }}</textarea>
         </div>
         <div class="inline field">
-            <button type="submit" class="ui primary right button">保存</button>
+            <button type="submit" class="ui fluid positive button">保存</button>
         </div>
-        <img class="ui fluid image" src="/gallery/media/{{image.name}}.{{image.ext}}">
     </form>
+</div>
+<div class="ui segment">
+    <img class="ui big image" src="/gallery/media/{{image.name}}.{{image.ext}}">
 </div>
 {% endblock %}

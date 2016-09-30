@@ -107,7 +107,7 @@ def product_detail():
             checkpoint = True
         else:
             checkpoint = False
-        if created == '1':
+        if create == '1':
             category_id = request.form['categoryparameter'] # 产品分类
             category = ProductCategory.query.get_or_404(category_id)
             product = Product(request.form['inputcode'], request.form['inputname'], request.form['inputenglishname'],

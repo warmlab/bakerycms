@@ -1,19 +1,20 @@
 {% extends "base-admin.html" %}
 {% block main_content_section %}
-<div class="ui container">
-  {% if product %}
-  <h2 class="ui dividing header">修改产品-{{product.name}}</h2>
-  {% else %}
-	  <h2 class="ui dividing header">新增产品</h2>
-	{% endif %}
-  <form class="ui form" method="POST" action="/product/{%if product %}{{ product.code }}{%else%}new-product{%endif%}">
+<div class="ui basic segment">
+	<h2 class="ui dividing header">
+	<i class="square icon"></i>
+	<div class="content">
+		{% if product %}修改产品-{{product.name}}{%else%}新增产品{%endif%}
+		<div class="sub header">Manage your product.</div>
+	</div>
+	</h2>
+  <form class="ui form" method="POST" action="/product{%if product %}?code={{ product.code }}{%else%}?new=1{%endif%}">
 		  <div class="inline field">
 			  <label>产品编码</label>
 		  {% if product %}
-		  <input id="inputcode" name="inputcode" placeholder="0000000000000" type="text" value="{{ product.code }}" disabled="true">
-		  <input id="inputcode" name="inputcode" type="hidden" value="{{ product.code }}">
+		  <input id="inputcode" name="inputcode" type="text" value="{{ product.code }}" disabled="true">
 		  {% else %}
-		  <input id="inputcode" name="inputcode" placeholder="0000000000000" type="text" value="{{ product.code }}">
+		  <input id="inputcode" name="inputcode" placeholder="0000000000000" type="text">
 		  {% endif %}
 	  </div>
 	  <div class="inline field">
@@ -30,8 +31,8 @@
 	  </div>
 	  <div class="inline field">
 		  <label for="inputname">产品分类</label>
-		  <select name="categoryparameter" class="ui dropdown" value="{{ product.category_id }}">
-			  {% for c in categories %}<option value="{{ c.id }}">{{ c }}</option>{% endfor %}
+		  <select name="categoryparameter" class="ui dropdown">
+			  {% for c in categories %}<option value="{{ c.id }}"{%if c.id == product.category_id %} selected{%endif%}>{{ c }}</option>{% endfor %}
 		  </select>
 	  </div>
 	  <div class="inline field">

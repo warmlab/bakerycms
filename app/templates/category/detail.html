@@ -2,11 +2,11 @@
 {% block main_content_section %}
 <div class="ui basic segment">
   <h2 class="ui dividing header">
-		<i class="sitemap icon"></i>
-		<div class="content">
-			{% if category %}修改产品分类-{{category.name}}{%else%}新增产品分类{%endif%}
-			<div class="sub header">Manage your Category.</div>
-		</div>
+	<i class="sitemap icon"></i>
+	<div class="content">
+		{% if category %}修改产品分类-{{category.name}}{%else%}新增产品分类{%endif%}
+		<div class="sub header">Manage your Category.</div>
+	</div>
   </h2>
   <form class="ui form" method="POST" action="/category{%if not category%}?new=1{%else%}?code={{ category.id }}{%endif%}">
 	  <div class="inline field">

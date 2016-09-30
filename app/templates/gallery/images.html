@@ -2,20 +2,70 @@
 {% block external_css %}
 {% endblock %}
 {% block main_content_section %}
-<div class="ui container">
-	<h2 class="ui icon header">
-		<i class="cloud icon"></i>
+<div class="ui basic segment">
+	<h2 class="ui header">
+		<i class="block layout icon"></i>
 		<div class="content">Images
-		<div class="sub header">Manage your account settings and set e-mail preferences.</div>
-      </div>
+            <div class="sub header">Manage your images.</div>
+        </div>
 	</h2>
-<div class="ui small rounded images">
-    {% for image in images %}
-    <a href="/gallery/image/{{image.name}}">
-        <img src="/gallery/media/{{image.name}}.{{image.ext}}">
-	</a>
-    {% endfor %}
+    <h4 class="ui horizontal divider header">
+      <i class="cloud upload icon"></i>
+      图片上传
+    </h4>
+	<form action="/gallery/image-upload" method="POST" enctype="multipart/form-data">
+		<div class="ui input" id="file-selector-div">
+			<input id="file-temp" type="file" style="display:none" accept="image/*">
+			<button id="file-selector" class="ui positive labeled icon button" type="button">
+				<i class="file image outline icon"></i>选择文件
+			</button>
+			<button class="ui positive labeled icon button">
+				<i class="upload icon"></i>开始上传
+			</button>
+		</div><div id="upload-files"></div>
+		<div id="upload-files-preview" class="ui medium images">
+		</div>
+	</form>
+    <h4 class="ui horizontal divider header">
+      <i class="block layout icon"></i>
+      图册
+    </h4>
 </div>
+<div class="ui basic segment">
+    <div class="ui four stackable cards">
+        {% for image in images %}
+		<div class="card" id="card-{{image.name}}">
+            <div class="image">
+                <img src="/gallery/media/{{image.name}}.{{image.ext}}">
+            </div>
+            <div class="content">
+                <div class="header">{{image.upload_name}}</div>
+                {% if image.title %}
+                <div class="meta">{{image.title}}</div>
+                {%endif%}
+                {% if image.description %}
+                <div class="description">{{image.description}}</div>
+                {%endif%}
+            </div>
+            <div class="extra content">
+                <div class="ui two buttons">
+                    <div class="ui basic negative button" href="/gallery/image/{{image.name}}" data-show="{{image.upload_name}}" data-name="{{image.name}}" data-ext="{{image.ext}}">删除</div>
+                <a class="ui basic positive button" href="/gallery/image/{{image.name}}">编辑</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<div class="ui modal">
+	<div class="header" id="modal-header">删除图片</div>
+	<div class="content">
+		<p>请确认从系统里删除图片：<strong id="modal-name"></strong></p>
+	</div>
+	<div class="actions">
+		<div class="ui green deny button">不删除</div>
+		<div class="ui red approve button">删除</div>
+	</div>
 </div>
 {% endblock %}
 {% block special_script_section %}
@@ -29,6 +79,49 @@ $('input:text, .ui.button', '.ui.action.input').on('click', function(e) {
 $('input:file', '.ui.action.input').on('change', function(e) {
 	var name = e.target.files[0].name;
 	$('input:text', $(e.target).parent()).val(name);
+});
+
+$('#file-selector').on('click', function(e) {
+	$('#file-temp').click();
+});
+
+$('#file-temp').on('change', function(e) {
+	var name = e.target.files[0].name;
+	var file = e.target.files[0];
+	//$('input:text', $(e.target).parent()).val(name);
+	var obj = $(this).clone();
+    obj.appendTo($('#file-selector-div'));
+	//obj.appendTo("#upload-files");
+    //$('#file-selector').remove($(this));
+	$(this).attr('name', 'upload-image');
+	$(this).removeAttr('id');
+    $(this).appendTo('#upload-files');
+	//var file_html = '<input name="uploads" type="file" value="' + e.target.value + '">';
+	var path = URL.createObjectURL(file);
+	var img_html = '<img src="' + path + '">';
+	//$("#upload-files").append(obj);
+	$("#upload-files-preview").append(img_html);
+	//$("#upload-files").appendTo(obj);
+
+});
+
+$('div.negative.button').click(function(e){
+	$('#modal-header').html('删除图片-' + $(this).data('show'));
+	$('#modal-name').html($(this).data('name'));
+	$(".modal")
+		.modal('setting', 'closable', false)
+		.modal({
+			closable: false,
+			onApprove: function(){
+                //$.post('{{url_for(".image_delete")}}', {name: '"' + $('#modal-name').html() + '"'}, dataType='json')
+                $.post('{{url_for(".image_delete")}}', {name: $('#modal-name').html()})
+                    .done(function(result){
+                        if (result.errcode == 0)
+                            $('div[id="card-' + $('#modal-name').html() + '"]').remove();
+                    });
+			}
+		})
+		.modal('show');
 });
 </script>
 {% endblock %}
