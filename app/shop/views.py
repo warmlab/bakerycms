@@ -4,7 +4,7 @@ from decimal import Decimal
 from flask import render_template
 from flask import request
 
-from flask.ext.login import login_required, current_user
+from flask_login import login_required, current_user
 
 from . import shop
 
