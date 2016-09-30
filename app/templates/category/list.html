@@ -1,0 +1,72 @@
+{% extends "base-admin.html" %}
+{% block main_content_section %}
+<div class="ui segment">
+	<h2 class="ui header">
+		<i class="list layout icon"></i>
+		<div class="content">
+			Category
+			<div class="sub header">Manage your Categories.</div>
+		</div>
+	</h2>
+	<a href="/category?new=1" class="ui basic button"><i class="plus icon"></i>新增产品分类</a>
+    <table class="ui three column table">
+        <thead>
+            <tr>
+                <th>English Name</th>
+                <th>Name</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+	  {% for c in categories %}
+	  <tr>
+		  <td>{{ c.english_name }}</td>
+		  <td>{{ c.name }}</td>
+		  <td>
+			  <a href="{{url_for('.category_detail')}}?code={{c.id}}" class="ui compact circular icon button"><i class="edit icon"></i></a>
+			  <button type="button" class="ui compact circular icon negative button" data-code="{{c.id}}" data-name="{{c.name}}"><i class="remove icon"></i></button>
+		  </td>
+	  </tr>
+	  {% endfor %}
+	  </tbody>
+	  <tfoot>
+	  <tr>
+          <th>{{categories|length}} Categories</th>
+          <th></th>
+          <th></th>
+	  </tr>
+	  </tfoot>
+	  </table>
+</div>
+<div class="ui modal">
+	<div class="header" id="modal-header">确认删除分类</div>
+	<div class="content">
+		<p>请确认从系统里删除产品分类：<strong id="modal-name">this category</strong></p>
+	</div>
+	<div class="actions">
+		<div class="ui cancel positive button">不删除</div>
+		<div class="ui approve negative button">确认删除</div>
+	</div>
+</div>
+<!--main content end-->
+{% endblock %}
+{% block special_script_section %}
+{% endblock %}
+{% block inline_script_section %}
+<script>
+$("button.negative").click(function(){
+	$('#modal-header').html('确认删除分类-' + $(this).data('name'));
+	$('#modal-name').html($(this).data('name'));
+	$(".modal")
+		.modal('setting', 'closable', false)
+		.modal({
+			closable: false,
+			onDeny: function(){
+			},
+			onApprove: function(){
+			}
+		})
+		.modal('show');
+});
+</script>
+{% endblock %}

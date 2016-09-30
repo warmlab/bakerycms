@@ -91,23 +91,10 @@ def _product_parameters(product, pc, parameters, price_parameter_values, stock_p
         product.parameters.remove(po)
         db.session.delete(po)
 
-@product.route('/product/<slug>', methods=['GET', 'POST'])
-def product_detail(slug):
-    if request.method == 'GET':
-        if slug == 'new-product':
-            product = None
-        else:
-            product = Product.query.filter_by(code=slug).first()
-        categories = ProductCategory.query.all()
-        parameter_categories = ParameterCategory.query.all()
-        images = Image.query.all()
-        #specifications = Specification.query.all()
-        #parameters = Parameter.query.all()
-
-        return render_template('product/detail.html', product=product, categories=categories,
-                               parameter_categories=parameter_categories, images=images)
-    elif request.method == 'POST':
-        print("the slug is: %s" % slug)
+@product.route('/product', methods=['GET', 'POST'])
+def product_detail():
+    create = request.args.get('new')
+    if request.method == 'POST':
         if request.form.get('checkweb'):
             checkweb = True
         else:
@@ -120,7 +107,7 @@ def product_detail(slug):
             checkpoint = True
         else:
             checkpoint = False
-        if slug == 'new-product':
+        if created == '1':
             category_id = request.form['categoryparameter'] # 产品分类
             category = ProductCategory.query.get_or_404(category_id)
             product = Product(request.form['inputcode'], request.form['inputname'], request.form['inputenglishname'],
@@ -128,10 +115,11 @@ def product_detail(slug):
                               request.form['inputprice'], request.form['inputmemberprice'], request.form['inputstock'],
                               checkweb, checkpos, checkpoint)
             print ("The new product is: %s" % product)
-        if request.form['inputcode'] != slug:
-            return render_template('404.html')
         else:
-            product = Product.query.filter_by(code=slug).first()
+            code = request.args.get('code')
+            if not code:
+                abort(400)
+            product = Product.query.filter_by(code=code).first()
             print ("The product is: %s" % product)
 
             product.name = request.form['inputname']
@@ -166,21 +154,64 @@ def product_detail(slug):
         db.session.add(product)
         db.session.commit()
 
-        product = Product.query.filter_by(code=slug).first()
-        categories = ProductCategory.query.all()
-        parameter_categories = ParameterCategory.query.all()
-        parameters = Parameter.query.all()
-        images = Image.query.all()
+        #product = Product.query.filter_by(code=slug).first()
+        #categories = ProductCategory.query.all()
+        #parameter_categories = ParameterCategory.query.all()
+        #parameters = Parameter.query.all()
+        #images = Image.query.all()
 
-        return render_template('product/detail.html', product=product, categories=categories,
-                           parameter_categories=parameter_categories, parameters=parameters, images=images)
+        #return render_template('product/detail.html', product=product, categories=categories,
+        #                   parameter_categories=parameter_categories, parameters=parameters, images=images)
+        return redirect(url_for('.product_list'))
+    if create == '1':
+        product = None
     else:
-        return render_template('method_not_allowed.html')
+        code = request.args.get('code')
+        if not code:
+            abort(400)
+        product = Product.query.filter_by(code=code).first()
+    categories = ProductCategory.query.all()
+    parameter_categories = ParameterCategory.query.all()
+    images = Image.query.all()
+    #specifications = Specification.query.all()
+    #parameters = Parameter.query.all()
+
+    return render_template('product/detail.html', product=product, categories=categories,
+                           parameter_categories=parameter_categories, images=images)
 
 @product.route('/categories', methods=['GET', 'POST'])
 def category_list():
     categories = ProductCategory.query.all()
     return render_template('category/list.html', categories=categories)
+
+@product.route('/category', methods=['GET', 'POST'])
+def category_detail():
+    create = request.args.get('new')
+    if request.method == 'POST':
+        name = request.form.get('inputname')
+        english_name = request.form.get('inputenglishname')
+        desc = request.form.get('inputdesc')
+        if create:
+            category = ProductCategory(name, english_name, desc)
+        else:
+            pk = request.args.get('code')
+            category = ProductCategory.query.get(pk)
+            category.name = name
+            category.english_name = english_name
+            category.description = desc
+        db.session.add(category)
+        db.session.commit()
+        #return render_template('category/list.html', category=category)
+        return redirect(url_for('.category_list'))
+
+    if create == "1":
+        return render_template('category/detail.html', category=None)
+    else:
+        pk = request.args.get("code")
+        if not pk:
+            abort(400)
+        category = ProductCategory.query.get(pk)
+        return render_template('category/detail.html', category=category)
 
 
 @product.route('/shutdown')

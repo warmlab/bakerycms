@@ -11,6 +11,15 @@ def forbidden(e):
         return response
     return render_template('403.html'), 403
 
+@product.app_errorhandler(400)
+def bad_request(e):
+    if request.accept_mimetypes.accept_json and \
+            not request.accept_mimetypes.accept_html:
+        response = jsonify({'error': 'bad request'})
+        response.status_code = 400
+        return response
+    return render_template('400.html'), 400
+
 
 @product.app_errorhandler(404)
 def page_not_found(e):

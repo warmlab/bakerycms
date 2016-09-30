@@ -8,7 +8,19 @@ class Message():
         self.__properties = {}
 
     def generate_response_body(self):
-        return self._generate_location_body()
+        return self._generate_text_body()
+
+    def _generate_text_body(self):
+        home_web = "http://m.wecakes.com/shop"
+        body = """<xml>
+        <ToUserName><![CDATA[%s]]></ToUserName>
+        <FromUserName><![CDATA[%s]]></FromUserName>
+        <CreateTime>%d</CreateTime>
+        <MsgType><![CDATA[text]]></MsgType>
+        <Content><![CDATA[您好，欢迎关注我们，请移步至 %s 选购]]></Content>
+        </xml>""" % (self.__properties['FromUserName'], self.__properties['ToUserName'], int(time()), home_web)
+
+        return body
 
     def _generate_location_body(self):
         body = """<xml>

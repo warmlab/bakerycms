@@ -1,6 +1,14 @@
 {% extends "base-admin.html" %}
 {% block main_content_section %}
-<div class="ui container">
+<div class="ui basic segment">
+	<h2 class="ui header">
+		<i class="settings icon"></i>
+		<div class="content">
+			Product
+			<div class="sub header">Manage your products.</div>
+		</div>
+	</h2>
+	<a href="/product?new=1" class="ui basic button"><i class="plus icon"></i>新增产品</a>
     <table class="ui six column table">
         <thead>
             <tr>
@@ -21,8 +29,8 @@
           <td>{{ p.stock }}</td>
 		  <td>{{ p.category }}</td>
 		  <td>
-			  <button type="button" class="ui circular icon button"><i class="edit icon"></i></a>
-			  <button type="button" class="ui circular icon button"><i class="remove icon"></i></a>
+              <a href="{{url_for('.product_detail')}}?code={{p.code}}" class="ui circular icon button"><i class="edit icon"></i></a>
+			  <button type="button" class="ui circular icon negative button"><i class="remove icon"></i></a>
 		  </td>
 	  </tr>
 	  {% endfor %}

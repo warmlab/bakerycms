@@ -1,0 +1,39 @@
+{% extends "base-admin.html" %}
+{% block main_content_section %}
+<div class="ui basic segment">
+  <h2 class="ui dividing header">
+		<i class="sitemap icon"></i>
+		<div class="content">
+			{% if category %}修改产品分类-{{category.name}}{%else%}新增产品分类{%endif%}
+			<div class="sub header">Manage your Category.</div>
+		</div>
+  </h2>
+  <form class="ui form" method="POST" action="/category{%if not category%}?new=1{%else%}?code={{ category.id }}{%endif%}">
+	  <div class="inline field">
+		  <label for="inputname">分类名称</label>
+		  <input id="inputname" name="inputname" placeholder="面包" type="text" value="{{ category.name }}">
+	  </div>
+	  <div class="inline field">
+		  <label for="inputenglishname">英语名称</label>
+		  <input id="inputenglishname" name="inputenglishname" placeholder="Bread" type="text" value="{{ category.english_name }}">
+	  </div>
+	  <div class="field">
+		  <label for="inputdesc">描述</label>
+		  <textarea name="inputdesc" rows="3">{{ category.description }}</textarea>
+	  </div>
+	  <div class="inline field">
+          <button type="submit" class="ui primary right button">保存</button>
+	  </div>
+  </form>
+</div>
+{% endblock %}
+{% block inline_script_section %}
+<script>
+function remove_line(line)
+{
+	var this_line = line.parentNode;
+	this_line.parentNode.removeChild(this_line);
+
+}
+</script>
+{% endblock %}
