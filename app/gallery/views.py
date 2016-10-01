@@ -54,7 +54,7 @@ def image_upload():
     files = request.files.getlist('upload-image')
     for f in files:
         filename = f.filename
-        print(filename)
+        print('aaa',filename)
         if not filename:
             abort(400)
         upload_name, name, ext = __generate_filename(filename)
@@ -79,9 +79,13 @@ def image_delete():
         abort(400)
 
     image = Image.query.filter_by(name=name).first()
-    # remove image from harddisk
-    path = os.path.join(current_app.config['UPLOAD_FOLDER'], '.'.join([name, image.ext]))
+    if image.products:
+        message = {"errcode": 1, "errmsg": "Image was used by product."}
+        return jsonify(message), 403
+
     try:
+        # remove image from harddisk
+        path = os.path.join(current_app.config['UPLOAD_FOLDER'], '.'.join([name, image.ext]))
         os.remove(path)
     except Exception as e:
         print(e)
@@ -91,7 +95,6 @@ def image_delete():
     db.session.commit()
 
     message = {"errcode": 0, "errmsg": "success"}
-
     return jsonify(message), 200
 
 @gallery.route('/media/<filename>')
