@@ -1,10 +1,9 @@
 from flask import Flask
-#from flask.ext.bootstrap import Bootstrap
 #from flask_mail import Mail
 #from flask.ext.moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-#from flask.ext.pagedown import PageDown
+#from flask_pagedown import PageDown
 from config import config
 
 #bootstrap = Bootstrap()
@@ -37,8 +36,8 @@ def create_app(config_name):
     from .product import product as product_blueprint
     app.register_blueprint(product_blueprint)
 
-    #from .auth import auth as auth_blueprint
-    #app.register_blueprint(auth_blueprint, url_prefix='/auth')
+    from .auth import auth as auth_blueprint
+    app.register_blueprint(auth_blueprint, url_prefix='/auth')
 
     #from .sale import sale as sale_blueprint
     #app.register_blueprint(sale_blueprint)

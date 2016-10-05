@@ -1,0 +1,95 @@
+{% extends "base-admin.html" %}
+{% block inline_css %}
+<style type="text/css">
+	body {
+	  background-color: #DADADA;
+	}
+	body > .grid {
+	  height: 100%;
+	}
+	.image {
+	  margin-top: -100px;
+	}
+	.column {
+	  max-width: 450px;
+	}
+</style>
+{% endblock %}
+{% block inline_script_section %}
+  <script>
+  $(document).ready(function(){
+      $('.ui.form')
+        .form({
+          fields: {
+            email: {
+              identifier  : 'email',
+              rules: [
+                {
+                  type   : 'empty',
+                  prompt : 'Please enter your e-mail'
+                },
+                {
+                  type   : 'email',
+                  prompt : 'Please enter a valid e-mail'
+                }
+              ]
+            },
+            password: {
+              identifier  : 'password',
+              rules: [
+                {
+                  type   : 'empty',
+                  prompt : 'Please enter your password'
+                },
+                {
+                  type   : 'length[6]',
+                  prompt : 'Your password must be at least 6 characters'
+                }
+              ]
+            }
+          }
+        })
+      ;
+    })
+  ;
+  </script>{% endblock %}
+</head>
+<body>{% block header_block %}{% endblock %}{% block main_content_section %}
+<div class="ui middle aligned center aligned grid">
+  <div class="column">
+    <h2 class="ui orange image header">
+        {#<img src="assets/images/logo.png" class="image">#}
+      <div class="content">
+        Login Amei Bakery's Backend
+      </div>
+    </h2>
+    <form class="ui large form" method="POST" action="{{url_for('.login')}}">
+        {{form.csrf_token}}
+      <div class="ui stacked segment">
+        <div class="field">
+          <div class="ui left icon input">
+            <i class="user icon"></i>
+            {#<input type="text" name="email" placeholder="E-mail address">#}
+            {{ form.email(placeholder="E-mail address") }}
+          </div>
+        </div>
+        <div class="field">
+          <div class="ui left icon input">
+            <i class="lock icon"></i>
+            {#<input type="password" name="password" placeholder="Password">#}
+            {{ form.password(placeholder="Password") }}
+          </div>
+        </div>
+        <div class="ui fluid large orange submit button">Login</div>
+      </div>
+      <div class="ui error message"></div>
+    </form>
+{#
+    <div class="ui message">
+      New to us? <a href="#">Sign Up</a>
+	</div>#}
+  </div>
+</div>
+{% endblock %}
+</body>
+</html>

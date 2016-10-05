@@ -13,7 +13,7 @@ from . import product # blueprint
 
 from ..models import Product, ProductCategory#, Specification
 from ..models import Parameter, ParameterCategory, ProductParameter
-from ..models import Member
+from ..models import Staff
 from ..models import Image, ProductImage
 
 from ..decorators import admin_required, permission_required
@@ -32,6 +32,7 @@ def after_request(response):
 
 # If GET is present, HEAD will be added automatically for you
 @product.route('/products', methods=['GET', 'POST'])
+@login_required
 def product_list():
     products = Product.query.all()
     return render_template('product/list.html', products=products)
@@ -94,6 +95,7 @@ def _product_parameters(product, pc, parameters, price_parameter_values, stock_p
         db.session.delete(po)
 
 @product.route('/product', methods=['GET', 'POST'])
+@login_required
 def product_detail():
     create = request.args.get('new')
     if request.method == 'POST':
@@ -182,11 +184,13 @@ def product_detail():
                            parameter_categories=parameter_categories, images=images)
 
 @product.route('/categories', methods=['GET', 'POST'])
+@login_required
 def category_list():
     categories = ProductCategory.query.all()
     return render_template('category/list.html', categories=categories)
 
 @product.route('/category', methods=['GET', 'POST'])
+@login_required
 def category_detail():
     create = request.args.get('new')
     if request.method == 'POST':
@@ -216,13 +220,12 @@ def category_detail():
         return render_template('category/detail.html', category=category)
 
 
-@product.route('/shutdown')
-def server_shutdown():
-    if not current_app.testing:
-        abort(404)
-    shutdown = request.environ.get('werkzeug.server.shutdown')
-    if not shutdown:
-        abort(500)
-    shutdown()
-    return 'Shutting down...'
-
+#@product.route('/shutdown')
+#def server_shutdown():
+#    if not current_app.testing:
+#        abort(404)
+#    shutdown = request.environ.get('werkzeug.server.shutdown')
+#    if not shutdown:
+#        abort(500)
+#    shutdown()
+#    return 'Shutting down...'

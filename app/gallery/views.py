@@ -26,11 +26,13 @@ def __generate_filename(filename):
         return filename, str(time()), ''
 
 @gallery.route('/images', methods=['GET'])
+@login_required
 def image_list():
     images = Image.query.all()
     return render_template('gallery/images.html', images=images)
 
 @gallery.route('/image/<name>', methods=['GET', 'POST'])
+@login_required
 def image_detail(name):
     if request.method == 'POST':
         upload_name = request.form.get('inputname')
@@ -45,6 +47,7 @@ def image_detail(name):
     return render_template('gallery/image.html', image=image)
 
 @gallery.route('/image-upload', methods=['POST'])
+@login_required
 def image_upload():
     # do upload
     #images = None # uploaded images
@@ -67,6 +70,7 @@ def image_upload():
     return redirect(url_for('.image_list'))
 
 @gallery.route('/image-delete', methods=['POST'])
+@login_required
 def image_delete():
     if request.method != 'POST':
         abort(405)
@@ -98,5 +102,6 @@ def image_delete():
     return jsonify(message), 200
 
 @gallery.route('/media/<filename>')
+@login_required
 def media_file(filename):
     return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)

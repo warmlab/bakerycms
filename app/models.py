@@ -106,10 +106,9 @@ class WeixinMember(db.Model):
 class Member(UserMixin, db.Model):
     __tablename__ = 'member'
     id = db.Column(db.Integer, primary_key=True)
-    code = db.Column(db.String(64), unique=True, index=True) # 实体会员卡的卡面卡号，没有实体卡，可以使用用户名
+    code = db.Column(db.String(64), unique=True, index=True, nullable=True) # 实体会员卡的卡面卡号，没有实体卡，可以使用用户名
     email = db.Column(db.String(64), unique=True, index=True)
     mobile = db.Column(db.String(16), unique=True, index=True) #手机号码
-    member_name = db.Column(db.String(64), unique=True, index=True) # 会员登录号
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default=False)
     name = db.Column(db.String(128), index=True) # 会员姓名
@@ -460,8 +459,88 @@ class ProductImage(db.Model):
     def __repr__(self):
         return "%s - %s" % (self.product_id, self.image_id)
 
+class Staff(UserMixin, db.Model):
+    __tablename__ = 'staff'
+
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(64), unique=True, index=True)
+    mobile = db.Column(db.String(16), unique=True, index=True) #手机号码
+    identify_card_no = db.Column(db.String(64), unique=True) # 员工身份证
+    name = db.Column(db.String(128))
+    nickname = db.Column(db.String(64)) # 员工昵称
+    login_name = db.Column(db.String(64), unique=True, index=True) # 登录名称
+    pos_code = db.Column(db.String(4), unique=True, index=True) # POS登录名称
+    openid = db.Column(db.String(64), unique=True, nullable=True)
+    password_hash = db.Column(db.String(128))
+    location = db.Column(db.String(64))
+    about_me = db.Column(db.Text)
+    staff_since = db.Column(db.DateTime, default=datetime.utcnow)
+    staff_end = db.Column(db.DateTime, default=None)
+    avatar_hash = db.Column(db.String(32)) # 头像
+
+    active = db.Column(db.Boolean, default=True) # is active
+    confirmed = db.Column(db.Boolean, default=False)
+
+    @property
+    def password(self):
+        raise AttributeError('password is not a readable attribute')
+
+    @password.setter
+    def password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def get_id(self):
+        return self.email
+
+    def is_active(self):
+        return self.active
+
+    @property
+    def is_authenticated(self):
+        return True
+
+    def verify_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def generate_confirmation_token(self, expiration=3600):
+        s = Serializer(current_app.config['SECRET_KEY'], expiration)
+        return s.dumps({'confirm': self.id})
+
+    def confirm(self, token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token)
+        except:
+            return False
+        if data.get('confirm') != self.id:
+            return False
+        self.confirmed = True
+        db.session.add(self)
+        return True
+
+@login_manager.user_loader
+def user_loader(email):
+    staff = Staff.query.filter_by(email=email).first()
+    if not staff:
+        return None
+
+    return staff
+
 
 """
+@login_manager.request_loader
+def request_loader(request):
+    email = request.form.get('email')
+    staff = Staff.query.filter_by(email=email).first()
+    if not staff:
+        return None
+
+    # DO NOT ever store passwords in plaintext and always compare password
+    # hashes using constant-time comparison!
+    #staff.is_authenticated = request.form.get('password') == staff.password
+
+    return staff
+
 
 class GalleryCategory(db.Model):
     __tablename__ = 'gallery_category'
@@ -552,17 +631,22 @@ class Specification(db.Model):
         self.description = description
 
     def __repr__(self):
+        return ""
 
 class Staff(UserMixin, db.Model):
     __tablename__ = 'staff'
+
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(64), unique=True, index=True)
     mobile = db.Column(db.String(16), unique=True, index=True) #手机号码
-    staff_name = db.Column(db.String(64), unique=True, index=True) # 登录名称
+    identify_card_no = db.Column(db.String(64), unique=True) # 员工身份证
+    name = db.Column(db.String(128))
+    nickname = db.Column(db.String(64)) # 员工昵称
+    login_name = db.Column(db.String(64), unique=True, index=True) # 登录名称
+    pos_code = db.Column(db.String(4), unique=True, index=True) # POS登录名称
     openid = db.Column(db.String(64), unique=True, nullable=True)
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default=False)
-    name = db.Column(db.String(128))
     location = db.Column(db.String(64))
     about_me = db.Column(db.Text)
     staff_since = db.Column(db.DateTime, default=datetime.utcnow)
