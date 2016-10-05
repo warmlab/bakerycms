@@ -458,7 +458,7 @@ class ProductImage(db.Model):
         self.description = description
 
     def __repr__(self):
-        return self.description
+        return "%s - %s" % (self.product_id, self.image_id)
 
 
 """

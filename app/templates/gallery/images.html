@@ -13,22 +13,20 @@
 		<div class="ui input" id="file-selector-div">
 			<input type="file" style="display:none;">
 		</div>
-		<div class="ui two buttons">
-			<button id="file-selector" class="ui orange labeled icon button" type="button">
-				<i class="file image outline icon"></i>选择文件
-			</button>
-			<button class="ui positive labeled icon button">
-				<i class="upload icon"></i>开始上传
-			</button>
-		</div>
+		<button id="file-selector" class="ui orange labeled icon button" type="button">
+			<i class="file image outline icon"></i>选择文件
+		</button>
+		<button class="ui positive labeled icon button">
+			<i class="upload icon"></i>开始上传
+		</button>
 		<div id="upload-files"></div>
-		<div id="upload-files-preview" class="ui small images"></div>
+		<div id="upload-files-preview" class="ui six doubling cards"></div>
 	</form>
+</div>
+<div class="ui basic segment">
     <h4 class="ui horizontal divider header">
       <i class="block layout icon"></i>图册
     </h4>
-</div>
-<div class="ui basic segment">
     <div class="ui four stackable cards">
         {% for image in images %}
 		<div class="card" id="card-{{image.name}}">
@@ -90,7 +88,7 @@ function change_event(e) {
 	$('#file-selector-div').html('<input type="file" style="display:none;">');
 	$('div.input input:file').change(change_event);
 	var path = URL.createObjectURL(file);
-	var img_html = '<img class="ui image" src="' + path + '">';
+	var img_html = '<div class="card"><div class="image"><img src="' + path + '"></div></div>';
 	$("#upload-files-preview").append(img_html);
 }
 

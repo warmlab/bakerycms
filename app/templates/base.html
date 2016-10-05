@@ -19,26 +19,37 @@
 	{% block external_css %}{% endblock %}
     {% block inline_css %}{% endblock %}
   </head>
-  <body>
-	  {% block header_block %}
-	  <div class="ui secondary pointing menu">
-		  <div class="header item">AMEI</div>
-		  <div class="active item">Product</div>
-		  <a class="item">Member</a>
+  <body>{% block header_block %}
+	  <div class="ui four item menu">
 		  <div tabindex="0" class="ui dropdown item">
 			  Sales<i class="dropdown icon"></i>
 			  <div tabindex="-1" class="menu">
-				  <div class="item">Action</div>
-				  <div class="item">Another Action</div>
-				  <div class="item">Something else here</div>
+				  <div class="item">营业概况</div>
+				  <div class="item">销售单据</div>
 				  <div class="divider"></div>
-				  <div class="item">Separated Link</div>
-				  <div class="divider"></div>
-				  <div class="item">One more separated link</div>
+				  <div class="item">日结记录</div>
 			  </div>
 		  </div>
-          <a class="item">Gallery</a>
-          <a class="item">Settings</a>
+		  <div tabindex="1" class="ui dropdown item">
+			  Product<i class="dropdown icon"></i>
+			  <div tabindex="-1" class="menu">
+				  <div class="item">产品</div>
+				  <div class="item">分类</div>
+			  </div>
+		  </div>
+		  <div tabindex="2" class="ui dropdown item">
+			  Member<i class="dropdown icon"></i>
+			  <div tabindex="-1" class="menu">
+				  <div class="item">会员</div>
+				  <div class="item">等级</div>
+			  </div>
+		  </div>
+		  <div tabindex="3" class="ui dropdown item">
+			  Settings<i class="dropdown icon"></i>
+			  <div tabindex="-1" class="menu">
+				  <div class="item">Gallery</div>
+			  </div>
+		  </div>
 	  </div>
 	  {% endblock %}{% block main_content_section %}{% endblock %}
 	  {% block foot_content_section %}
@@ -60,4 +71,5 @@
 		#}
 {% endblock %}
 {% block inline_script_section %}{% endblock %}
+<script>$('.ui.dropdown').dropdown();</script>
 </html>

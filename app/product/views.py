@@ -37,29 +37,31 @@ def product_list():
     return render_template('product/list.html', products=products)
 
 def _product_images(product, image_names):
-    print(image_names)
     pis = product.images
-    found_image = []
+    found_images = []
+    to_append_images = []
     for name in image_names:
         #pi = ProductImage.query.filter_by(product=product, image=image)
         found = False
         for tpi in pis:
             if tpi.image.name == name:
                 found = True
-                found_image.append(tpi)
+                found_images.append(tpi)
 
         if not found:
-            image = Image.query.filter_by(name=name).first()
-            pi = ProductImage(product, image)
-            product.images.append(pi)
-
-            db.session.add(pi)
+            to_append_images.append(name)
 
     # delete image
     for pi in pis:
-        if pi not in found_image:
+        if pi not in found_images:
+            print('delete pi: ', pi.product_id)
             product.images.remove(pi)
-            #db.session.delete(pi)
+
+    # append added images
+    for name in to_append_images:
+        image = Image.query.filter_by(name=name).first()
+        pi = ProductImage(product, image)
+        product.images.append(pi)
 
 def _product_parameters(product, pc, parameters, price_parameter_values, stock_parameter_values):
     print("product parameters: %s" % (parameters))

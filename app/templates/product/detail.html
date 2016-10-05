@@ -2,15 +2,15 @@
 {% block main_content_section %}
 <div class="ui basic segment">
 	<h2 class="ui dividing header">
-	<i class="square icon"></i>
-	<div class="content">
-		{% if product %}修改产品-{{product.name}}{%else%}新增产品{%endif%}
-		<div class="sub header">Manage your product.</div>
-	</div>
+		<i class="square icon"></i>
+		<div class="content">
+			{% if product %}修改产品-{{product.name}}{%else%}新增产品{%endif%}
+			<div class="sub header">Manage your product.</div>
+		</div>
 	</h2>
   <form class="ui form" method="POST" action="/product{%if product %}?code={{ product.code }}{%else%}?new=1{%endif%}">
-		  <div class="inline field">
-			  <label>产品编码</label>
+	  <div class="inline field">
+		  <label>产品编码</label>
 		  {% if product %}
 		  <input id="inputcode" name="inputcode" type="text" value="{{ product.code }}" disabled="true">
 		  {% else %}
@@ -86,11 +86,10 @@
 	  </div>
 	  <div class="fields">
 		  <div class="inline field">
-		  <label for="input-image">产品图片</label>
-		  <button id="product-image-new" type="button" class="mini circular ui icon button"><i class="plus icon"></i></button>
+			  <label for="input-image">产品图片</label>
+			  <button id="product-image-new" type="button" class="mini circular ui icon button"><i class="plus icon"></i></button>
 		  </div>
-		  <div class="ui small images" id="product-images">
-		  </div>
+		  <div class="ui six doubling cards" id="product-images"></div>
 	  </div>
 	  {% for oc in parameter_categories %}
 	  {% if oc.parameters.all() %}
@@ -104,54 +103,6 @@
 	  </div>
 	  {% endif %}
 	  {% endfor %}
-	  {#
-	  {% for oc in parameter_categories %}
-	  <div class="inline field">
-		  <label for="inputname">{{oc}}
-			  <button id="product-parameter-{{oc.id}}-new" class="btn" type="button"><i class="fa fa-plus"></i></button>
-		  </label>
-		  <div class="col-lg-10 adv-table editable-table">
-			  <table class="table table-striped table-hover table-bordered" id="editable-{{ oc.id }}">
-				  <tbody id="product-parameters-{{oc.id}}">
-			  {% for po in product.parameters %}
-					  <tr>
-						  <td>
-							  <select name="parameter-{{oc.id}}" class="form-control" value="{{ po.parameter.id }}">
-				  {% for o in oc.parameters %}
-				  {% if po.parameter.id == o.id %}
-				  <parameter value="{{ o.id }}" selected="selected">{{ o }}</parameter>
-				  {% else %}
-				  <parameter value="{{ o.id }}">{{ o }}</parameter>
-				  {% endif %}
-				  {% endfor %}
-			  </select>
-						  </td>
-						  <td>
-							  <input name="inputparameter-{{oc.id}}" type="text" value="{{ po.numeric_value }}">
-						  </td>
-						  <td>
-							  <button class="mini circular ui icon button" type="button" onclick="javascript:remove_line(this)"><i class="icon remove"></i></button>
-						  </td>
-					  </tr>
-			  {% endfor %}
-					  </tbody>
-			  </table>
-			  
-		  </div>
-	  </div>
-	  {% endfor %}
-	  #}
-	  <!--
-	  <div class="inline field">
-		  <div class="col-lg-offset-2 col-lg-10">
-			  <div class="checkbox">
-				  <label>
-					  <input type="checkbox"> Remember me
-				  </label>
-			  </div>
-		  </div>
-	  </div>
-	  -->
 	  <div class="inline field">
           <button type="submit" class="ui primary right button">保存</button>
 	  </div>
@@ -191,13 +142,6 @@
 	  </div>
   </div>
   </form>
-  {#
-  <div class="ui bottom fixed brown huge three item inverted menu">
-	  <a class="active item">Home</a>
-	  <a class="item">Home</a>
-	  <a class="item">Home</a>
-  </div>
-  #}
 </div>
 {% endblock %}
 {% block inline_script_section %}
@@ -223,7 +167,6 @@ PRODUCT = {
 	}
 };
 $(document).ready(function(){
-	var imageHtml = "";
     {% for po in product.parameters %}
 	var option_values = [{% for o in po.parameter.parameter_category.parameters %}"{{o.id}}"{%endfor%}];
 	var options = [{% for o in po.parameter.parameter_category.parameters %}"{{o}}"{%endfor%}];
@@ -241,16 +184,37 @@ $(document).ready(function(){
 		PRODUCT.setParameters("{{oc.id}}", '', option_values, options, '', '');
 	});
 	{% endfor %}
+
+	var images = [];
+	var images_add = []
+	var show_product_image = function(){
+		var imageHtml = "";
+		for (var name in images){
+			imageHtml += '<div class="card"><div class="blurring dimmable image"><div class="ui dimmer"><div class="content"><div class="center"><div class="ui inverted"><i class="remove huge icon"></i></div></div></div></div><img src="'  + images[name] + '"><input type="hidden" value="' + name +'" name="product-image"></div></div>';
+		}
+		for (var name in images_add){
+			imageHtml += '<div class="card"><div class="blurring dimmable image"><div class="ui dimmer"><div class="content"><div class="center"><div class="ui inverted"><i class="remove huge icon"></i></div></div></div></div><img src="'  + images_add[name] + '"><input type="hidden" value="' + name +'" name="product-image"></div></div>';
+		}
+		$("#product-images").html(imageHtml);
+		$('#product-images .image').dimmer({
+			on: 'click'
+		}).click(function(){
+			if ($(this).dimmer("is active")){
+				console.log('active');
+				$(this).find("input[type=hidden]").attr('name', 'product-image');
+			} else {
+				console.log('not active');
+				$(this).find("input[type=hidden]").attr('name', 'product-image-remove');
+			}
+		});
+	}
+	{% for pi in product.images %}
+	images["{{pi.image.name}}"] = "/gallery/media/{{pi.image.name}}.{{pi.image.ext}}";{% endfor %}
 	$("#product-image-new").click(function(){
 		$('#image-selector')
 		.modal({
 			closable: false,
-			onDeny: function(){
-				return false;
-			},
-			onApprove: function(){
-				$("#product-images").append(imageHtml);
-			}
+			onApprove: show_product_image
 		})
 		.modal('show');
 	});
@@ -260,15 +224,23 @@ $(document).ready(function(){
 	$('.ui.checkbox').checkbox();
 	$('.special.cards .image').dimmer({
 		on: 'click'
-	}).on('click', function(){
-		var imageSrc = $(this).data('src');
-		var imageName = $(this).data('name');
-		imageHtml += '<img src="' + imageSrc + '"><input type="hidden" value="' + imageName +'" name="product-image">';
+	}).click(function(){
+		if (!$(this).dimmer("is active")) {
+			console.log($(this).data('name'));
+			console.log($(this).data('src'));
+			images_add[$(this).data('name')] = $(this).data('src');
+			//imageHtml += '<img src="' + imageSrc + '"><input type="hidden" value="' + imageName +'" name="product-image">';
+		} else {
+			console.log('pop');
+			//images.pop(($(this).data('name'));
+			//var index = images_add.indexOf($(this).data('name'));
+			//console.log(index);
+			//images_add.splice(index, 1);
+			delete images_add[$(this).data('name')];
+		}
 	});
-	{% for pi in product.images %}
-	imageHtml += '<img src="/gallery/media/{{pi.image.name}}.{{pi.image.ext}}"><input type="hidden" value="{{pi.image.name}}" name="product-image">';
-	{% endfor %}
-	$("#product-images").append(imageHtml);
+
+	show_product_image();
 });
 
 function remove_line(line)
