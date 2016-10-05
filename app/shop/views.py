@@ -68,7 +68,7 @@ def checkout():
     alipay_url = 'https://openapi.alipay.com/gateway.do'
     return render_template('shop/checkout.html', products=to_buy_products, amounts=to_buy_amounts, total_cost=total_cost)
 
-@shop.route('/memberinfo', methods=['GET'])
+@shop.route('/myinfo', methods=['GET'])
 def user_info():
     return render_template('shop/memberinfo.html')
 

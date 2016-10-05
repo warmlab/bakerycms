@@ -8,6 +8,8 @@ from flask import current_app, request
 from flask import send_from_directory
 from flask import json, jsonify
 
+from flask_login import login_required, current_user
+
 from werkzeug.utils import secure_filename
 
 from . import gallery
