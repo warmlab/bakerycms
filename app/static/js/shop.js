@@ -13,9 +13,23 @@ function Product(code, name, image, price, amount) {
 	this.code = code;
 	this.name = name;
 	this.image = image;
-	this.price = price;
+	this._price = price;
 	this.amount = amount;
 	this.parameters = [];
+
+	this.addParameter = function(code, name, price) {
+		this.parameters.push({"code":code, "name": name, "price": price});
+		console.log(this);
+	}
+
+	this.price = function(){
+		var _ = this._price;
+		for (var para in this.parameters) {
+			_ += para.price;
+		}
+
+		return _;
+	}
 }
 
 //class Cart {
@@ -52,12 +66,12 @@ function Cart(name, type) {
 		var added = false;
 		for (var p of this.products) {
 			if (p.code == product.code
-				&& p.parameters.length() == product.parameters.length()) {
+				&& p.parameters.length == product.parameters.length) {
 				var same_key_sum = 0;
 				for (var key in product.parameters)
 					if (p.parameters.indexOf(key))
 						same_key_sum++;
-				if (same_key_sum == p.parameters.length()) {
+				if (same_key_sum == p.parameters.length) {
 					p.amount += product.amount;
 					added = true;
 				}
@@ -102,9 +116,12 @@ function Cart(name, type) {
 	}
 
 	this.calTotal = function() {
-		var total = 0;
+		var total = 0.0;
 		for (var p of this.products) {
-			total += p.price * p.amount;
+			var price = p.price;
+			for (para in p.parameters)
+				price += para.price;
+			total += price * p.amount;
 		}
 
 		return total;
@@ -116,18 +133,3 @@ function Cart(name, type) {
 		this.storage.setItem(this.key, json);
 	}
 }
-
-$(document).ready(function(){
-	var cart = new Cart('cart');
-	$(".add-to-cart").click(function(){
-		var product = new Product($(this).data("code"),
-							  $(this).data("name"),
-							  $(this).data("image"),
-							  $(this).data("price"));
-
-		cart.addProduct(product);
-	});
-//product = new Product('003', '美式', '/image', 10, 20);
-//cart.addProduct(product);
-//cart.removeProduct('002');
-});

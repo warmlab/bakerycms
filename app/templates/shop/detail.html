@@ -37,7 +37,7 @@
 	</h4>
 	<span>
 	{% for value in values %}
-	<div class="ui basic toggle button" data-code="{{value.parameter_id}}" data-price="{{value.plus_price}}">{{value.parameter}}</div>
+	<div class="ui basic toggle button" data-code="{{value.parameter_id}}" data-name="{{value}}" data-price="{{value.plus_price}}">{{value.parameter}}</div>
 	{% endfor %}
 	</span>
 	{% endfor %}
@@ -136,9 +136,9 @@ $('.ui.fluid.button').click(function(e){
 		$toggle.each(function() {
 			if ($(this).hasClass($active)) {
 				var code = $(this).data('code');
+				var name = $(this).data('name');
 				var price = $(this).data('price');
-				p.parameters[code] = price;
-				console.log(p.parameters.keys());
+				p.addParameter(code, name, price);
 			}
 		});
 

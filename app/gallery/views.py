@@ -104,6 +104,5 @@ def image_delete():
     return jsonify(message), 200
 
 @gallery.route('/media/<filename>')
-@login_required
 def media_file(filename):
     return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)

@@ -50,7 +50,16 @@ $(document).ready(function(){
 	//for (var product of cart.products) {
 	for (var i=0; i < cart.products.length; i++) {
 		var product = cart.products[i];
-		var line = '<div class="ui segment"><div class="ui image middle aligned header">'
+		var price = product.price;
+		var $parameters = product.parameters;
+		var parameter_name = '';
+		for (var para of $parameters) {
+			if (para != null) {
+			price += para.price;
+			parameter_name += para.code + ' ';
+			}
+		}
+		var line = '<div class="ui basic segment"><div class="ui image middle aligned header">'
 					+ '<div class="ui checkbox"><input name="is-buy-'
                     + product.code + '" type="checkbox" checked><input type="hidden" name="product-code" value="'
 				   + product.code
@@ -59,8 +68,8 @@ $(document).ready(function(){
 				   + '" class="ui tiny image"><div class="content">'
 				   + product.name
 				   + '<div class="sub header">￥'
-				   + product.price
-				   + '</div></div></div><div class="ui mini input"><input type="text" size="2" name="amount" value="'
+				   + product.price()
+				   + '</div><div class="meta">'+parameter_name+'</div></div></div><div class="ui mini input"><input type="text" size="2" name="amount" value="'
 				   + product.amount
 				   + '"></div>\n<div class="ui mini buttons"><button class="ui icon button" type="button"><i class="minus icon"></i></button><button class="ui icon orange button" type="button"><i class="plus icon"></i></button></div></div>';
 		$("#product-area").append(line);
