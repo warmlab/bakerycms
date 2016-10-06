@@ -152,8 +152,8 @@ PRODUCT = {
 		var htmlString = '<div class="inline field"><select name="parameter-' + category_id + '" class="ui dropdown">';
 		for (var index in options) {
 			var option_html = '<option value="' +  option_values[index] + '"';
-			if (options[index] == selected_option)
-				option_html += ' selected="selected"'
+			if (option_values[index] == selected_option)
+				option_html += ' selected'
 			option_html += '>' + options[index] +'</option>';
 			htmlString += option_html;
 		}
@@ -163,13 +163,12 @@ PRODUCT = {
 		htmlString += '<button class="mini circular ui icon orange button" type="button" onclick="javascript:remove_line(this)"><i class="icon remove"></i></button></div>';
 		$("#parameters-" + category_id).append(htmlString);
 		$('select.dropdown').dropdown();
-		console.log(category_id);
 	}
 };
 $(document).ready(function(){
     {% for po in product.parameters %}
-	var option_values = [{% for o in po.parameter.parameter_category.parameters %}"{{o.id}}"{%endfor%}];
-	var options = [{% for o in po.parameter.parameter_category.parameters %}"{{o}}"{%endfor%}];
+	var option_values = [{% for o in po.parameter.parameter_category.parameters %}"{{o.id}}",{%endfor%}];
+	var options = [{% for o in po.parameter.parameter_category.parameters %}"{{o}}",{%endfor%}];
 	var category_id = "{{po.parameter.parameter_category_id}}";
 	var selected_option = "{{po.parameter_id}}";
 	var price = "{{po.plus_price}}";
@@ -178,10 +177,10 @@ $(document).ready(function(){
     {% endfor %}
 
 	{% for oc in parameter_categories %}
-	var option_values = [{% for o in oc.parameters %}"{{ o.id }}"{% endfor %}];
-	var options = [{% for o in oc.parameters %}"{{ o }}"{% endfor %}];
+	var option_values_{{oc.id}} = [{% for o in oc.parameters %}"{{ o.id }}",{% endfor %}];
+	var options_{{oc.id}} = [{% for o in oc.parameters %}"{{ o }}",{% endfor %}];
 	$("#product-parameter-{{oc.id}}-new").click(function(){
-		PRODUCT.setParameters("{{oc.id}}", '', option_values, options, '', '');
+		PRODUCT.setParameters("{{oc.id}}", '', option_values_{{oc.id}}, options_{{oc.id}}, '', '');
 	});
 	{% endfor %}
 

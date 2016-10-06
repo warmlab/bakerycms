@@ -271,9 +271,9 @@ class Parameter(db.Model):
     __tablename__ = 'parameter'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), nullable=False)
-    parameter_category_id = db.Column(db.Integer, db.ForeignKey('parameter_category.id'))
+    category_id = db.Column(db.Integer, db.ForeignKey('parameter_category.id'))
 
-    parameter_category = db.relationship('ParameterCategory',
+    category = db.relationship('ParameterCategory',
             backref=db.backref('parameters', lazy='dynamic'))
     products = db.relationship('ProductParameter',
                         back_populates='parameter')

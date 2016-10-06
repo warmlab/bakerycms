@@ -1,7 +1,7 @@
 {% extends "base-user.html" %}
 {% block main_content_section %}
-<div class="ui segment">
-    <img id="banner-image" class="ui huge image" src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}"><p/>
+<div class="ui basic segment">
+    <img id="banner-image" class="ui big image" src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}"><p/>
     <div class="ui tiny images">
         {% for pi in product.images %}
         <img src="/gallery/media/{{pi.image.name}}.{{pi.image.ext}}">
@@ -9,13 +9,13 @@
     </div>
     <h3 class="ui header">
         <div class="content">
-          儿童可爱卡通生肖蛋糕100%乳脂奶油卡诺烘焙蛋糕
-          <div class="sub header">
+			{{product.name}}
+          <div class="sub header" id="product-price">
               ￥{{product.price}}
           </div>
         </div>
     </h3>
-    <p>Audiam quaerendum eu sea, pro omittam definiebas ex. Te est latine definitiones. Quot wisi nulla ex duo. Vis sint solet expetenda ne, his te phaedrum referrentur consectetuer. Id vix fabulas oporteat, ei quo vide phaedrum, vim vivendum maiestatis in.</p>{#
+	<p>{{product.description}}</p>{#
     <div class="ui labeled mini input">
         <div class="ui label">购买数量</div>
         <input id="amount" value="1" maxlength="5" size="6" placeholder="1" type="text">
@@ -28,15 +28,21 @@
             <i class="plus icon"></i>
         </button>
     </div>#}
-    <div class="ui info icon message">
-        <i class="shipping icon"></i>
-        <div class="content">
-            <div class="header">
-                72小时发货
-            </div>
-            <p>付款后72小时内发货</p>
-        </div>
-    </div>
+	{% if parameter_categories %}
+	{% for key,values in parameter_categories.items() %}
+	<h4 class="ui sub header">
+		<div class="content">
+			选择{{key}}
+		</div>
+	</h4>
+	<span>
+	{% for value in values %}
+	<div class="ui basic toggle button" data-code="{{value.parameter_id}}" data-price="{{value.plus_price}}">{{value.parameter}}</div>
+	{% endfor %}
+	</span>
+	{% endfor %}
+	{% endif %}
+	<h4 class="ui sub header"></h4>
 	<div class="ui fluid orange right labeled icon huge button">
 		<i class="add to cart icon"></i>添加到购物车
 	</div>
@@ -52,6 +58,31 @@
 {% endblock %}
 {% block inline_script_section %}
 <script>
+$(document).ready(function(){
+	$toggle = $('div.toggle.button');
+	$active = 'orange';
+	handler = {
+		activate: function(){
+			if ($(this).hasClass($active))
+				$(this).removeClass($active).addClass('basic');
+			else
+				$(this).addClass($active).removeClass('basic')
+					.siblings().removeClass($active).addClass('basic');
+			var price = {{product.price}};
+			$toggle.each(function() {
+				if ($(this).hasClass($active)) {
+					price += parseFloat($(this).data('price'));
+				}
+			});
+			$('#product-price').html('￥' + price);
+		}
+	};
+	$toggle.click(handler.activate);
+	//$toggle.click(function(){
+	//	$('div.toggle.button[name="' + $(this).attr('name') + '"]').removeClass($active).addClass('basic');
+	//	$(this).state('active');
+	//	//$(this).removeClass('basic').addClass($active);
+	//});
 $(".ui.tiny.images img").click(function(){
     var src = $(this).attr('src');
     if ($("#banner-image").attr('src') != src) {
@@ -63,10 +94,27 @@ $(".ui.tiny.images img").click(function(){
 });
 
 $('.ui.fluid.button').click(function(e){
+	// add product to cart
+	//var code = "{{product.code}}";
+	//var parameters = [];
+	//$toggle.each(function() {
+	//	if ($(this).hasClass($active)) {
+	//		parameters.push($(this).data('code'));
+	//	}
+	//});
+	//console.log(parameters);
+	//$.post('/shop/add-to-cart', {code: parameters})
+	//	.done(function(){
+	//		console.log('added');
+	//	})
+	//	.fail(function(){
+	//		console.log('failed');
+	//	});
+
 	//$('.ui.popup').popup('show');
 	var obj = $("#banner-image").clone();
 	obj.removeAttr('id');
-	obj.removeClass('huge').addClass('tiny');
+	obj.removeClass('big').addClass('tiny');
 	obj.insertAfter($(this)).fadeTo(10, 0.9);
 
 	obj.css({
@@ -85,12 +133,21 @@ $('.ui.fluid.button').click(function(e){
 		var image = "/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}";
 		var price = "{{product.price}}";
 		var p = new Product(code, name, image, price, 1);
+		$toggle.each(function() {
+			if ($(this).hasClass($active)) {
+				var code = $(this).data('code');
+				var price = $(this).data('price');
+				p.parameters[code] = price;
+				console.log(p.parameters.keys());
+			}
+		});
 
 		var cart = new Cart('cart', 'session');
 		cart.addProduct(p);
 	});
 
 	//obj.offset({top: e.pageX, left: e.pageY, zIndex: 10});
+});
 });
 </script>
 {% endblock %}

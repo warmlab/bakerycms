@@ -1,7 +1,7 @@
 {% extends "base-user.html" %}
 {% block main_content_section %}
 <!--main content start-->
-<div class="ui segment">
+<div class="ui baisc segment">
 	<img class="ui huge image" src="/static/img/caro.jpg">
 	<div class="ui items">
 		<div class="item">
@@ -24,7 +24,7 @@
 		</div>
 	</div>
 </div>
-<div class="ui segments">
+<div class="ui basic segments">
 	{% for product in products %}
 	<div class="ui clearing segment">
 		<a href="/shop/product/{{product.code}}">

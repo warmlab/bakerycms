@@ -11,18 +11,23 @@ from . import shop
 from ..models import Product, ProductCategory
 from ..models import Parameter, ParameterCategory, ProductParameter
 
-"""
 @shop.route('/products', methods=['GET'])
-def product_list():
-    products = Product.query.all()
+@shop.route('/', methods=['GET'])
+def index():
+    products = Product.query.filter_by(is_available_on_web=True).all()
     return render_template('shop/list.html', products=products)
-"""
 
-@shop.route('/product/<slug>', methods=['GET'])
-def product_detail(slug):
-    option_categories = ParameterCategory.query.all()
-    product = Product.query.filter_by(code=slug).first()
-    return render_template('shop/detail.html', product=product, option_categories=option_categories)
+@shop.route('/product/<code>', methods=['GET'])
+def product_detail(code):
+    product = Product.query.filter_by(code=code).first()
+    ppc = {}
+    for pp in product.parameters:
+        if pp.parameter.category not in ppc:
+            ppc[pp.parameter.category] = [pp]
+        else:
+            ppc[pp.parameter.category].append(pp)
+    print(ppc)
+    return render_template('shop/detail.html', product=product, parameter_categories=ppc)
 
 @shop.route('/cart', methods=['GET'])
 def cart():
@@ -71,34 +76,6 @@ def checkout():
 @shop.route('/myinfo', methods=['GET'])
 def user_info():
     return render_template('shop/memberinfo.html')
-
-@shop.route('/', methods=['GET', 'POST'])
-def index():
-    """
-    form = PostForm()
-    if current_user.can(Permission.WRITE_ARTICLES) and \
-            form.validate_on_submit():
-        post = Post(body=form.body.data,
-                    author=current_user._get_current_object())
-        db.session.add(post)
-        return redirect(url_for('.index'))
-    page = request.args.get('page', 1, type=int)
-    if current_user.is_authenticated:
-        show_followed = bool(request.cookies.get('show_followed', ''))
-    if show_followed:
-        query = current_user.followed_posts
-    else:
-        query = Post.query
-    pagination = query.order_by(Post.timestamp.desc()).paginate(
-        page, per_page=current_app.config['FLASKY_POSTS_PER_PAGE'],
-        error_out=False)
-    posts = pagination.items
-    return render_template('index.html', form=form, posts=posts,
-                           show_followed=show_followed, pagination=pagination)
-    """
-    products = Product.query.all()
-    return render_template('shop/list.html', products=products)
-
 
 @shop.route('/member/<username>')
 def user(username):
