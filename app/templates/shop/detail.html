@@ -73,36 +73,32 @@
 {% block inline_script_section %}
 <script>
 $(document).ready(function(){
-	$toggle = $('div.toggle.button');
-	$active = 'orange';
-	$parameters = [];
+	var $toggle = $('div.toggle.button');
+	var $active = 'orange';
+	var $parameters = [];
+	var $price = {{product.price}};
 	handler = {
 		activate: function(){
-			if ($(this).hasClass($active))
+			if ($(this).hasClass($active)) {
 				$(this).removeClass($active).addClass('basic');
-			else
+				$parameters.pop();
+			} else {
 				$(this).addClass($active).removeClass('basic')
 					.siblings().removeClass($active).addClass('basic');
-			var price = {{product.price}};
+
+				$parameters.push({code: $(this).data('code'), name: $(this).html()});
+			}
 			$toggle.each(function() {
 				if ($(this).hasClass($active)) {
-					price += parseFloat($(this).data('price'));
+					$price += parseFloat($(this).data('price'));
 				}
 			});
-			$('#product-price').html('￥' + price);
-
-			$parameters.push($(this).data('code'));
+			$('#product-price').html('￥' + $price);
 		}
 	};
 	$toggle.click(handler.activate);
-	//$toggle.click(function(){
-	//	$('div.toggle.button[name="' + $(this).attr('name') + '"]').removeClass($active).addClass('basic');
-	//	$(this).state('active');
-	//	//$(this).removeClass('basic').addClass($active);
-	//});
-	$tiny_images = $(".ui.tiny.images img");
 	$banner = $("#banner-image");
-	$tiny_images.click(function(){
+	$(".ui.tiny.images img").click(function(){
 		var src = $(this).attr('src');
 		if ($banner.attr('src') != src) {
 			$banner.fadeOut('fast', function(){
@@ -115,13 +111,49 @@ $(document).ready(function(){
 	$('.ui.fluid.button').click(function(e){
 		// add product to cart
 		var code = "{{product.code}}";
-		console.log($parameters);
-		$form = $('form:first');
-		$form.append('<input type="hidden" name="code" value="{{product.code}}">');
-		for (var p of $parameters) {
-			$form.append('<input type="hidden" name="parameters" value="' + p +'">');
-		}
-		$form.submit();
+		var image = "/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}";
+		// IndexedDB
+		window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+		var $db;
+		var request = window.indexedDB.open('ShoppingCart6', 1);
+		request.onerror = function(event) {
+			console.log('open indexeddb failed');
+		};
+		request.onupgradeneeded = function (event) {
+			$db = event.target.result;
+			$db.createObjectStore("products", {keyPath: ["code", "parameters"], indexNames: ["parameters", "amouont", "image"]});
+		};
+
+		request.onsuccess = function(event) {
+			$db = event.target.result;
+			console.log('open indexeddb successfully');
+
+			var trans = $db.transaction("products", "readwrite");
+			trans.oncomplete  = function(event) {
+				console.log("All done!");
+			};
+			trans.onerror = function(event) {
+				console.log("transaction failed");
+			};
+			var objectStore = trans.objectStore("products");
+			var item = objectStore.get(code);
+			item.onsuccess = function() {
+				if (item.result === undefined) {
+					console.log($parameters);
+					objectStore.add({code: code, name: "{{product.name}}",
+									 parameters: JSON.stringify($parameters), image: image,
+									 amount: 1, price: $price});
+				} else {
+					product = item.result;
+					product.amount += 1;
+					objectStore.put(product);
+					console.log(product);
+				}
+			};
+			item.onerror = function() {
+				console.log("Failed in getting item from objectStore!");
+			};
+		};
 	});
 });
 </script>

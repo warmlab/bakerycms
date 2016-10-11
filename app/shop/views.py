@@ -49,8 +49,6 @@ def add_to_cart():
     return redirect(url_for('.product_detail', code=code, added=True, _method='GET'));
 
 @shop.route('/cart', methods=['GET'])
-@login_required
-@member_required
 def cart():
     products = Product.query.all()
     return render_template('shop/cart.html', products=products)
