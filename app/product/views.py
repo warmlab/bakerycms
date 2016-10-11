@@ -16,8 +16,6 @@ from ..models import Parameter, ParameterCategory, ProductParameter
 from ..models import Staff
 from ..models import Image, ProductImage
 
-from ..decorators import admin_required, permission_required
-
 
 @product.after_app_request
 def after_request(response):

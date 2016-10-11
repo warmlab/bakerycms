@@ -1,12 +1,24 @@
 {% extends "base-user.html" %}
 {% block main_content_section %}
 <div class="ui basic segment">
+	{% if message %}
+	<div class="ui info icon message">
+		<i class="info icon"></i>
+		<div class="content">
+		<div class="header">
+			{{product.name}}
+		</div>
+		<p>加入到购物车，请到购物车查看</p>
+		</div>
+	</div>
+	{% endif %}
     <img id="banner-image" class="ui big image" src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}"><p/>
     <div class="ui tiny images">
         {% for pi in product.images %}
         <img src="/gallery/media/{{pi.image.name}}.{{pi.image.ext}}">
         {% endfor %}
     </div>
+	<form action="{{url_for('.add_to_cart')}}" method="POST">
     <h3 class="ui header">
         <div class="content">
 			{{product.name}}
@@ -28,6 +40,7 @@
             <i class="plus icon"></i>
         </button>
     </div>#}
+	<input type="hidden" name="product-code" value="{{product.code}}">
 	{% if parameter_categories %}
 	{% for key,values in parameter_categories.items() %}
 	<h4 class="ui sub header">
@@ -35,9 +48,9 @@
 			选择{{key}}
 		</div>
 	</h4>
-	<span>
+	<span id="product-parameters">
 	{% for value in values %}
-	<div class="ui basic toggle button" data-code="{{value.parameter_id}}" data-name="{{value}}" data-price="{{value.plus_price}}">{{value.parameter}}</div>
+	<div class="ui basic toggle button" data-code="{{value.parameter_id}}" data-price="{{value.plus_price}}">{{value.parameter}}</div>
 	{% endfor %}
 	</span>
 	{% endfor %}
@@ -46,6 +59,7 @@
 	<div class="ui fluid orange right labeled icon huge button">
 		<i class="add to cart icon"></i>添加到购物车
 	</div>
+	</form>
 </div>
 {% include "includes/delivery.html" %}
 <div style="padding-bottom: 40px;"></div>
@@ -61,6 +75,7 @@
 $(document).ready(function(){
 	$toggle = $('div.toggle.button');
 	$active = 'orange';
+	$parameters = [];
 	handler = {
 		activate: function(){
 			if ($(this).hasClass($active))
@@ -75,6 +90,8 @@ $(document).ready(function(){
 				}
 			});
 			$('#product-price').html('￥' + price);
+
+			$parameters.push($(this).data('code'));
 		}
 	};
 	$toggle.click(handler.activate);
@@ -83,71 +100,29 @@ $(document).ready(function(){
 	//	$(this).state('active');
 	//	//$(this).removeClass('basic').addClass($active);
 	//});
-$(".ui.tiny.images img").click(function(){
-    var src = $(this).attr('src');
-    if ($("#banner-image").attr('src') != src) {
-        $("#banner-image").fadeOut('fast', function(){
-            $("#banner-image").attr('src', src);
-        });
-        $("#banner-image").fadeIn('fast');
-    }
-});
-
-$('.ui.fluid.button').click(function(e){
-	// add product to cart
-	//var code = "{{product.code}}";
-	//var parameters = [];
-	//$toggle.each(function() {
-	//	if ($(this).hasClass($active)) {
-	//		parameters.push($(this).data('code'));
-	//	}
-	//});
-	//console.log(parameters);
-	//$.post('/shop/add-to-cart', {code: parameters})
-	//	.done(function(){
-	//		console.log('added');
-	//	})
-	//	.fail(function(){
-	//		console.log('failed');
-	//	});
-
-	//$('.ui.popup').popup('show');
-	var obj = $("#banner-image").clone();
-	obj.removeAttr('id');
-	obj.removeClass('big').addClass('tiny');
-	obj.insertAfter($(this)).fadeTo(10, 0.9);
-
-	obj.css({
-		position: 'absolute',
-		left: e.pageX,
-		top: e.pageY,
-		zIndex: 1
-	}).animate({
-		top: $('#cart').offset().top,
-		left: $('#cart').offset().left + $('#cart').width() / 2
-	}, 1000, function(){
-		obj.remove();
-		// add product to cart
-		var code = "{{product.code}}";
-		var name = "{{product.name}}";
-		var image = "/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}";
-		var price = "{{product.price}}";
-		var p = new Product(code, name, image, price, 1);
-		$toggle.each(function() {
-			if ($(this).hasClass($active)) {
-				var code = $(this).data('code');
-				var name = $(this).data('name');
-				var price = $(this).data('price');
-				p.addParameter(code, name, price);
-			}
-		});
-
-		var cart = new Cart('cart', 'session');
-		cart.addProduct(p);
+	$tiny_images = $(".ui.tiny.images img");
+	$banner = $("#banner-image");
+	$tiny_images.click(function(){
+		var src = $(this).attr('src');
+		if ($banner.attr('src') != src) {
+			$banner.fadeOut('fast', function(){
+				$banner.attr('src', src);
+			});
+			$banner.fadeIn('fast');
+		}
 	});
 
-	//obj.offset({top: e.pageX, left: e.pageY, zIndex: 10});
-});
+	$('.ui.fluid.button').click(function(e){
+		// add product to cart
+		var code = "{{product.code}}";
+		console.log($parameters);
+		$form = $('form:first');
+		$form.append('<input type="hidden" name="code" value="{{product.code}}">');
+		for (var p of $parameters) {
+			$form.append('<input type="hidden" name="parameters" value="' + p +'">');
+		}
+		$form.submit();
+	});
 });
 </script>
 {% endblock %}

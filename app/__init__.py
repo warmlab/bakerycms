@@ -40,7 +40,7 @@ def create_app(config_name):
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
 
     from .sale import sale as sale_blueprint
-    app.register_blueprint(sale_blueprint)
+    app.register_blueprint(sale_blueprint, url_prefix="/sale")
 
     from .shop import shop as shop_blueprint
     app.register_blueprint(shop_blueprint, url_prefix='/shop')

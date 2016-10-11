@@ -1,12 +1,14 @@
 from datetime import datetime
-import hashlib
+#import hashlib
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 #from markdown import markdown
 #import bleach
-from flask import current_app, request, url_for
-from flask_login import UserMixin, AnonymousUserMixin
-from app.exceptions import ValidationError
+from flask import current_app, jsonify#, url_for
+from flask_login import UserMixin
+
+from sqlalchemy import or_
+#from .exceptions import ValidationError
 from . import db, login_manager
 
 class Shoppoint(db.Model):
@@ -28,7 +30,7 @@ class Shoppoint(db.Model):
         return self.name
 
 
-class MemberAddress(db.Model):
+class Address(db.Model):
     __tablename__ = 'member_address'
     id = db.Column(db.Integer, primary_key=True)
     country = db.Column(db.String(64))
@@ -41,13 +43,10 @@ class MemberAddress(db.Model):
     is_default = db.Column(db.Boolean, default=False)
     description = db.Column(db.Text)
 
-    member_id = db.Column(db.Integer, db.ForeignKey('member.id'), nullable=True)
-    member = db.relationship('Member',
+    user_id = db.Column(db.Integer, db.ForeignKey('userauth.id'), nullable=True)
+    user = db.relationship('UserAuth',
                          backref=db.backref('addresses', lazy="dynamic"))
 
-    #shoppoint_id = db.Column(db.Integer, db.ForeignKey('shoppoint.id'), nullable=True)
-    #shoppoint = db.relationship('Shoppoint',
-    #                     backref=db.backref('addresses', lazy="dynamic"))
 
     #staff_id = db.Column(db.Integer, db.ForeignKey('staff.id'), nullable=True)
     #staff = db.relationship('Staff',
@@ -84,8 +83,6 @@ class WeixinMember(db.Model):
     groupid = db.Column(db.String(64))
     tagid = db.Column(db.BigInteger)
 
-    member = db.relationship("Member", uselist=False, back_populates="weixin_member")
-
     def __init__(self, openid, unionid, subscribe, nickname, sex, city, country, province, headimgurl,
                  remark=None, groupid=None, tagid=None, language=None, subscribe_time=None):
         self.openid = openid
@@ -103,32 +100,69 @@ class WeixinMember(db.Model):
         self.groupid = groupid 
         self.tagid = tagid 
 
-class Member(UserMixin, db.Model):
+class Member(db.Model):
     __tablename__ = 'member'
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(64), unique=True, index=True, nullable=True) # 实体会员卡的卡面卡号，没有实体卡，可以使用用户名
-    email = db.Column(db.String(64), unique=True, index=True)
-    mobile = db.Column(db.String(16), unique=True, index=True) #手机号码
-    password_hash = db.Column(db.String(128))
-    confirmed = db.Column(db.Boolean, default=False)
     name = db.Column(db.String(128), index=True) # 会员姓名
-    location = db.Column(db.String(64))
-    about_me = db.Column(db.Text)
+    mobile = db.Column(db.String(16), unique=True, index=True) #手机号码
+    email = db.Column(db.String(64), unique=True, index=True)
+    nickname = db.Column(db.String(128)) # 会员姓名
     to_point = db.Column(db.Boolean, default=True) # 该会员是否参与积分
+    points = db.Column(db.Integer, default=0) # 积分
     member_since = db.Column(db.DateTime, default=datetime.utcnow)
     member_end = db.Column(db.DateTime, default=None)
-    last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     avatar_hash = db.Column(db.String(32)) # 头像
+    about_me = db.Column(db.Text)
 
     grade_id = db.Column(db.Integer, db.ForeignKey('member_grade.id'))
     grade = db.relationship('MemberGrade',
                          backref=db.backref('members', lazy='dynamic'))
 
-    weixin_openid = db.Column(db.String(64), db.ForeignKey('weixin_member.openid'))
-    weixin_member = db.relationship("WeixinMember", back_populates='member')
+    #weixin_openid = db.Column(db.String(64), db.ForeignKey('weixin_member.openid'))
+    #weixin_member = db.relationship("WeixinMember", back_populates='member')
 
-    def __init__(self, **kwargs):
-        super(User, self).__init__(**kwargs)
+class Staff(db.Model):
+    __tablename__ = 'staff'
+
+    id = db.Column(db.Integer, primary_key=True)
+    identify_card_no = db.Column(db.String(64), unique=True, index=True) # 员工身份证
+    mobile = db.Column(db.String(16), unique=True, index=True) #手机号码
+    email = db.Column(db.String(64), unique=True, index=True)
+    name = db.Column(db.String(128))
+    nickname = db.Column(db.String(64)) # 员工昵称
+    login_name = db.Column(db.String(64), unique=True, index=True) # 登录名称
+    pos_code = db.Column(db.String(4), unique=True, index=True) # POS登录名称
+    about_me = db.Column(db.Text)
+    staff_since = db.Column(db.DateTime, default=datetime.utcnow)
+    staff_end = db.Column(db.DateTime, default=None)
+
+    def can(permission):
+        return True # TODO
+
+class UserAuth(db.Model, UserMixin):
+    __tablename__ = 'userauth'
+    id = db.Column(db.Integer, primary_key=True)
+
+    # User authentication information
+    email = db.Column(db.String(64), unique=True, index=True)
+    mobile = db.Column(db.String(16), unique=True, index=True) #手机号码
+    password_hash = db.Column(db.String(128), nullable=False)
+    #reset_password_token = db.Column(db.String(128), nullable=False)
+    confirmed_at = db.Column(db.DateTime)
+    active = db.Column(db.Boolean, default=False)
+
+    # Relationships
+    staff_id = db.Column(db.Integer(), db.ForeignKey('staff.id', ondelete='CASCADE'))
+    staff = db.relationship('Staff', uselist=False, foreign_keys=staff_id)
+    member_id = db.Column(db.Integer(), db.ForeignKey('member.id', ondelete='CASCADE'))
+    member = db.relationship('Member', uselist=False, foreign_keys=member_id)
+    #weixin_openid = db.Column(db.String(64), db.ForeignKey('weixin_member.openid', ondelete='CASCADE'))
+    #weixin = db.relationship('WeixinMember', uselist=False, foreign_keys=weixin_openid)
+
+    shoppoint_id = db.Column(db.Integer, db.ForeignKey('shoppoint.id'), nullable=True)
+    shoppoint = db.relationship('Shoppoint',
+                         backref=db.backref('userauth', lazy="dynamic"))
 
     @property
     def password(self):
@@ -138,11 +172,42 @@ class Member(UserMixin, db.Model):
     def password(self, password):
         self.password_hash = generate_password_hash(password)
 
+    @property
+    def confirmed(self):
+        print(self.confirmed_at)
+        print(datetime.utcnow())
+        if self.confirmed_at and self.confirmed_at < datetime.utcnow():
+            return True
+        return False
+
+    def get_id(self):
+        return self.email
+
+    def is_active(self):
+        return self.active
+
+    @property
+    def is_authenticated(self):
+        return True
+
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    def __repr__(self):
-        return name
+    def generate_confirmation_token(self, expiration=3600):
+        s = Serializer(current_app.config['SECRET_KEY'], expiration)
+        return s.dumps({'confirm': self.id})
+
+    def confirm(self, token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token)
+        except:
+            return False
+        if data.get('confirm') != self.id:
+            return False
+        self.confirmed = True
+        db.session.add(self)
+        return True
 
 class Supplier(db.Model): # 存储供应商和物流商信息
     __tablename__ = 'supplier'
@@ -459,72 +524,31 @@ class ProductImage(db.Model):
     def __repr__(self):
         return "%s - %s" % (self.product_id, self.image_id)
 
-class Staff(UserMixin, db.Model):
-    __tablename__ = 'staff'
-
+class ShoppingCart(db.Model):
+    __tablename__ = 'shopping_cart'
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(64), unique=True, index=True)
-    mobile = db.Column(db.String(16), unique=True, index=True) #手机号码
-    identify_card_no = db.Column(db.String(64), unique=True) # 员工身份证
-    name = db.Column(db.String(128))
-    nickname = db.Column(db.String(64)) # 员工昵称
-    login_name = db.Column(db.String(64), unique=True, index=True) # 登录名称
-    pos_code = db.Column(db.String(4), unique=True, index=True) # POS登录名称
-    openid = db.Column(db.String(64), unique=True, nullable=True)
-    password_hash = db.Column(db.String(128))
-    location = db.Column(db.String(64))
-    about_me = db.Column(db.Text)
-    staff_since = db.Column(db.DateTime, default=datetime.utcnow)
-    staff_end = db.Column(db.DateTime, default=None)
-    avatar_hash = db.Column(db.String(32)) # 头像
+    member_id = db.Column(db.Integer, db.ForeignKey('member.id'))
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
+    parameters = db.Column(db.String)
 
-    active = db.Column(db.Boolean, default=True) # is active
-    confirmed = db.Column(db.Boolean, default=False)
+    product = db.relationship('Product')
+    member = db.relationship('Member')
 
-    @property
-    def password(self):
-        raise AttributeError('password is not a readable attribute')
+    def __init__(self, member, product, parameters):
+        self.member = member
+        self.product = product
+        self.parameters = jsonify(parameters)
 
-    @password.setter
-    def password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def get_id(self):
-        return self.email
-
-    def is_active(self):
-        return self.active
-
-    @property
-    def is_authenticated(self):
-        return True
-
-    def verify_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-    def generate_confirmation_token(self, expiration=3600):
-        s = Serializer(current_app.config['SECRET_KEY'], expiration)
-        return s.dumps({'confirm': self.id})
-
-    def confirm(self, token):
-        s = Serializer(current_app.config['SECRET_KEY'])
-        try:
-            data = s.loads(token)
-        except:
-            return False
-        if data.get('confirm') != self.id:
-            return False
-        self.confirmed = True
-        db.session.add(self)
-        return True
+    def __repr__(self):
+        return "shopping cart"
 
 @login_manager.user_loader
 def user_loader(email):
-    staff = Staff.query.filter_by(email=email).first()
-    if not staff:
+    user = UserAuth.query.filter(or_(UserAuth.email==email, UserAuth.mobile==email)).first()
+    if not user:
         return None
 
-    return staff
+    return user
 
 
 """

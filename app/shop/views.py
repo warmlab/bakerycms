@@ -1,14 +1,18 @@
 from datetime import datetime
-from decimal import Decimal
+#from decimal import Decimal
 
-from flask import render_template
-from flask import request
+from flask import render_template, redirect
+from flask import request, url_for, abort
 
 from flask_login import login_required, current_user
 
 from . import shop
 
-from ..models import Product, ProductCategory
+from .. import db
+
+from ..decorators import member_required
+
+from ..models import Product, ProductCategory, ShoppingCart
 from ..models import Parameter, ParameterCategory, ProductParameter
 
 @shop.route('/products', methods=['GET'])
@@ -26,10 +30,27 @@ def product_detail(code):
             ppc[pp.parameter.category] = [pp]
         else:
             ppc[pp.parameter.category].append(pp)
-    print(ppc)
-    return render_template('shop/detail.html', product=product, parameter_categories=ppc)
+    #logger.debug(ppc)
+    message = request.args.get('added');
+    return render_template('shop/detail.html', product=product, parameter_categories=ppc, message=message)
+
+@shop.route('/add-to-cart', methods=['POST'])
+@login_required
+@member_required
+def add_to_cart():
+    code = request.form.get('code');
+    if not code:
+        abort(400)
+    product = Product.query.filter_by(code=code).first()
+    parameters = request.form.getlist('parameters')
+    item = ShoppingCart(current_user, product, parameters)
+    db.session.add(item)
+    db.session.commit()
+    return redirect(url_for('.product_detail', code=code, added=True, _method='GET'));
 
 @shop.route('/cart', methods=['GET'])
+@login_required
+@member_required
 def cart():
     products = Product.query.all()
     return render_template('shop/cart.html', products=products)
