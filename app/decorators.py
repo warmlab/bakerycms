@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import abort
+from flask import abort, redirect, url_for
 from flask_login import current_user
 
 def member_required(fn):
@@ -7,7 +7,8 @@ def member_required(fn):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if not current_user.member:
-                abort(403)
+                #abort(403)
+                return redirect(url_for('shop.member_info', _method='GET'))
             return f(*args, **kwargs)
         return decorated_function
     return decorator(fn)

@@ -2,7 +2,7 @@ from datetime import datetime
 #from decimal import Decimal
 
 from flask import render_template, redirect
-from flask import request, url_for, abort
+from flask import request, url_for, abort, json
 
 from flask_login import login_required, current_user
 
@@ -12,8 +12,7 @@ from .. import db
 
 from ..decorators import member_required
 
-from ..models import Product, ProductCategory, ShoppingCart
-from ..models import Parameter, ParameterCategory, ProductParameter
+from ..models import Product, Member
 
 @shop.route('/products', methods=['GET'])
 @shop.route('/', methods=['GET'])
@@ -66,35 +65,65 @@ def payresult():
     return render_template('shop/payresult.html')
 
 @shop.route('/checkout', methods=['POST'])
+@login_required
+@member_required
 def checkout():
     # create an order to checkout
-    to_buy_products = []
-    to_buy_amounts = []
     total_cost = 0
-    codes = request.form.getlist('product-code')
-    amounts = request.form.getlist('amount')
-    for code,amount in zip(codes,amounts):
-        if request.form.get('-'.join(['is-buy', code])) == 'on':
-            product = Product.query.filter_by(code=code).first()
-            if product:
-                to_buy_products.append(product)
-                to_buy_amounts.append(amount)
-                total_cost += product.price * int(amount)
+    items = []
+    #amounts = request.form.getlist('amount')
+    lines = request.form.getlist('product')
+    for line in lines:
+        product_info = json.loads(line);
+        parameters_info = json.loads(product_info.get('parameters'))
+        parameters_info = [p['code'] for p in parameters_info]
 
-    #products = Product.query.filter(Product.code.in_(to_buy_codes))
-    #print('products: %s' % products)
-    print('codes: %s, amounts: %s' % (to_buy_products, to_buy_amounts))
+        product = Product.query.filter_by(code=product_info['code']).first()
+
+        price = product.price;
+        parameters = []
+        for para in product.parameters:
+            if para.parameter_id in parameters_info:
+                price += para.plus_price
+                parameters.append(para)
+                parameters_info.remove(para.parameter_id)
+        if parameters_info:
+            abort(400)
+        items.append((product, parameters, price, product_info['amount']))
+        total_cost += price * product_info['amount']
+
+        #if request.form.get('-'.join(['is-buy', code])) == 'on':
+        #    product = Product.query.filter_by(code=code).first()
+        #    if product:
+        #        to_buy_products.append(product)
+        #        to_buy_amounts.append(amount)
+        #        total_cost += product.price * int(amount)
+
+    member = current_user.member
+    #print(member)
+    #if not member:
+    #    # redirect member info page
+    #    return redirect(url_for('.member_info', next=url_for('.cart'), _method='GET'))
+    #items = Product.query.filter(Product.code.in_(to_buy_codes))
+    #print('items: %s' % items)
+    #print('codes: %s, amounts: %s' % (to_buy_products, to_buy_amounts))
     now = datetime.utcnow()
     shoppoint_id = '9999'
-    app_id = '2088711989941795'
+    #app_id = '2088711989941795'
     trade_number_format='%Y%m%d%H%M%S{0}%f'.format(shoppoint_id) 
-    out_trade_no = now.strftime(trade_number_format)
-    alipay_url = 'https://openapi.alipay.com/gateway.do'
-    return render_template('shop/checkout.html', products=to_buy_products, amounts=to_buy_amounts, total_cost=total_cost)
+    #out_trade_no = now.strftime(trade_number_format)
+    #alipay_url = 'https://openapi.alipay.com/gateway.do'
+    return render_template('shop/checkout.html', items=items, total_cost=total_cost)
 
-@shop.route('/myinfo', methods=['GET'])
-def user_info():
-    return render_template('shop/memberinfo.html')
+@shop.route('/myinfo', methods=['GET', 'POST'])
+@login_required
+def member_info():
+    if request.method == 'POST':
+        name = request.form.get('inputname')
+        current_user.member = Member(name=name)
+        db.session.add(current_user.member)
+        db.session.commit()
+    return render_template('shop/myinfo.html', user=current_user)
 
 @shop.route('/member/<username>')
 def user(username):

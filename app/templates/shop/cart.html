@@ -10,27 +10,7 @@
 	</div>
 </h2>
 <form method="POST" action="/shop/checkout">
-	<div class="ui segments" id="product-area">{#
-		<div class="ui segment">
-			<div class="ui image middle aligned header">
-				<div class="ui checkbox">
-					<input type="checkbox" checked><input type="hidden" name="product-code" value="">
-				</div>
-				<img src="/gallery/media/1468825061.2163908.jpg" class="ui tiny image">
-				<div class="content">
-					product.name
-					<div class="sub header">￥product.price</div>
-				</div>
-			</div>
-			<div class="ui mini icon input">
-				<input type="text" size="1" name="amount" value="1">
-				<div class="ui buttons">
-					<button class="ui mini icon button" type="button"><i class="minus icon"></i></button>
-					<button class="ui mini icon orange button" type="button"><i class="plus icon"></i></button>
-				</div>
-			</div>
-		</div>#}
-	</div>
+	<div class="ui segments" id="product-area"></div>
 	<button id="pay-button" class="ui fluid big orange labeled icon button">
 		<i class="payment icon"></i>去支付
 	</button>
@@ -80,15 +60,15 @@ $(document).ready(function(){
 				var $image = $('<img class="ui tiny image"></img>');
 				var $content = $('<div class="content"></div>');
 				var $sub_header = $('<div class="sub header"></div>');
-				var $meta = $('<div class="meta"></div>');
+				var $meta = $('<div class="sub header"></div>');
 				console.log("cursor.value.parameters: " + cursor.value.parameters);
-					var parameters = JSON.parse(cursor.value.parameters);
-					var metas = "";
-					for (var para of parameters) {
-						console.log(para);
-						metas += para.name + " ";
-					}
-					$meta.html(metas);
+				var parameters = JSON.parse(cursor.value.parameters);
+				var metas = "";
+				for (var para of parameters) {
+					console.log(para);
+					metas += para.name + " ";
+				}
+				$meta.html(metas);
 				$checkbox.attr("name", "tobuy-" + cursor.value.code);
 				$checkbox.appendTo($checkdiv);
 				$sub_header.html('￥' + cursor.value.price);
@@ -103,7 +83,12 @@ $(document).ready(function(){
 
 				$item.appendTo($segment);
 
+				var $input_product = $('<input type="hidden" name="product"></input>').attr('value', JSON.stringify(cursor.value));
+
 				$segment.appendTo($('#product-area'));
+
+				$form = $('form:first');
+				$input_product.appendTo($form);
 
 				cursor.continue();
 			} else {
@@ -112,35 +97,6 @@ $(document).ready(function(){
 			$('.ui.checkbox').checkbox();
 		};
 	};
-	//var cart = new Cart('cart', 'session');
-	////for (var product of cart.products) {
-	//for (var i=0; i < cart.products.length; i++) {
-	//	var product = cart.products[i];
-	//	var price = product.price;
-	//	var $parameters = product.parameters;
-	//	var parameter_name = '';
-	//	for (var para of $parameters) {
-	//		if (para != null) {
-	//		price += para.price;
-	//		parameter_name += para.code + ' ';
-	//		}
-	//	}
-	//	var line = '<div class="ui basic segment"><div class="ui image middle aligned header">'
-	//				+ '<div class="ui checkbox"><input name="is-buy-'
-    //                + product.code + '" type="checkbox" checked><input type="hidden" name="product-code" value="'
-	//			   + product.code
-	//			   +'"></div><img src="'
-	//			   + product.image
-	//			   + '" class="ui tiny image"><div class="content">'
-	//			   + product.name
-	//			   + '<div class="sub header">￥'
-	//			   + product.price()
-	//			   + '</div><div class="meta">'+parameter_name+'</div></div></div><div class="ui mini input"><input type="text" size="2" name="amount" value="'
-	//			   + product.amount
-	//			   + '"></div>\n<div class="ui mini buttons"><button class="ui icon button" type="button"><i class="minus icon"></i></button><button class="ui icon orange button" type="button"><i class="plus icon"></i></button></div></div>';
-	//	$("#product-area").append(line);
-	//	$("#pay-button").html('<i class="payment icon"></i>总消费额: ' + cart.calTotal() + '元，去支付');
-	//}
 	$('.ui.checkbox').checkbox();
 });
 </script>

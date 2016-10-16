@@ -165,3 +165,9 @@ def change_email(token):
     else:
         flash('Invalid request.')
     return redirect(url_for('main.index'))
+
+@auth.route('/myinfo', methods=['GET', 'POST'])
+@login_required
+def member_info():
+    userauth = current_user
+    return render_template("auth/member.html", userauth=userauth)
