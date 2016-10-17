@@ -137,7 +137,7 @@ class Staff(db.Model):
     staff_since = db.Column(db.DateTime, default=datetime.utcnow)
     staff_end = db.Column(db.DateTime, default=None)
 
-    def can(permission):
+    def can(self, permission):
         return True # TODO
 
 class UserAuth(db.Model, UserMixin):

@@ -1,7 +1,7 @@
 from decimal import Decimal
 
-from flask import render_template, redirect, url_for, abort, flash, request,\
-    current_app, make_response
+from flask import render_template, redirect, url_for, abort, request,\
+    current_app #, make_response
 
 from flask_login import login_required, current_user
 from flask_sqlalchemy import get_debug_queries
@@ -13,8 +13,10 @@ from . import product # blueprint
 
 from ..models import Product, ProductCategory#, Specification
 from ..models import Parameter, ParameterCategory, ProductParameter
-from ..models import Staff
+#from ..models import Staff
 from ..models import Image, ProductImage
+
+from ..decorators import staff_required
 
 
 @product.after_app_request
@@ -31,6 +33,7 @@ def after_request(response):
 # If GET is present, HEAD will be added automatically for you
 @product.route('/products', methods=['GET', 'POST'])
 @login_required
+@staff_required
 def product_list():
     products = Product.query.all()
     return render_template('product/list.html', products=products)
@@ -94,6 +97,7 @@ def _product_parameters(product, pc, parameters, price_parameter_values, stock_p
 
 @product.route('/product', methods=['GET', 'POST'])
 @login_required
+@staff_required
 def product_detail():
     create = request.args.get('new')
     if request.method == 'POST':
@@ -183,12 +187,14 @@ def product_detail():
 
 @product.route('/categories', methods=['GET', 'POST'])
 @login_required
+@staff_required
 def category_list():
     categories = ProductCategory.query.all()
     return render_template('category/list.html', categories=categories)
 
 @product.route('/category', methods=['GET', 'POST'])
 @login_required
+@staff_required
 def category_detail():
     create = request.args.get('new')
     if request.method == 'POST':

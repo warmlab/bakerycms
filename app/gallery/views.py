@@ -16,6 +16,7 @@ from . import gallery
 from .. import db
 
 from ..models import Image
+from ..decorators import staff_required
 
 def __generate_filename(filename):
     from time import time
@@ -29,12 +30,14 @@ def __generate_filename(filename):
 
 @gallery.route('/images', methods=['GET'])
 @login_required
+@staff_required
 def image_list():
     images = Image.query.all()
     return render_template('gallery/images.html', images=images)
 
 @gallery.route('/image/<name>', methods=['GET', 'POST'])
 @login_required
+@staff_required
 def image_detail(name):
     if request.method == 'POST':
         upload_name = request.form.get('inputname')
@@ -50,6 +53,7 @@ def image_detail(name):
 
 @gallery.route('/image-upload', methods=['POST'])
 @login_required
+@staff_required
 def image_upload():
     # do upload
     #images = None # uploaded images
@@ -73,6 +77,7 @@ def image_upload():
 
 @gallery.route('/image-delete', methods=['POST'])
 @login_required
+@staff_required
 def image_delete():
     if request.method != 'POST':
         abort(405)

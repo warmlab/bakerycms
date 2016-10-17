@@ -4,12 +4,16 @@ from decimal import Decimal
 from flask import render_template
 from flask import request, current_app, make_response
 
+from flask_login import login_required, current_user
+
 from . import weixin
 from .message import parse_message, Message
 from .access import get_member_info
 
 from ..models import Product, ProductCategory
 from ..models import Parameter, ParameterCategory, ProductParameter
+
+from ..decorators import member_required
 
 def check_signature(code, signature, timestamp, nonce):
     token = current_app.config['WEIXIN_TOKEN']
@@ -50,5 +54,7 @@ def access():
         return response
 
 @weixin.route('/pay/', methods=['POST'])
+@login_required
+@member_required
 def pay():
     return 'OK'

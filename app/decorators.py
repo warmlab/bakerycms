@@ -13,16 +13,16 @@ def member_required(fn):
         return decorated_function
     return decorator(fn)
 
-def staff_required(permission):
+def staff_required(fn):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if not current_user.staff \
-               or not current_user.staff.can(permission):
+               or not current_user.staff.can(0):
                 abort(403)
             return f(*args, **kwargs)
         return decorated_function
-    return decorator
+    return decorator(fn)
 
 def admin_required(f):
     return staff_required(0xffff)(f)
