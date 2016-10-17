@@ -1,0 +1,36 @@
+{% extends "base-user.html" %}
+{% block main_content_section %}
+<div class="ui basic segment">
+  <form class="ui form" method="POST" action="/shop/myinfo">
+	<h3 class="ui dividing header">
+		<i class="user icon"></i>
+		<div class="content">
+			会员登录信息
+			<div class="sub header">These information used for login</div>
+		</div>
+	</h3>
+	  <div class="inline field">
+		  <label>手机号</label>
+		  <input name="inputmobile" placeholder="18053214078" type="text" value="{{ user.mobile }}">
+	  </div>
+      <div class="inline field">
+		  <label>邮箱</label>
+		  <input name="inputemail" placeholder="warmlab@outlook.com" type="text" value="{{ user.email }}">
+      </div>
+	<h3 class="ui dividing header">
+		<i class="user icon"></i>
+		<div class="content">
+			会员详细信息
+			<div class="sub header">These information used for member</div>
+		</div>
+	</h3>
+	  <div class="inline field">
+		  <label for="inputname">姓名</label>
+		  <input id="inputname" name="inputname" placeholder="张三" type="text" value="{{ user.member.name }}">
+	  </div>
+	  <div class="inline field">
+          <button type="submit" class="ui primary right button">保存</button>
+	  </div>
+  </form>
+</div>
+{% endblock %}

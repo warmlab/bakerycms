@@ -12,7 +12,7 @@ from .. import db
 
 from ..decorators import member_required
 
-from ..models import Product, Member
+from ..models import Product, Member, Address
 
 @shop.route('/products', methods=['GET'])
 @shop.route('/', methods=['GET'])
@@ -113,7 +113,7 @@ def checkout():
     trade_number_format='%Y%m%d%H%M%S{0}%f'.format(shoppoint_id) 
     #out_trade_no = now.strftime(trade_number_format)
     #alipay_url = 'https://openapi.alipay.com/gateway.do'
-    return render_template('shop/checkout.html', items=items, total_cost=total_cost)
+    return render_template('shop/checkout.html', items=items, total_cost=total_cost, user=current_user)
 
 @shop.route('/myinfo', methods=['GET', 'POST'])
 @login_required
@@ -124,6 +124,31 @@ def member_info():
         db.session.add(current_user.member)
         db.session.commit()
     return render_template('shop/myinfo.html', user=current_user)
+
+@shop.route('/myaddress', methods=['GET', 'POST', 'DELETE', 'PUT'])
+@login_required
+@member_required
+def my_address():
+    if request.method == 'PUT':
+        # new address
+        info = json.loads(request.data)
+        print(info['user'])
+        print(current_user.id)
+        if info['user'] != current_user.id:
+            abort(400)
+        address = Address(address=info['address'], contact_name=info['name'], mobile=info['mobile'])
+        current_user.addresses.append(address)
+        db.session.add(address)
+        db.session.commit()
+        info = {'code': address.id}
+
+        if 'application/json' in request.headers.get('Accept'):
+            return json.dumps(info)
+    elif request.method == 'DELETE':
+        pass
+    print (request.headers)
+    print (request.data)
+    return render_template('shop/myaddress.html', user=current_user)
 
 @shop.route('/member/<username>')
 def user(username):

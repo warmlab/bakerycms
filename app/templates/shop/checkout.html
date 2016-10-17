@@ -8,79 +8,202 @@
 	</div>
 </h2>
 <form class="ui form" action="/shop/dopay" method="POST">
-	<div class="ui segments">
-		{% for item in items %}<div class="ui segment">
-            {% set product = item[0] %}{% set amount = item[3] %}
-			<div class="ui image middle aligned header">
-				<img src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" class="ui tiny image">
-				<input type="hidden" name="product-code" value="{{product.code}}">
-				<div class="content">
-					{{product.name}}
-					<div class="sub header">￥{{product.price}}</div>
-                    {% if item[1] %}<div class="sub header">{%for p in item[1]%}{{p.parameter.name}} {%endfor%}</div>{%endif%}
-					<div class="sub header">购买数量: {{amount}}</div>
-					<input type="hidden" name="amount" value="{{amount}}">
-				</div>
-			</div>
-		</div>{% endfor %}
-	</div>
-	<div class="ui segments">
-		<div class="ui segment">
-			<div class="ui middle aligned image header">
-				<i class="marker icon"></i>
-				<div class="content">
-					李沧区九水路227号一层
-					<div class="sub header">李旭升 58806365</div>
-				</div>
-			</div>
-			<div class="ui right floated icon label button">
-				<i class="marker icon"></i>
-				更换配送地址
+	{% for item in items %}<div class="ui basic segment">
+		{% set product = item[0] %}{% set amount = item[3] %}
+		<div class="ui image middle aligned header">
+			<img src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" class="ui tiny image">
+			<input type="hidden" name="product" value="{{product.code}}">
+			<div class="content">
+				{{product.name}}
+				<div class="sub header">￥{{product.price}}</div>
+				{% if item[1] %}<div class="sub header">{%for p in item[1]%}{{p.parameter.name}} {%endfor%}</div>{%endif%}
+				<div class="sub header">数量: {{amount}}</div>
+				<input type="hidden" name="amount" value="{{amount}}">
 			</div>
 		</div>
-		<div class="ui segment">
-			<div class="required inline field">
-				<label>使用日期</label>
-				<input name="date" type="date">
-			</div>
+	</div>{% endfor %}
+	<div class="ui basic segment">
+		<div class="ui middle aligned image header">
+			<i class="marker icon"></i>
+            {% if user.addresses %}<div class="content" id="target-location">
+                {{user.addresses[0].contact_name}} {{user.addresses[0].mobile}}
+                <div class="sub header">{{user.addresses[0].address}}</div>
+            </div>{% endif %}
 		</div>
-		<div class="ui segment">
-			<div class="required inline field">
-				<label>用餐时间</label>
-				<input name="time" type="time">
-			</div>
+		<div class="ui right floated icon label button" id="location-btn">
+			<i class="marker icon"></i>
+			更换配送地址
 		</div>
-		<div class="ui segment">
-			<div class="field">
-				<label>留言</label>
-				<textarea rows="2"></textarea>
-			</div>
-		</div>{#
-		<div class="inline fields">
-			<label for="payment">支付方式</label>
-			<div class="field">
-				<div class="ui radio checkbox">
-					<input class="hidden" tabindex="0" name="payment" type="radio">
-					<label>支付宝</label>
+		<div class="required inline field">
+			<label>使用日期</label>
+			<input name="date" type="date">
+		</div>
+		<div class="required inline field">
+			<label>用餐时间</label>
+			<input name="time" type="time">
+		</div>
+		<div class="field">
+			<label>留言</label>
+			<textarea rows="2"></textarea>
+		</div>
+		<div class="ui info icon message">
+			<i class="info icon"></i>
+			<div class="content">
+				<div class="header">
+					注意事项
 				</div>
+				<p>使用日期：食用蛋糕的日期</p>
+				<p>用餐时间：请在收到蛋糕后2小时内食用完</p>
+				<p>本店蛋糕是纯天然乳脂奶油蛋糕，不加入任何的稳定剂和防腐剂，温度稍高一点，就容易融化；需要放置到冰箱的<strong>保鲜层</strong>；在保鲜层也只能保质48小时!</p>
 			</div>
-			<div class="field">
-				<div class="ui radio checkbox">
-					<input class="hidden" tabindex="1" name="payment" checked type="radio">
-					<label>微信支付</label>
-				</div>
-			</div>
-		</div>#}
-		<div class="ui segment">
-			<button class="ui fluid orange right labeled icon huge button">
-				<i class="payment icon"></i>需支付￥{{total_cost}}元
-			</button>
 		</div>
+		<button class="ui fluid orange right labeled icon huge button">
+			<i class="payment icon"></i>支付￥{{total_cost}}元
+		</button>
 	</div>
 </form>
+<div class="ui coupled first modal">
+	<div class="ui header">配送地址</div>
+	<div class="content">
+		<div class="ui items" id="addresses">
+			{% for address in user.addresses %}
+			<div class="item">
+				<div class="middle aligned content">
+					<div class="ui radio checkbox">
+						<input name="address" checked="" tabindex="0" class="hidden" type="radio">
+					</div>
+					<div class="header">
+                        {{address.contact_name}} {{address.mobile}}
+					</div>
+					<div class="meta">
+                        {{address.address}}
+					</div>
+				</div>
+			</div>
+			{% endfor %}
+		</div>
+	</div>
+	<div class="actions">
+		<div class="ui orange button" id="new-address">增加新地址</div>
+		<div class="ui cancel button">取消</div>
+		<div class="ui approve button">确定</div>
+	</div>
+</div>
+<div class="ui coupled second modal">
+	<div class="ui header">新增配送地址</div>
+	<div class="content">
+		<form class="ui form" id="new-address-form">
+		<div class="required field">
+			<label>收货人姓名</label>
+			<input name="name" placeholder="张三" type="text">
+		</div>
+		<div class="required field">
+			<label>手机</label>
+			<input name="mobile" placeholder="18053214078" type="text">
+		</div>
+		<div class="required field">
+			<label>地址</label>
+			<input name="address" placeholder="青岛市李沧区九水路227号一层南门卡诺烘焙" type="text">
+		</div>
+		<div class="ui error message"></div>
+		</form>
+	</div>
+	<div class="actions">
+		<div class="ui cancel button">取消</div>
+		<div class="ui approve button">确定</div>
+	</div>
+</div>
 {% endblock %}
 {% block inline_script_section %}
 <script>
-//$('.ui.radio.checkbox').checkbox();
+$(document).ready(function(){
+	$('.coupled.modal').modal({
+		allowMultiple: true,
+	});
+	$('#location-btn').click(function(){
+		$('.first.modal')
+		.modal({
+			closeable: false,
+			onDeny: function() {
+				console.log('Deny');
+			},
+			onApprove: function() {
+				$contents = $('#addresses > .item > .content > .checkbox');
+				for (var $cb of $contents) {
+					$cb = $($cb);
+					$child = $cb.children().first();
+					if ($child.attr('checked')) {
+						var to_name = $cb.siblings('.header').html();
+						var to_address = $cb.siblings('.meta').html();
+						$to_address = $('<div class="sub header"></div>');
+						$to_address.html(to_address);
+						$target_location = $('#target-location');
+						$target_location.html(to_name);
+						$to_address.appendTo($target_location);
+						$address_hidden = $('<input type="hidden" name="target-location"></input>');
+						$address_hidden.attr('value', $cb.data('code'));
+						$address_hidden.appendTo($target_location);
+					}
+				}
+			}
+		})
+		.modal('show');
+	});
+	$('.ui.second.modal')
+		.modal('attach events', '.first.modal #new-address')
+		.modal({
+			onApprove: function() {
+				var $new_address_form = $('#new-address-form');
+				$new_address_form.form({
+					on: 'get values',
+					fields: {
+						mobile: {
+							identifier: 'mobile',
+							rules: [
+							{
+								type: 'exactLength[11]',
+								prompt: '请输入收件人的手机号码'
+							}
+							]
+						}
+					}
+				});
+
+				var fields = $new_address_form.form('get values');
+				var data = JSON.stringify({"name": fields.name, "mobile": fields.mobile, "address": fields.address, "user": {{user.id}}});
+
+				$.ajax({
+					url: "{{url_for('.my_address')}}",
+					contentType:  'application/json',
+					data: data,
+					method: 'PUT',
+					dataType: 'json',
+					statusCode: {
+						200: function(info) {
+							console.log(info);
+							var $item = $('<div class="item"></div>');
+							var $content = $('<div class="middle aligned content"></div>');
+							var $radio = $('<div class="ui radio checkbox"><input name="address" checked class="hidden" type="radio"></div>');
+							$radio.data('code', info.code);
+							var $header = $('<div class="header"></div>');
+							$header.html(fields.name + " " + fields.mobile);
+							var $meta = $('<div class="meta"></div>');
+							$meta.html(fields.address);
+							$radio.appendTo($content);
+							$header.appendTo($content);
+							$meta.appendTo($content);
+							$content.appendTo($item);
+							$item.appendTo($('#addresses'));
+							$radio.checkbox();
+						},
+						400: function(info) {
+							$('.ui.error.message').html('aaaaaaaaaa');
+						}
+					}
+				});
+			}
+		});
+	$('.ui.radio.checkbox').checkbox();
+});
 </script>
 {% endblock %}

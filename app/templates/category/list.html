@@ -62,8 +62,10 @@ $("button.negative").click(function(){
 		.modal({
 			closable: false,
 			onDeny: function(){
+				console.log('deny');
 			},
 			onApprove: function(){
+				console.log('approve');
 			}
 		})
 		.modal('show');
