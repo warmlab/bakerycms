@@ -74,18 +74,18 @@
 $(document).ready(function(){
 	var $toggle = $('div.toggle.button');
 	var $active = 'orange';
-	var $parameters = [];
+	var parameters = [];
 	var $price = {{product.price}};
 	handler = {
 		activate: function(){
 			if ($(this).hasClass($active)) {
 				$(this).removeClass($active).addClass('basic');
-				$parameters.pop();
+				parameters.pop();
 			} else {
 				$(this).addClass($active).removeClass('basic')
 					.siblings().removeClass($active).addClass('basic');
 
-				$parameters.push({code: $(this).data('code'), name: $(this).html()});
+				parameters.push({code: $(this).data('code'), name: $(this).html()});
 			}
 			$toggle.each(function() {
 				if ($(this).hasClass($active)) {
@@ -114,7 +114,7 @@ $(document).ready(function(){
 		// IndexedDB
 		window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
 		var $db;
-		var request = window.indexedDB.open('ShoppingCart6', 1);
+		var request = window.indexedDB.open('ShoppingCart', 1);
 		request.onerror = function(event) {
 			console.log('open indexeddb failed');
 		};
@@ -135,12 +135,12 @@ $(document).ready(function(){
 				console.log("transaction failed");
 			};
 			var objectStore = trans.objectStore("products");
-			var item = objectStore.get(code);
+			var parameter_string = JSON.stringify(parameters);
+			var item = objectStore.get([code, parameter_string]);
 			item.onsuccess = function() {
 				if (item.result === undefined) {
-					console.log($parameters);
-					objectStore.add({code: code, name: "{{product.name}}",
-									 parameters: JSON.stringify($parameters), image: image,
+					objectStore.add({code: code, parameters: parameter_string,
+									 name: "{{product.name}}", image: image,
 									 amount: 1, price: $price});
 				} else {
 					product = item.result;

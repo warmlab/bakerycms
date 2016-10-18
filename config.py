@@ -7,13 +7,13 @@ class Config:
     SSL_DISABLE = False
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_RECORD_QUERIES = True
-    MAIL_SERVER = 'smtp.qq.com'
+    MAIL_SERVER = 'smtp-mail.outlook.com'
     MAIL_PORT = 587
     MAIL_USE_TLS = True
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     CARO_MAIL_SUBJECT_PREFIX = '[CAROBakery]'
-    CARO_MAIL_SENDER = 'CAROBakery Admin <bzip@qq.com>'
+    CARO_MAIL_SENDER = 'CAROBakery Admin <warmlab@outlook.com>'
     CARO_ADMIN = os.environ.get('CAROBAKERY_ADMIN')
     CARO_POSTS_PER_PAGE = 20
     CARO_FOLLOWERS_PER_PAGE = 50
@@ -36,7 +36,7 @@ class DevelopmentConfig(Config):
     DEBUG = True
     #SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
     #    'sqlite:///' + os.path.join(basedir, 'data-dev.sqlite')
-    SQLALCHEMY_DATABASE_URI =  'postgresql+psycopg2://%s:%s@127.0.0.1:5432/bakerycms' % (DB_USER, DB_PASSWORD)
+    SQLALCHEMY_DATABASE_URI =  'postgresql+psycopg2://%s:%s@127.0.0.1:5432/bakerycms_dev' % (DB_USER, DB_PASSWORD)
 
 
 class TestingConfig(Config):
@@ -45,7 +45,7 @@ class TestingConfig(Config):
     TESTING = True
     #SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
     #    'sqlite:///' + os.path.join(basedir, 'data-test.sqlite')
-    SQLALCHEMY_DATABASE_URI =  'postgresql+psycopg2://%s:%s@127.0.0.1:5432/bakerycms' % (DB_USER, DB_PASSWORD)
+    SQLALCHEMY_DATABASE_URI =  'postgresql+psycopg2://%s:%s@127.0.0.1:5432/bakerycms_test' % (DB_USER, DB_PASSWORD)
     WTF_CSRF_ENABLED = False
 
 

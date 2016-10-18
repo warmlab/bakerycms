@@ -136,7 +136,7 @@ def my_address():
         print(current_user.id)
         if info['user'] != current_user.id:
             abort(400)
-        address = Address(address=info['address'], contact_name=info['name'], mobile=info['mobile'])
+        address = Address(address=info['address'], contact_name=info['contact'], mobile=info['mobile'])
         current_user.addresses.append(address)
         db.session.add(address)
         db.session.commit()

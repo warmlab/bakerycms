@@ -7,7 +7,7 @@
 		<div class="sub header">确认商品及数量，确认送货时间和收货地址</div>
 	</div>
 </h2>
-<form class="ui form" action="/shop/dopay" method="POST">
+<form class="ui form" action="{{url_for('.do_pay')}}" method="POST" id="action-form">
 	{% for item in items %}<div class="ui basic segment">
 		{% set product = item[0] %}{% set amount = item[3] %}
 		<div class="ui image middle aligned header">
@@ -21,27 +21,57 @@
 				<input type="hidden" name="amount" value="{{amount}}">
 			</div>
 		</div>
-	</div>{% endfor %}
-	<div class="ui basic segment">
-		<div class="ui middle aligned image header">
-			<i class="marker icon"></i>
-            {% if user.addresses %}<div class="content" id="target-location">
-                {{user.addresses[0].contact_name}} {{user.addresses[0].mobile}}
-                <div class="sub header">{{user.addresses[0].address}}</div>
-            </div>{% endif %}
+	{% endfor %}
+		<div class="ui items">
+			<div class="item">{% if user.addresses.all() %}
+				<div class="content" id="target-location">
+					<div class="header">{{user.addresses[0].contact_name}}</div>
+					<div class="meta">{{user.addresses[0].mobile}}</div>
+					<div class="description">{{user.addresses[0].address}}</div>
+					<div class="extra" id="location-btn">
+						<div class="ui tiny right floated button">
+						更换配送地址
+						<i class="right chevron icon"></i>
+						</div>
+					</div>
+				</div>
+				<input type="hidden" name="target-location" value="{{user.addresses[0].id}}">
+				<input style="display:none;" name="contact" type="text" value="{{user.addresses[0].contact_name}}">
+				<input style="display:none;" name="mobile" type="text" value="{{user.addresses[0].mobile}}">
+				<input style="display:none;" name="address" type="text" value="{{user.addresses[0].address}}">
+				{%else%}<div class="content" id="target-location">
+					<div class="header">需要选择地址</div>
+					<div class="meta"></div>
+					<div class="description"></div>
+					<div class="extra" id="location-btn">
+						<div class="ui tiny right floated button">
+						更换配送地址
+						<i class="right chevron icon"></i>
+						</div>
+					</div>
+					<input type="hidden" name="target-location">
+				</div>
+				<input style="display:none;" name="contact" type="text">
+				<input style="display:none;" name="mobile" type="text">
+				<input style="display:none;" name="address" type="text">
+				{% endif %}
+			</div>
 		</div>
-		<div class="ui right floated icon label button" id="location-btn">
-			<i class="marker icon"></i>
-			更换配送地址
-		</div>
-		<div class="required inline field">
-			<label>使用日期</label>
-			<input name="date" type="date">
-		</div>
-		<div class="required inline field">
-			<label>用餐时间</label>
-			<input name="time" type="time">
-		</div>
+		<div class="ui error message"></div>
+		<div class="two fields">
+			<div class="required field">
+				<label>使用日期</label>
+				<input name="date" type="date">
+			</div>
+			<div class="required field">
+				<label>用餐时间</label>
+				<input name="time" type="time">
+			</div>
+		</div>{#
+		<div class="required field">
+			<label>蜡烛</label>
+			<input name="candy" type="text">
+		</div>#}
 		<div class="field">
 			<label>留言</label>
 			<textarea rows="2"></textarea>
@@ -72,12 +102,9 @@
 					<div class="ui radio checkbox">
 						<input name="address" checked="" tabindex="0" class="hidden" type="radio">
 					</div>
-					<div class="header">
-                        {{address.contact_name}} {{address.mobile}}
-					</div>
-					<div class="meta">
-                        {{address.address}}
-					</div>
+					<div class="header">{{address.contact_name}}</div>
+					<div class="meta">{{address.mobile}}</div>
+					<div class="description">{{address.address}}</div>
 				</div>
 			</div>
 			{% endfor %}
@@ -95,7 +122,7 @@
 		<form class="ui form" id="new-address-form">
 		<div class="required field">
 			<label>收货人姓名</label>
-			<input name="name" placeholder="张三" type="text">
+			<input name="contact" placeholder="张三" type="text">
 		</div>
 		<div class="required field">
 			<label>手机</label>
@@ -128,21 +155,22 @@ $(document).ready(function(){
 				console.log('Deny');
 			},
 			onApprove: function() {
+				var $target_location = $('#target-location');
 				$contents = $('#addresses > .item > .content > .checkbox');
 				for (var $cb of $contents) {
 					$cb = $($cb);
 					$child = $cb.children().first();
 					if ($child.attr('checked')) {
 						var to_name = $cb.siblings('.header').html();
-						var to_address = $cb.siblings('.meta').html();
-						$to_address = $('<div class="sub header"></div>');
-						$to_address.html(to_address);
-						$target_location = $('#target-location');
-						$target_location.html(to_name);
-						$to_address.appendTo($target_location);
-						$address_hidden = $('<input type="hidden" name="target-location"></input>');
-						$address_hidden.attr('value', $cb.data('code'));
-						$address_hidden.appendTo($target_location);
+						var to_mobile = $cb.siblings('.meta').html();
+						var to_address = $cb.siblings('.description').html();
+						$target_location.children('.header').html(to_name);
+						$target_location.children('.meta').html(to_mobile);
+						$target_location.children('.description').html(to_address);
+						$target_location.siblings('input[name="target-location"]').attr('value', $cb.data('code'));
+						$target_location.siblings('input[name="contact"]').attr('value', to_name);
+						$target_location.siblings('input[name="mobile"]').attr('value', to_mobile);
+						$target_location.siblings('input[name="address"]').attr('value', to_address);
 					}
 				}
 			}
@@ -153,22 +181,6 @@ $(document).ready(function(){
 		.modal('attach events', '.first.modal #new-address')
 		.modal({
 			onApprove: function() {
-				var $new_address_form = $('#new-address-form');
-				$new_address_form.form({
-					on: 'get values',
-					fields: {
-						mobile: {
-							identifier: 'mobile',
-							rules: [
-							{
-								type: 'exactLength[11]',
-								prompt: '请输入收件人的手机号码'
-							}
-							]
-						}
-					}
-				});
-
 				var fields = $new_address_form.form('get values');
 				var data = JSON.stringify({"name": fields.name, "mobile": fields.mobile, "address": fields.address, "user": {{user.id}}});
 
@@ -197,12 +209,96 @@ $(document).ready(function(){
 							$radio.checkbox();
 						},
 						400: function(info) {
-							$('.ui.error.message').html('aaaaaaaaaa');
+							$('.ui.error.message').html('error');
 						}
 					}
 				});
 			}
 		});
+	$('#action-form').form({
+		on: 'blur',
+		fields: {
+			contact: {
+				identifier: 'contact',
+				rules: [
+					{
+					type: 'empty',
+					prompt: '请选择联系人信息'
+					}
+				]
+			},
+			mobile: {
+				identifier: 'mobile',
+				rules: [
+					{
+					type: 'empty',
+					prompt: '请选择联系人手机信息'
+					}
+				]
+			},
+			address: {
+				identifier: 'address',
+				rules: [
+					{
+					type: 'empty',
+					prompt: '请选择联系人地址信息'
+					}
+				]
+			},
+			date: {
+				identifier: 'date',
+				rules: [
+					{
+					type: 'empty',
+					prompt: '请输入使用日期（纪念日生日等）'
+					}
+				]
+			},
+			time: {
+				identifier: 'time',
+				rules: [
+					{
+					type: 'empty',
+					prompt: '请输入具体用餐时间'
+					}
+				]
+			}
+		}
+	});
+
+	var $new_address_form = $('#new-address-form');
+	$new_address_form.form({
+		on: 'blur',
+		fields: {
+			contact: {
+				identifier: 'contact',
+				rules: [
+				{
+					type: 'empty',
+					prompt: '输入联系人姓名'
+				}
+				]
+			},
+			mobile: {
+				identifier: 'mobile',
+				rules: [
+				{
+					type: 'exactLength[11]',
+					prompt: '请输入收件人的手机号码'
+				}
+				]
+			},
+			address: {
+				identifier: 'address',
+				rules: [
+					{
+					type: 'empty',
+					prompt: '请选择配送信息'
+					}
+				]
+			}
+		}
+	});
 	$('.ui.radio.checkbox').checkbox();
 });
 </script>

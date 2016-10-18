@@ -174,8 +174,6 @@ class UserAuth(db.Model, UserMixin):
 
     @property
     def confirmed(self):
-        print(self.confirmed_at)
-        print(datetime.utcnow())
         if self.confirmed_at and self.confirmed_at < datetime.utcnow():
             return True
         return False

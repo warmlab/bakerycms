@@ -17,7 +17,7 @@ from app import create_app, db
 from app.models import Member
 from app.models import Product, ProductImage
 from flask_script import Manager, Shell
-#from flaskr_migrate import Migrate, MigrateCommand
+#from flask_migrate import Migrate, MigrateCommand
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 manager = Manager(app)
@@ -65,11 +65,11 @@ def profile(length=25, profile_dir=None):
 @manager.command
 def deploy():
     """Run deployment tasks."""
-    from flask.ext.migrate import upgrade
+    #from flask_migrate import upgrade
     from app.models import Role, Member
 
     # migrate database to latest revision
-    upgrade()
+    #upgrade()
 
     # create user roles
     #Role.insert_roles()

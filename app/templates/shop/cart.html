@@ -1,5 +1,4 @@
-{% extends "base-user.html" %}
-{% block main_content_section %}
+{% extends "base-user.html" %}{% block main_content_section %}
 <h2 class="ui center aligned icon header">
 	<i class="shopping cart icon"></i>
 	<div class="content">
@@ -10,8 +9,8 @@
 	</div>
 </h2>
 <form method="POST" action="/shop/checkout">
-	<div class="ui segments" id="product-area"></div>
-	<button id="pay-button" class="ui fluid big orange labeled icon button">
+	<div class="ui segments"></div>
+	<button class="ui fluid big orange labeled icon button">
 		<i class="payment icon"></i>去支付
 	</button>
 </form>
@@ -21,20 +20,20 @@
 {% include "includes/bottom_fixed.html" %}
 {% endblock %}
 {% block special_script_section %}
-	<script src="{{url_for('static', filename='js/shop.js')}}"></script>
 {% endblock %}
 {% block inline_script_section %}
 <script>
 $(document).ready(function(){
 	window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
 	var $db;
-	var request = window.indexedDB.open('ShoppingCart6', 1);
-	request.onerror = function(event) {
-		console.log('open indexeddb failed');
-	};
+	var request = window.indexedDB.open('ShoppingCart', 1);
 	request.onupgradeneeded = function (event) {
 		$db = event.target.result;
-		$db.createObjectStore("products", {keyPath: ["code", "parameters"], indexNames: ["parameters", "amouont", "image"]});
+		$db.createObjectStore("products", {keyPath: ["code", "parameters"], indexNames: ["amouont", "image"]});
+	};
+
+	request.onerror = function(event) {
+		console.log('open indexeddb failed');
 	};
 
 	request.onsuccess = function(event) {
@@ -48,10 +47,9 @@ $(document).ready(function(){
 		trans.onerror = function(event) {
 			console.log("transaction failed");
 		};
-		var $objectStore = trans.objectStore("products");
-		$objectStore.openCursor().onsuccess = function(e) {
+		var objectStore = trans.objectStore("products");
+		objectStore.openCursor().onsuccess = function(e) {
 			var cursor = e.target.result;
-			console.log(cursor);
 			if (cursor) {
 				var $segment = $('<div class="ui basic segment"></div>');
 				var $item = $('<div class="ui image middle aligned header"></div>');
@@ -61,11 +59,16 @@ $(document).ready(function(){
 				var $content = $('<div class="content"></div>');
 				var $sub_header = $('<div class="sub header"></div>');
 				var $meta = $('<div class="sub header"></div>');
-				console.log("cursor.value.parameters: " + cursor.value.parameters);
+				var $amount_div = $('<div class="ui mini action input"></div>');
+				var $amount_input = $('<input name="amount" type="text" size="2" readonly></input>');
+				var $amount_minus = $('<div class="ui mini icon button"><i class="minus icon"></i></div>');
+				var $amount_plus = $('<div class="ui mini icon button"><i class="plus icon"></i></div>');
+				var $remove_btn = $('<div class="ui mini circular icon negative button"><i class="remove icon"></i></div>');
+				var code = cursor.value.code;
 				var parameters = JSON.parse(cursor.value.parameters);
 				var metas = "";
 				for (var para of parameters) {
-					console.log(para);
+					//console.log(para);
 					metas += para.name + " ";
 				}
 				$meta.html(metas);
@@ -74,6 +77,12 @@ $(document).ready(function(){
 				$sub_header.html('￥' + cursor.value.price);
 				$image.attr("src", cursor.value.image);
 				$content.html(cursor.value.name);
+
+				$amount_input.appendTo($amount_div);
+				$amount_input.attr('value', cursor.value.amount);
+				$amount_minus.appendTo($amount_div);
+				$amount_plus.appendTo($amount_div);
+
 				$sub_header.appendTo($content);
 				$meta.appendTo($content);
 
@@ -82,13 +91,75 @@ $(document).ready(function(){
 				$content.appendTo($item);
 
 				$item.appendTo($segment);
+				$amount_div.appendTo($segment);
+				$remove_btn.appendTo($segment);
 
 				var $input_product = $('<input type="hidden" name="product"></input>').attr('value', JSON.stringify(cursor.value));
 
-				$segment.appendTo($('#product-area'));
+				$segment.appendTo($('.ui.segments'));
 
 				$form = $('form:first');
 				$input_product.appendTo($form);
+
+				$remove_btn.click(function(e){
+					// need to reopen transcation
+					var trans = $db.transaction(["products"], "readwrite");
+					trans.oncomplete  = function(event) {
+						console.log("Remove done!");
+					};
+					var objectStore = trans.objectStore("products");
+					var req = objectStore.delete([code, JSON.stringify(parameters)]);
+					req.onsuccess = function(e) {
+						$segment.remove();
+					};
+					req.onerror = function(e) {
+						console.log('delete failed');
+					};
+				});
+
+				$amount_minus.click(function(e){
+					// need to reopen transcation
+					var trans = $db.transaction(["products"], "readwrite");
+					trans.oncomplete  = function(event) {
+						console.log("substract done!");
+					};
+					var objectStore = trans.objectStore("products");
+					var req = objectStore.get([code, JSON.stringify(parameters)]);
+					req.onsuccess = function(e) {
+						var data = e.target.result;
+						if (data.amount > 1) {
+							data.amount -= 1;
+							var req_update = objectStore.put(data);
+							req_update.onsuccess = function(e){
+								$amount_input.attr('value', data.amount);
+							};
+						}
+					};
+					req.onerror = function(e) {
+						console.log('substract failed');
+					};
+				});
+
+				$amount_plus.click(function(e){
+					// need to reopen transcation
+					var trans = $db.transaction(["products"], "readwrite");
+					trans.oncomplete  = function(event) {
+						console.log("plus done!");
+					};
+					var objectStore = trans.objectStore("products");
+					var req = objectStore.get([code, JSON.stringify(parameters)]);
+					req.onsuccess = function(e) {
+						var data = e.target.result;
+						data.amount += 1;
+						var req_update = objectStore.put(data);
+						req_update.onsuccess = function(e){
+							$amount_input.attr('value', data.amount);
+						};
+					};
+					req.onerror = function(e) {
+						console.log('plus failed');
+					};
+				});
 
 				cursor.continue();
 			} else {
