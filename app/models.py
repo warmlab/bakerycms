@@ -382,6 +382,7 @@ class ProductSupplier(db.Model):
 
 # order table
 class Ticket(db.Model):
+    __tablename__ = 'ticket'
     code = db.Column(db.String(64), primary_key=True, index=True) # 订单编号
     payment_code = db.Column(db.String(64), nullable=True) # 第三方支付平台订单编号
     #cashier = models.ForeignKey(Staff) # 收银员
@@ -394,6 +395,7 @@ class Ticket(db.Model):
     type = db.Column(db.SmallInteger, default=0) # 消费方式, 0: 消费, 1: 充值, 2: 退货, 3: 反结账, 4: 退卡
     pending_time = db.Column(db.DateTime, default=datetime.utcnow) # 挂单时间
     occurred_time = db.Column(db.DateTime, default=datetime.utcnow) # 订单时间
+    require_datetime = db.Column(db.DateTime) # 使用日期和时间
 
     shoppoint_id = db.Column(db.Integer, db.ForeignKey('shoppoint.id'), nullable=True)
     shoppoint = db.relationship('Shoppoint',
@@ -403,26 +405,26 @@ class Ticket(db.Model):
     member = db.relationship('Member',
                          backref=db.backref('tickets', lazy="dynamic"))
 
+    address_id = db.Column(db.Integer, db.ForeignKey('address.id'), nullable=True) # 配送地址
+    adddress = db.relationship('Address')
+
     products = db.relationship('TicketProduct', back_populates='ticket')
     payments = db.relationship('TicketPayment', back_populates='ticket')
 
-    def __init__(self, shoppoint, product_amount, original_cost, real_cost, bonus_balance=0, type=0, Member=None):
-        self.product_amount = product_amount
-        self.original_cost = original_cost
-        self.real_cost = real_cost
+    note = db.Column(db.Text)
 
     def __repr__(self):
         return self.code
 
 
 class TicketProduct(db.Model):
-    #id = db.Column(db.Integer, primary_key=True)
-    ticket_code = db.Column(db.String(64), db.ForeignKey('ticket.code'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    ticket_code = db.Column(db.String(64), db.ForeignKey('ticket.code'))
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'), primary_key=True)
-    original_cost = db.Column(db.Numeric(7,2), default=0) # 商品原始总价格
-    real_cost = db.Column(db.Numeric(7,2), default=0) # 商品原始总价格
+    parameters = db.Column(db.String(256)) # 交易时所选的属性名称，一旦该属性被删，这个可以用来查看订单记录的属性名称
+    original_price = db.Column(db.Numeric(7,2), default=0) # 商品原始总价格
+    real_price = db.Column(db.Numeric(7,2), default=0) # 商品实际价格
     product_amount = db.Column(db.Integer, default=1) # 商品总数量
-    cost = db.Column(db.Numeric(7,2), default=0) # 商品总成本
     sale_time = db.Column(db.DateTime, default=datetime.utcnow) # 售卖时间
 
     product = db.relationship("Product", back_populates="tickets")

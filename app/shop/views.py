@@ -13,6 +13,7 @@ from .. import db
 from ..decorators import member_required
 
 from ..models import Product, Member, Address
+from ..models import Ticket, TicketProduct
 
 @shop.route('/products', methods=['GET'])
 @shop.route('/', methods=['GET'])
@@ -49,32 +50,24 @@ def add_to_cart():
 
 @shop.route('/cart', methods=['GET'])
 def cart():
-    products = Product.query.all()
+    products = Product.query.filter_by(is_available_on_web=True)
     return render_template('shop/cart.html', products=products)
 
-@shop.route('/dopay', methods=['POST'])
-def do_pay():
-    return render_template('shop/payresult.html')
-
-@shop.route('/wxpay', methods=['POST'])
-def weixin_pay():
-    return render_template('shop/payresult.html')
-
-@shop.route('/payresult', methods=['POST', 'GET'])
-def payresult():
-    return render_template('shop/payresult.html')
-
-@shop.route('/checkout', methods=['POST'])
+@shop.route('/checkout', methods=['POST']) # 结算
 @login_required
 @member_required
 def checkout():
     # create an order to checkout
-    total_cost = 0
     items = []
     #amounts = request.form.getlist('amount')
     lines = request.form.getlist('product')
-    for line in lines:
+    amounts = request.form.getlist('amount')
+    for line, amount in zip(lines, amounts):
         product_info = json.loads(line);
+        tobuy = request.form.get('-'.join(['tobuy', str(product_info['code'])]))
+        print(tobuy)
+        if not tobuy:
+            continue
         parameters_info = json.loads(product_info.get('parameters'))
         parameters_info = [p['code'] for p in parameters_info]
 
@@ -89,31 +82,71 @@ def checkout():
                 parameters_info.remove(para.parameter_id)
         if parameters_info:
             abort(400)
-        items.append((product, parameters, price, product_info['amount']))
-        total_cost += price * product_info['amount']
+        items.append((product, parameters, price, amount))
 
-        #if request.form.get('-'.join(['is-buy', code])) == 'on':
-        #    product = Product.query.filter_by(code=code).first()
-        #    if product:
-        #        to_buy_products.append(product)
-        #        to_buy_amounts.append(amount)
-        #        total_cost += product.price * int(amount)
+    return render_template('shop/pre-order.html', user=current_user, items=items)
 
-    member = current_user.member
-    #print(member)
-    #if not member:
-    #    # redirect member info page
-    #    return redirect(url_for('.member_info', next=url_for('.cart'), _method='GET'))
-    #items = Product.query.filter(Product.code.in_(to_buy_codes))
-    #print('items: %s' % items)
-    #print('codes: %s, amounts: %s' % (to_buy_products, to_buy_amounts))
-    now = datetime.utcnow()
-    shoppoint_id = '9999'
-    #app_id = '2088711989941795'
-    trade_number_format='%Y%m%d%H%M%S{0}%f'.format(shoppoint_id) 
-    #out_trade_no = now.strftime(trade_number_format)
-    #alipay_url = 'https://openapi.alipay.com/gateway.do'
-    return render_template('shop/checkout.html', items=items, total_cost=total_cost, user=current_user)
+@shop.route('/order', methods=['POST'])
+@login_required
+@member_required
+def order():
+    order_number = '%Y%m%d%H%M%S{0}%f'.format('0000') # the parameter is shoppoint code
+    ticket = Ticket(ticket_code=order_number)
+    # create an order to checkout
+    total_price = 0
+    total_amount = 0
+    #amounts = request.form.getlist('amount')
+    product_codes = request.form.getlist('product')
+    parameter_ids = request.form.getlist('parameter')
+    amounts = request.form.getlist('amount')
+    for code, para_ids, amount in zip(product_codes, parameter_ids, amounts):
+        product = Product.query.filter_by(code=code).first()
+        price = product.price;
+        parameters = []
+        for para in product.parameters:
+            if para.parameter_id in para_ids:
+                price += para.plus_price
+                parameters.append(para)
+                para_ids.remove(para.parameter_id)
+        if para_ids:
+            abort(400)
+
+        tp = TicketProduct(product=product) 
+        tp.parameters = json.dumps([{"id": p.parameter_id, "name": p.parameter.name} for p in parameters]),
+        tp.original_price = price
+        tp.real_price = price
+        tp.amount = amount
+        ticket.products.append(tp)
+
+        total_price += price
+        total_amount += amount
+
+    ticket.required_datetime = request.form.get('date') + request.form.get('time')
+    ticket.note = request.form.get('note')
+
+
+    ticket.product_amount = total_amount
+    ticket.original_price = total_price
+    ticket.real_price = total_price
+    ticket.member = current_user.member
+    address = Address.query.get(request.form.get('target-location'))
+    if address not in current_user.addresses:
+        abort(400)
+    ticket.address =  address
+
+    return render_template('shop/order.html', ticket=ticket, user=current_user)
+
+@shop.route('/dopay', methods=['POST'])
+def do_pay():
+    return render_template('shop/payresult.html')
+
+@shop.route('/wxpay', methods=['POST'])
+def weixin_pay():
+    return render_template('shop/payresult.html')
+
+@shop.route('/payresult', methods=['POST', 'GET'])
+def payresult():
+    return render_template('shop/payresult.html')
 
 @shop.route('/myinfo', methods=['GET', 'POST'])
 @login_required

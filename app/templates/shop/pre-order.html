@@ -7,17 +7,18 @@
 		<div class="sub header">确认商品及数量，确认送货时间和收货地址</div>
 	</div>
 </h2>
-<form class="ui form" action="{{url_for('.do_pay')}}" method="POST" id="action-form">
+<form class="ui form" action="{{url_for('.order')}}" method="POST" id="action-form">
 	{% for item in items %}<div class="ui basic segment">
 		{% set product = item[0] %}{% set amount = item[3] %}
 		<div class="ui image middle aligned header">
-			<img src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" class="ui tiny image">
+			<img src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" class="ui small image">
 			<input type="hidden" name="product" value="{{product.code}}">
 			<div class="content">
 				{{product.name}}
 				<div class="sub header">￥{{product.price}}</div>
-				{% if item[1] %}<div class="sub header">{%for p in item[1]%}{{p.parameter.name}} {%endfor%}</div>{%endif%}
+				{% if item[1] %}<div class="sub header">{%for p in item[1]%}{{p.parameter.name}}{%endfor%}</div>{%endif%}
 				<div class="sub header">数量: {{amount}}</div>
+                <input type="hidden" name="parameter" value="{%if item[1]%}{{items[1]}}{%endif%}">
 				<input type="hidden" name="amount" value="{{amount}}">
 			</div>
 		</div>
@@ -74,7 +75,7 @@
 		</div>#}
 		<div class="field">
 			<label>留言</label>
-			<textarea rows="2"></textarea>
+			<textarea rows="2" name="note"></textarea>
 		</div>
 		<div class="ui info icon message">
 			<i class="info icon"></i>
@@ -88,7 +89,7 @@
 			</div>
 		</div>
 		<button class="ui fluid orange right labeled icon huge button">
-			<i class="payment icon"></i>支付￥{{total_cost}}元
+			<i class="payment icon"></i>生成订单
 		</button>
 	</div>
 </form>
@@ -100,7 +101,7 @@
 			<div class="item">
 				<div class="middle aligned content">
 					<div class="ui radio checkbox">
-						<input name="address" checked="" tabindex="0" class="hidden" type="radio">
+						<input name="address" class="hidden" type="radio">
 					</div>
 					<div class="header">{{address.contact_name}}</div>
 					<div class="meta">{{address.mobile}}</div>
@@ -118,23 +119,20 @@
 </div>
 <div class="ui coupled second modal">
 	<div class="ui header">新增配送地址</div>
-	<div class="content">
-		<form class="ui form" id="new-address-form">
-		<div class="required field">
-			<label>收货人姓名</label>
-			<input name="contact" placeholder="张三" type="text">
-		</div>
-		<div class="required field">
-			<label>手机</label>
-			<input name="mobile" placeholder="18053214078" type="text">
-		</div>
-		<div class="required field">
-			<label>地址</label>
-			<input name="address" placeholder="青岛市李沧区九水路227号一层南门卡诺烘焙" type="text">
-		</div>
-		<div class="ui error message"></div>
-		</form>
+	<form class="ui form basic segment" id="new-address-form">
+	<div class="required field">
+		<label>联系人</label>
+		<input name="contact" placeholder="张三" type="text">
 	</div>
+	<div class="required field">
+		<label>联系人手机</label>
+		<input name="mobile" placeholder="18053214078" type="text">
+	</div>
+	<div class="required field">
+		<label>联系人地址</label>
+		<input name="address" placeholder="青岛市李沧区九水路227号一层南门卡诺烘焙" type="text">
+	</div>
+	</form>
 	<div class="actions">
 		<div class="ui cancel button">取消</div>
 		<div class="ui approve button">确定</div>
@@ -159,11 +157,11 @@ $(document).ready(function(){
 				$contents = $('#addresses > .item > .content > .checkbox');
 				for (var $cb of $contents) {
 					$cb = $($cb);
-					$child = $cb.children().first();
-					if ($child.attr('checked')) {
+					if ($cb.checkbox('is checked')) {
 						var to_name = $cb.siblings('.header').html();
 						var to_mobile = $cb.siblings('.meta').html();
 						var to_address = $cb.siblings('.description').html();
+						console.log(to_name);
 						$target_location.children('.header').html(to_name);
 						$target_location.children('.meta').html(to_mobile);
 						$target_location.children('.description').html(to_address);
@@ -171,6 +169,7 @@ $(document).ready(function(){
 						$target_location.siblings('input[name="contact"]').attr('value', to_name);
 						$target_location.siblings('input[name="mobile"]').attr('value', to_mobile);
 						$target_location.siblings('input[name="address"]').attr('value', to_address);
+						break;
 					}
 				}
 			}
@@ -181,8 +180,12 @@ $(document).ready(function(){
 		.modal('attach events', '.first.modal #new-address')
 		.modal({
 			onApprove: function() {
+				if (!$('#new-address-form').form('is valid')) {
+					return false;
+				}
+
 				var fields = $new_address_form.form('get values');
-				var data = JSON.stringify({"name": fields.name, "mobile": fields.mobile, "address": fields.address, "user": {{user.id}}});
+				var data = JSON.stringify({"contact": fields.contact, "mobile": fields.mobile, "address": fields.address, "user": {{user.id}}});
 
 				$.ajax({
 					url: "{{url_for('.my_address')}}",
@@ -207,9 +210,12 @@ $(document).ready(function(){
 							$content.appendTo($item);
 							$item.appendTo($('#addresses'));
 							$radio.checkbox();
+
+							return true;
 						},
 						400: function(info) {
 							$('.ui.error.message').html('error');
+							return false;
 						}
 					}
 				});
