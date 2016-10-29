@@ -1,11 +1,11 @@
 <div class="ui three item bottom fixed compact menu">
-	<a class="active item" href="/shop" data-seq="0">
+	<a class="item" href="{{url_for('.index')}}">
 		<i class="food icon"></i>美味
 	</a>
-	<a class="item" id="cart" href="/shop/cart" data-seq="1">
+	<a class="item" id="cart" href="{{url_for('.cart')}}">
 		<i class="shopping cart icon"></i>购物车
 	</a>
-	<a class="item" href="/shop/userinfo" data-seq="2">
+	<a class="item" href="{{url_for('.myshop')}}">
 		<i class="user icon"></i>我的
 	</a>
 </div>

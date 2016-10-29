@@ -100,7 +100,7 @@
 			{% for address in user.addresses %}
 			<div class="item">
 				<div class="middle aligned content">
-					<div class="ui radio checkbox">
+                    <div class="ui radio checkbox" data-code="{{address.id}}">
 						<input name="address" class="hidden" type="radio">
 					</div>
 					<div class="header">{{address.contact_name}}</div>
@@ -142,6 +142,8 @@
 {% block inline_script_section %}
 <script>
 $(document).ready(function(){
+	$('.huge.button').click(function(e){
+	});
 	$('.coupled.modal').modal({
 		allowMultiple: true,
 	});

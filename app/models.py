@@ -4,7 +4,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 #from markdown import markdown
 #import bleach
-from flask import current_app, jsonify#, url_for
+from flask import current_app#, url_for
+from flask import json, jsonify
 from flask_login import UserMixin
 
 from sqlalchemy import or_
@@ -387,15 +388,15 @@ class Ticket(db.Model):
     payment_code = db.Column(db.String(64), nullable=True) # 第三方支付平台订单编号
     #cashier = models.ForeignKey(Staff) # 收银员
     product_amount = db.Column(db.Integer, default=1) # 商品总数量
-    original_cost = db.Column(db.Numeric(7,2), default=0) # 订单原始总价格
-    real_cost = db.Column(db.Numeric(7,2), default=0) # 订单现在总价格
-    #off = db.Column(db.Numeric(7,2), default=0) # 订单优惠金额，该项=original_cost-real_cost
-    #discount = db.Column(db.Numeric(7,2), default=0) # 订单优惠金额，该项=real_cost/original_cost
+    original_price = db.Column(db.Numeric(7,2), default=0) # 订单原始总价格
+    real_price = db.Column(db.Numeric(7,2), default=0) # 订单现在总价格
+    #off = db.Column(db.Numeric(7,2), default=0) # 订单优惠金额，该项=original_price-real_price
+    #discount = db.Column(db.Numeric(7,2), default=0) # 订单优惠金额，该项=real_price/original_price
     bonus_balance = db.Column(db.Numeric(7,2), default=0) # 赠送金额，充值的时候会产生赠送金额
     type = db.Column(db.SmallInteger, default=0) # 消费方式, 0: 消费, 1: 充值, 2: 退货, 3: 反结账, 4: 退卡
-    pending_time = db.Column(db.DateTime, default=datetime.utcnow) # 挂单时间
+    pending_time = db.Column(db.DateTime) # 挂单时间
     occurred_time = db.Column(db.DateTime, default=datetime.utcnow) # 订单时间
-    require_datetime = db.Column(db.DateTime) # 使用日期和时间
+    required_datetime = db.Column(db.DateTime) # 使用日期和时间
 
     shoppoint_id = db.Column(db.Integer, db.ForeignKey('shoppoint.id'), nullable=True)
     shoppoint = db.relationship('Shoppoint',
@@ -405,11 +406,12 @@ class Ticket(db.Model):
     member = db.relationship('Member',
                          backref=db.backref('tickets', lazy="dynamic"))
 
-    address_id = db.Column(db.Integer, db.ForeignKey('address.id'), nullable=True) # 配送地址
-    adddress = db.relationship('Address')
+    address_id = db.Column(db.Integer, db.ForeignKey('ticket_address.id'), nullable=True) # 配送地址
+    address = db.relationship('TicketAddress')
 
     products = db.relationship('TicketProduct', back_populates='ticket')
     payments = db.relationship('TicketPayment', back_populates='ticket')
+    pay_time = db.Column(db.DateTime) # 支付时间
 
     note = db.Column(db.Text)
 
@@ -417,18 +419,37 @@ class Ticket(db.Model):
         return self.code
 
 
+class TicketAddress(db.Model):
+    __tablename__ = 'ticket_address'
+    id = db.Column(db.Integer, primary_key=True)
+    contact_name = db.Column(db.String(128)) # 联系人或者收货人姓名/紧急联系人姓名
+    mobile = db.Column(db.String(16))
+    address = db.Column(db.String(256))
+
+    delivery_time = db.Column(db.DateTime) # 配送日期
+    arrived_time = db.Column(db.DateTime) # 签收日期
+
+
 class TicketProduct(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     ticket_code = db.Column(db.String(64), db.ForeignKey('ticket.code'))
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), primary_key=True)
-    parameters = db.Column(db.String(256)) # 交易时所选的属性名称，一旦该属性被删，这个可以用来查看订单记录的属性名称
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
+    parameters_json = db.Column(db.String(256)) # 交易时所选的属性名称，一旦该属性被删，这个可以用来查看订单记录的属性名称
     original_price = db.Column(db.Numeric(7,2), default=0) # 商品原始总价格
     real_price = db.Column(db.Numeric(7,2), default=0) # 商品实际价格
-    product_amount = db.Column(db.Integer, default=1) # 商品总数量
+    amount = db.Column(db.Integer, default=1) # 商品总数量
     sale_time = db.Column(db.DateTime, default=datetime.utcnow) # 售卖时间
 
     product = db.relationship("Product", back_populates="tickets")
     ticket = db.relationship('Ticket', back_populates='products')
+
+    @property
+    def parameters(self):
+        return json.loads(self.parameters_json)
+
+    @parameters.setter
+    def parameters(self, parameters):
+        self.parameters_json = json.dumps(parameters)
 
 
 class TicketPayment(db.Model):
@@ -437,6 +458,7 @@ class TicketPayment(db.Model):
     #balance = db.Column(db.Numeric(7,2), default=0) # 该付款方式，收到的金额
     receive_balance = db.Column(db.Numeric(7,2), default=0) # 收银多少，现金一般会收到整钱，然后找零
     change_balance = db.Column(db.Numeric(7,2), default=0) # 找零多少
+    payment_code = db.Column(db.String(64)) # 第三方支付返回的支付码
 
     ticket = db.relationship('Ticket', back_populates='payments') # 订单
     payment = db.relationship("Payment", back_populates="tickets") # 付款方式
@@ -459,16 +481,6 @@ class Payment(db.Model):
     description = db.Column(db.Text)
 
     tickets = db.relationship('TicketPayment', back_populates='payment')
-
-    def __init__(self, name, is_change=False, charge=0,
-                 is_available_on_web=True,
-                 is_available_on_pos=True, description=None):
-        self.name = name
-        self.is_change = is_change
-        self.charge = charge
-        self.is_available_on_web = is_available_on_web
-        self.is_available_on_pos = is_available_on_pos
-        self.description = description
 
     def __repr__(self):
         return self.name

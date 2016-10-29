@@ -8,7 +8,7 @@ def member_required(fn):
         def decorated_function(*args, **kwargs):
             if not current_user.member:
                 #abort(403)
-                return redirect(url_for('shop.member_info', _method='GET'))
+                return redirect(url_for('shop.myinfo', _method='GET'))
             return f(*args, **kwargs)
         return decorated_function
     return decorator(fn)

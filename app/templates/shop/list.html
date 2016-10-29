@@ -15,7 +15,7 @@
 				<div class="ui divider"></div>
 				<div class="extra">
 					<span class="ui basic icon label">
-						<i class="heart icon"></i>{{products|length}}
+						<i class="heart icon"></i>{{products.count()}}
 						<div class="detail">Products</div>
 					</span>
 					<span class="ui basic label right floated"><i class="registered icon"></i>Since August 2014</span>
@@ -27,7 +27,7 @@
 <div class="ui basic segments">
 	{% for product in products %}
 	<div class="ui clearing segment">
-		<a href="/shop/product/{{product.code}}">
+		<a href="{{url_for('.product_detail', code=product.code, _method='GET')}}">
 			<div class="ui image middle aligned header">
 				<img src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" class="ui small rounded image">
 				<div class="content">
@@ -109,5 +109,9 @@ $('.ui.right.floated.small.icon.orange.button').click(function(e){
 
 	//obj.offset({top: e.pageX, left: e.pageY, zIndex: 10});
 });
+
+$bottom_menu = $('.bottom.fixed.menu');
+//$bottom_menu.children().removeClass('active');
+$bottom_menu.children('[href="{{url_for('.index')}}"]').addClass('active');
 </script>
 {% endblock %}

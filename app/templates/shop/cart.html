@@ -169,6 +169,9 @@ $(document).ready(function(){
 		};
 	};
 	$('.ui.checkbox').checkbox();
+
+	$bottom_menu = $('.bottom.fixed.menu');
+	$bottom_menu.children('[href="{{url_for('.cart')}}"]').addClass('active');
 });
 </script>
 {% endblock %}

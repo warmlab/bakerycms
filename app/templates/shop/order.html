@@ -1,0 +1,209 @@
+{% extends "base-user.html"%}
+{% block main_content_section %}
+<h2 class="ui center aligned icon header">{#ui centered#}
+	<i class="payment icon"></i>
+	<div class="content">
+		订单编号
+        <div class="sub header">{{ticket.code}}</div>
+	</div>
+</h2>
+<div class="ui basic segment">
+    {% for tp in ticket.products %}<div class="ui image middle aligned header">
+        <img src="/gallery/media/{{tp.product.images[0].image.name}}.{{tp.product.images[0].image.ext}}" class="ui small image">
+        <div class="content">
+            {{tp.product.name}}
+            <div class="sub header">￥{{tp.product.price}}</div>
+            {%if tp.parameters%}<div class="sub header">{% for p in tp.parameters %}{{p["name"]}}{%endfor%}</div>{%endif%}
+            <div class="sub header">数量: {{tp.amount}}</div>
+        </div>
+    </div>{% endfor %}
+    <div class="ui items">
+        <div class="item">
+            <div class="content" id="target-location">
+                <div class="header">{{ticket.address.contact_name}}</div>
+                <div class="meta">{{ticket.address.mobile}}</div>
+                <div class="description">{{ticket.address.address}}</div>
+            </div>
+        </div>
+    </div>
+    {% if not ticket.pay_datetime and not ticket.payments %}
+    <div class="ui fluid orange labeled icon huge button">
+        <i class="payment icon"></i>去支付
+    </div>
+	{% else %}
+	<a class="ui fluid orange labeled icon huge button" href="{{url_for('.myinfo')}}">
+        <i class="home icon"></i>返回
+    </a>
+    {% endif %}
+</div>
+{% endblock %}
+{% block inline_script_section %}
+<script>
+$(document).ready(function(){
+	$('.coupled.modal').modal({
+		allowMultiple: true,
+	});
+	$('#location-btn').click(function(){
+		$('.first.modal')
+		.modal({
+			closeable: false,
+			onDeny: function() {
+				console.log('Deny');
+			},
+			onApprove: function() {
+				var $target_location = $('#target-location');
+				$contents = $('#addresses > .item > .content > .checkbox');
+				for (var $cb of $contents) {
+					$cb = $($cb);
+					if ($cb.checkbox('is checked')) {
+						var to_name = $cb.siblings('.header').html();
+						var to_mobile = $cb.siblings('.meta').html();
+						var to_address = $cb.siblings('.description').html();
+						console.log(to_name);
+						$target_location.children('.header').html(to_name);
+						$target_location.children('.meta').html(to_mobile);
+						$target_location.children('.description').html(to_address);
+						$target_location.siblings('input[name="target-location"]').attr('value', $cb.data('code'));
+						$target_location.siblings('input[name="contact"]').attr('value', to_name);
+						$target_location.siblings('input[name="mobile"]').attr('value', to_mobile);
+						$target_location.siblings('input[name="address"]').attr('value', to_address);
+						break;
+					}
+				}
+			}
+		})
+		.modal('show');
+	});
+	$('.ui.second.modal')
+		.modal('attach events', '.first.modal #new-address')
+		.modal({
+			onApprove: function() {
+				if (!$('#new-address-form').form('is valid')) {
+					return false;
+				}
+
+				var fields = $new_address_form.form('get values');
+				var data = JSON.stringify({"contact": fields.contact, "mobile": fields.mobile, "address": fields.address, "user": {{user.id}}});
+
+				$.ajax({
+					url: "{{url_for('.my_address')}}",
+					contentType:  'application/json',
+					data: data,
+					method: 'PUT',
+					dataType: 'json',
+					statusCode: {
+						200: function(info) {
+							console.log(info);
+							var $item = $('<div class="item"></div>');
+							var $content = $('<div class="middle aligned content"></div>');
+							var $radio = $('<div class="ui radio checkbox"><input name="address" checked class="hidden" type="radio"></div>');
+							$radio.data('code', info.code);
+							var $header = $('<div class="header"></div>');
+							$header.html(fields.name + " " + fields.mobile);
+							var $meta = $('<div class="meta"></div>');
+							$meta.html(fields.address);
+							$radio.appendTo($content);
+							$header.appendTo($content);
+							$meta.appendTo($content);
+							$content.appendTo($item);
+							$item.appendTo($('#addresses'));
+							$radio.checkbox();
+
+							return true;
+						},
+						400: function(info) {
+							$('.ui.error.message').html('error');
+							return false;
+						}
+					}
+				});
+			}
+		});
+	$('#action-form').form({
+		on: 'blur',
+		fields: {
+			contact: {
+				identifier: 'contact',
+				rules: [
+					{
+					type: 'empty',
+					prompt: '请选择联系人信息'
+					}
+				]
+			},
+			mobile: {
+				identifier: 'mobile',
+				rules: [
+					{
+					type: 'empty',
+					prompt: '请选择联系人手机信息'
+					}
+				]
+			},
+			address: {
+				identifier: 'address',
+				rules: [
+					{
+					type: 'empty',
+					prompt: '请选择联系人地址信息'
+					}
+				]
+			},
+			date: {
+				identifier: 'date',
+				rules: [
+					{
+					type: 'empty',
+					prompt: '请输入使用日期（纪念日生日等）'
+					}
+				]
+			},
+			time: {
+				identifier: 'time',
+				rules: [
+					{
+					type: 'empty',
+					prompt: '请输入具体用餐时间'
+					}
+				]
+			}
+		}
+	});
+
+	var $new_address_form = $('#new-address-form');
+	$new_address_form.form({
+		on: 'blur',
+		fields: {
+			contact: {
+				identifier: 'contact',
+				rules: [
+				{
+					type: 'empty',
+					prompt: '输入联系人姓名'
+				}
+				]
+			},
+			mobile: {
+				identifier: 'mobile',
+				rules: [
+				{
+					type: 'exactLength[11]',
+					prompt: '请输入收件人的手机号码'
+				}
+				]
+			},
+			address: {
+				identifier: 'address',
+				rules: [
+					{
+					type: 'empty',
+					prompt: '请选择配送信息'
+					}
+				]
+			}
+		}
+	});
+	$('.ui.radio.checkbox').checkbox();
+});
+</script>
+{% endblock %}

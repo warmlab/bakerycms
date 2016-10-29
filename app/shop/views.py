@@ -1,5 +1,5 @@
 from datetime import datetime
-#from decimal import Decimal
+from decimal import Decimal
 
 from flask import render_template, redirect
 from flask import request, url_for, abort, json
@@ -13,12 +13,12 @@ from .. import db
 from ..decorators import member_required
 
 from ..models import Product, Member, Address
-from ..models import Ticket, TicketProduct
+from ..models import Ticket, TicketProduct, TicketAddress
 
 @shop.route('/products', methods=['GET'])
 @shop.route('/', methods=['GET'])
 def index():
-    products = Product.query.filter_by(is_available_on_web=True).all()
+    products = Product.query.filter_by(is_available_on_web=True)
     return render_template('shop/list.html', products=products)
 
 @shop.route('/product/<code>', methods=['GET'])
@@ -86,53 +86,65 @@ def checkout():
 
     return render_template('shop/pre-order.html', user=current_user, items=items)
 
-@shop.route('/order', methods=['POST'])
+@shop.route('/order', methods=['POST', 'GET'])
 @login_required
 @member_required
 def order():
-    order_number = '%Y%m%d%H%M%S{0}%f'.format('0000') # the parameter is shoppoint code
-    ticket = Ticket(ticket_code=order_number)
-    # create an order to checkout
-    total_price = 0
-    total_amount = 0
-    #amounts = request.form.getlist('amount')
-    product_codes = request.form.getlist('product')
-    parameter_ids = request.form.getlist('parameter')
-    amounts = request.form.getlist('amount')
-    for code, para_ids, amount in zip(product_codes, parameter_ids, amounts):
-        product = Product.query.filter_by(code=code).first()
-        price = product.price;
-        parameters = []
-        for para in product.parameters:
-            if para.parameter_id in para_ids:
-                price += para.plus_price
-                parameters.append(para)
-                para_ids.remove(para.parameter_id)
-        if para_ids:
+    if request.method == 'GET':
+        code = request.args.get('order')
+        if not code:
             abort(400)
+        ticket = Ticket.query.get(code)
+    elif request.method == 'POST':
+        order_number_format = '%Y%m%d%H%M%S{0}%f'.format('0000') # the parameter is shoppoint code
+        now = datetime.now()
+        order_number = now.strftime(order_number_format)
+        ticket = Ticket(code=order_number)
+        print(order_number)
+        # create an order to checkout
+        total_price = Decimal(0)
+        total_amount = 0
+        #amounts = request.form.getlist('amount')
+        product_codes = request.form.getlist('product')
+        parameters_ids = request.form.getlist('parameter')
+        amounts = request.form.getlist('amount')
+        for code, para_ids, amount in zip(product_codes, parameters_ids, amounts):
+            amount = Decimal(amount)
+            product = Product.query.filter_by(code=code).first()
+            price = product.price;
+            parameters = []
+            for para in product.parameters:
+                if para.parameter_id in para_ids:
+                    price += para.plus_price
+                    parameters.append({"code": para.product_id, "name": para.parameter.name})
+                    para_ids.remove(para.parameter_id)
+            if para_ids:
+                abort(400)
 
-        tp = TicketProduct(product=product) 
-        tp.parameters = json.dumps([{"id": p.parameter_id, "name": p.parameter.name} for p in parameters]),
-        tp.original_price = price
-        tp.real_price = price
-        tp.amount = amount
-        ticket.products.append(tp)
+            tp = TicketProduct(product=product) 
+            tp.parameters = json.dumps(parameters),
+            tp.original_price = price
+            tp.real_price = price
+            tp.amount = amount
+            ticket.products.append(tp)
 
-        total_price += price
-        total_amount += amount
+            total_price += price * amount
+            total_amount += amount
 
-    ticket.required_datetime = request.form.get('date') + request.form.get('time')
-    ticket.note = request.form.get('note')
+        ticket.required_datetime = now #request.form.get('date') + request.form.get('time')
+        ticket.note = request.form.get('note')
 
-
-    ticket.product_amount = total_amount
-    ticket.original_price = total_price
-    ticket.real_price = total_price
-    ticket.member = current_user.member
-    address = Address.query.get(request.form.get('target-location'))
-    if address not in current_user.addresses:
-        abort(400)
-    ticket.address =  address
+        ticket.product_amount = total_amount
+        ticket.original_price = total_price
+        ticket.real_price = total_price
+        ticket.member = current_user.member
+        address = Address.query.get(request.form.get('target-location'))
+        if address not in current_user.addresses:
+            abort(400)
+        else:
+            ta = TicketAddress(contact_name=address.contact_name,
+                    mobile=address.mobile, address=address.address)
+            ticket.address = ta
 
     return render_template('shop/order.html', ticket=ticket, user=current_user)
 
@@ -148,14 +160,27 @@ def weixin_pay():
 def payresult():
     return render_template('shop/payresult.html')
 
+@shop.route('/myshop', methods=['GET', 'POST'])
+@login_required
+@member_required
+def myshop():
+    tickets = Ticket.query.filter_by(member_id=current_user.member_id)
+    return render_template('shop/myshop.html', tickets=tickets, user=current_user)
+
 @shop.route('/myinfo', methods=['GET', 'POST'])
 @login_required
-def member_info():
+def myinfo():
     if request.method == 'POST':
-        name = request.form.get('inputname')
-        current_user.member = Member(name=name)
-        db.session.add(current_user.member)
-        db.session.commit()
+        mobile = request.form.get('loginmobile')
+        email = request.form.get('loginemail')
+        current_user.mobile = mobile
+        current_user.email = email
+
+        name = request.form.get('name')
+        if current_user.member:
+            current_user.member.name = name
+        else:
+            current_user.member = Member(name=name, mobile=mobile)
     return render_template('shop/myinfo.html', user=current_user)
 
 @shop.route('/myaddress', methods=['GET', 'POST', 'DELETE', 'PUT'])

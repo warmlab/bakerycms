@@ -34,7 +34,7 @@ def create_app(config_name):
         sslify = SSLify(app)
 
     from .product import product as product_blueprint
-    app.register_blueprint(product_blueprint)
+    app.register_blueprint(product_blueprint, url_prefix='/product')
 
     from .auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
@@ -43,7 +43,7 @@ def create_app(config_name):
     app.register_blueprint(sale_blueprint, url_prefix="/sale")
 
     from .shop import shop as shop_blueprint
-    app.register_blueprint(shop_blueprint, url_prefix='/shop')
+    app.register_blueprint(shop_blueprint)
 
     from .gallery import gallery as gallery_blueprint
     app.register_blueprint(gallery_blueprint, url_prefix='/gallery')
