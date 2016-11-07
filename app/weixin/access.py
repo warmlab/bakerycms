@@ -5,9 +5,7 @@ from flask import current_app
 
 from werkzeug.contrib.cache import MemcachedCache
 
-from .. import db
-
-from ..models import WeixinMember
+from ..models import Member
 
 from ..exceptions import AccessTokenGotError
 
@@ -79,9 +77,9 @@ def get_member_info(openid, language='zh-CN'):
         groupid = info.get('groupid')
         tagid = sum(info.get('tagid_list'))
 
-        wm = WeixinMember(openid, unionid, subscribe, nickname, sex, city, country, province, headimgurl, remark, groupid, tagid, lang, subscribe_time)
-        db.session.add(wm)
-        db.session.commit()
+        #wm = WeixinMember(openid, unionid, subscribe, nickname, sex, city, country, province, headimgurl, remark, groupid, tagid, lang, subscribe_time)
+        #db.session.add(wm)
+        #db.session.commit()
     else:
         openid = info.get('openid')
         unionid = info.get('unionid')
