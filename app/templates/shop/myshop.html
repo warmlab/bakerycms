@@ -1,0 +1,95 @@
+{% extends "base-user.html" %}{% block main_content_section %}
+<div class="ui basic segment">
+	<h2 class="ui icon header">
+		<i class="user icon"></i>
+		<div class="content">
+			My World
+			<div class="sub header">
+				Manage your shopping cart.
+			</div>
+		</div>
+	</h2>
+	<div class="ui four item top attached menu">
+		<a class="active item">
+			待付款
+			<div class="ui small label">{{tickets.count()}}</div>
+		</a>
+		<a class="item">
+			待发货
+			<div class="ui small label">1</div>
+		</a>
+		<a class="item">
+			已发货
+			<div class="ui small label">1</div>
+		</a>
+		<a class="item">
+			已完成
+			<div class="ui small label">1</div>
+		</a>
+	</div>
+	<div class="ui attached segment" style="display: none;">
+		<div class="ui cards">{% for ticket in tickets %}
+			<div class="card">
+				<div class="content">
+					<div class="header">
+						联系人: {{ticket.address.contact_name}}
+					</div>
+					<div class="meta">
+						联系手机: {{ticket.address.mobile}}
+					</div>
+					<div class="meta">
+						联系地址: {{ticket.address.address}}
+					</div>
+					{% for tp in ticket.products %}
+					<div class="description">
+						{{tp.product.name}}
+					</div>
+					<div class="description">
+						 价格: {{tp.real_price}}  数量: {{tp.amount}}
+					</div>
+					{% endfor %}
+				</div>
+				<div class="extra content">
+					<a class="ui basic green button" href="{{url_for('.order', order=ticket.code, _method='GET')}}">查看</a>
+				</div>
+			</div>{% endfor %}
+		</div>
+	</div>
+	<div class="ui attached segment" style="display: none;">
+		<p>to be shipped</p>
+	</div>
+	<div class="ui attached segment" style="display: none;">
+		<p>shipped</p>
+	</div>
+	<div class="ui attached segment" style="display: none;">
+		<p>Done</p>
+	</div>
+</div>
+{% endblock %}
+{% block bottom_nav_section %}
+{% include "includes/bottom_fixed.html" %}
+{% endblock %}
+{% block inline_script_section %}
+<script>
+$(document).ready(function(){
+	var $segments = $('div.attached.segment');
+	var active_segment = function(index){
+		$segments.hide();
+		$segments.slice(index, index+1).show();
+
+	};
+
+	active_segment(0);
+
+	$('div.menu > a').click(function(e){
+		$(this).siblings().removeClass('active');
+		$(this).addClass('active');
+		console.log($(this).index());
+		active_segment($(this).index());
+	});
+
+	$bottom_menu = $('.bottom.fixed.menu');
+	$bottom_menu.children('[href="{{url_for('.myshop')}}"]').addClass('active');
+});
+</script>
+{% endblock %}

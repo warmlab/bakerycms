@@ -12,6 +12,7 @@ from sqlalchemy import or_
 #from .exceptions import ValidationError
 from . import db, login_manager
 
+
 class Shoppoint(db.Model):
     __tablename__ = 'shoppoint'
 
@@ -49,11 +50,6 @@ class Address(db.Model):
                          backref=db.backref('addresses', lazy="dynamic"))
 
 
-    #staff_id = db.Column(db.Integer, db.ForeignKey('staff.id'), nullable=True)
-    #staff = db.relationship('Staff',
-    #                     backref=db.backref('addresses', lazy="dynamic"))
-
-
 class MemberGrade(db.Model): # 会员等级或分类
     __tablename__ = 'member_grade'
 
@@ -66,40 +62,6 @@ class MemberGrade(db.Model): # 会员等级或分类
     def __repr__(self):
         return self.name
 
-class WeixinMember(db.Model):
-    __tablename__ = 'weixin_member'
-
-    openid = db.Column(db.String(64), primary_key=True) # used in weixin
-    unionid = db.Column(db.String(64), unique=True, nullable=True) # used in weixin
-    subscribe = db.Column(db.Boolean)
-    subscribe_time = db.Column(db.DateTime)
-    nickname = db.Column(db.String(64))
-    sex = db.Column(db.SmallInteger)
-    city = db.Column(db.String(64))
-    country = db.Column(db.String(64))
-    province = db.Column(db.String(64))
-    language = db.Column(db.String(64))
-    headimgurl = db.Column(db.String(2048))
-    remark = db.Column(db.String(64))
-    groupid = db.Column(db.String(64))
-    tagid = db.Column(db.BigInteger)
-
-    def __init__(self, openid, unionid, subscribe, nickname, sex, city, country, province, headimgurl,
-                 remark=None, groupid=None, tagid=None, language=None, subscribe_time=None):
-        self.openid = openid
-        self.unionid = unionid 
-        self.subscribe = subscribe 
-        self.subscribe_time = subscribe_time 
-        self.nickname = nickname 
-        self.sex = sex 
-        self.city = city 
-        self.country = country 
-        self.province = province 
-        self.language = language 
-        self.headimgurl = headimgurl 
-        self.remark = remark 
-        self.groupid = groupid 
-        self.tagid = tagid 
 
 class Member(db.Model):
     __tablename__ = 'member'
@@ -120,8 +82,8 @@ class Member(db.Model):
     grade = db.relationship('MemberGrade',
                          backref=db.backref('members', lazy='dynamic'))
 
-    #weixin_openid = db.Column(db.String(64), db.ForeignKey('weixin_member.openid'))
-    #weixin_member = db.relationship("WeixinMember", back_populates='member')
+    weixin_openid = db.Column(db.String(64), unique=True, nullable=True) # used in weixin
+    weixin_unionid = db.Column(db.String(64), unique=True, nullable=True) # used in weixin
 
 class Staff(db.Model):
     __tablename__ = 'staff'
@@ -158,8 +120,6 @@ class UserAuth(db.Model, UserMixin):
     staff = db.relationship('Staff', uselist=False, foreign_keys=staff_id)
     member_id = db.Column(db.Integer(), db.ForeignKey('member.id', ondelete='CASCADE'))
     member = db.relationship('Member', uselist=False, foreign_keys=member_id)
-    #weixin_openid = db.Column(db.String(64), db.ForeignKey('weixin_member.openid', ondelete='CASCADE'))
-    #weixin = db.relationship('WeixinMember', uselist=False, foreign_keys=weixin_openid)
 
     shoppoint_id = db.Column(db.Integer, db.ForeignKey('shoppoint.id'), nullable=True)
     shoppoint = db.relationship('Shoppoint',
@@ -180,7 +140,7 @@ class UserAuth(db.Model, UserMixin):
         return False
 
     def get_id(self):
-        return self.email
+        return self.mobile if self.mobile else self.email
 
     def is_active(self):
         return self.active
@@ -573,245 +533,7 @@ class ShoppingCart(db.Model):
 @login_manager.user_loader
 def user_loader(email):
     user = UserAuth.query.filter(or_(UserAuth.email==email, UserAuth.mobile==email)).first()
-    print('user loader', user)
     if not user:
         return None
 
     return user
-
-
-"""
-@login_manager.request_loader
-def request_loader(request):
-    email = request.form.get('email')
-    staff = Staff.query.filter_by(email=email).first()
-    if not staff:
-        return None
-
-    # DO NOT ever store passwords in plaintext and always compare password
-    # hashes using constant-time comparison!
-    #staff.is_authenticated = request.form.get('password') == staff.password
-
-    return staff
-
-class GalleryCategory(db.Model):
-    __tablename__ = 'gallery_category'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(128), unique=True, index=True)
-    english_name = db.Column(db.String(128), unique=True, index=True, nullable=False)
-    description = db.Column(db.Text)
-
-    def __init__(self, name, english_name, description=None):
-        self.name = name
-        self.english_name = english_name
-
-    def __repr__(self):
-        return self.name
-
-class RestockHistory(db.Model):
-    __tablename__ = 'restock_history'
-    order_number = db.Column(db.String(64), primary_key=True)
-    order_time = db.Column(db.DateTime, default=datetime.utcnow) # 订货时间
-
-    shoppoint_id = db.Column(db.Integer, db.ForeignKey('shoppoint.id'), nullable=True)
-    shoppoint = db.relationship('Shoppoint',
-                         backref=db.backref('restock_histories', lazy="dynamic"))
-
-class RestockDetail(db.Model):
-    __tablename__ = 'restock_detail'
-    id = db.Column(db.Integer, primary_key=True)
-    history_id = db.Column(db.Integer, db.ForeignKey('restock_history.id'))
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
-    supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'))
-    price = db.Column(db.Numeric(7,2), default=0) # 该次订货，商品价格，会遇到一些打折商品
-    arrived_time = db.Column(db.DateTime, default=datetime.utcnow) # 到货时间
-    description = db.Column(db.Text)
-
-    product = db.relationship("Product", back_populates="suppliers")
-    supplier = db.relationship("Supplier", back_populates="products")
-
-
-class ProductSpecification(db.Model):
-    __tablename__ = 'product_specification'
-
-    id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
-    specification_id = db.Column(db.Integer, db.ForeignKey('specification.id'))
-    #supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'))
-    restock_price = db.Column(db.Numeric(7,2), default=0.0)
-    original_price = db.Column(db.Numeric(7,2), default=0.0)
-    price = db.Column(db.Numeric(7,2), default=0.0)
-    member_price = db.Column(db.Numeric(7,2), default=0.0)
-    stock = db.Column(db.Numeric(7,2), default=0.0) # 库存
-    is_available = db.Column(db.Boolean, default=True)
-    is_deleted = db.Column(db.Boolean, default=False)
-    description = db.Column(db.Text)
-
-    product = db.relationship("Product", back_populates="specifications")
-    specification = db.relationship('Specification', back_populates='products')
-    #supplier = db.relationship('Supplier', back_populates='products')
-
-    def __init__(self, product, specification, restock_price, price,
-            old_price=0.0, member_price=0.0, stock=0.0,
-            is_available=True, is_deleted=True, description=None):
-        self.product = product
-        self.specification = specification
-        self.restock_price = restock_price
-        self.price = price
-        self.old_price = old_price
-        self.member_address = member_price
-        self.stock = stock
-        self.is_available = is_available
-        self.is_deleted = is_deleted
-        self.description = description
-
-class Specification(db.Model):
-    __tablename__ = 'specification'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(128), unique=True, index=True)
-    amount = db.Column(db.Numeric(7,2), default=0.0) # 规格中含有的克数或者ml数
-    unit = db.Column(db.String(8))
-    description = db.Column(db.Text)
-
-    products = db.relationship('ProductSpecification',
-                        back_populates='specification')
-
-    def __init__(self, name, amount, unit=None, description=None):
-        self.name = name
-        self.amount = amount
-        self.unit = unit
-        self.description = description
-
-    def __repr__(self):
-        return ""
-
-class Staff(UserMixin, db.Model):
-    __tablename__ = 'staff'
-
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(64), unique=True, index=True)
-    mobile = db.Column(db.String(16), unique=True, index=True) #手机号码
-    identify_card_no = db.Column(db.String(64), unique=True) # 员工身份证
-    name = db.Column(db.String(128))
-    nickname = db.Column(db.String(64)) # 员工昵称
-    login_name = db.Column(db.String(64), unique=True, index=True) # 登录名称
-    pos_code = db.Column(db.String(4), unique=True, index=True) # POS登录名称
-    openid = db.Column(db.String(64), unique=True, nullable=True)
-    password_hash = db.Column(db.String(128))
-    confirmed = db.Column(db.Boolean, default=False)
-    location = db.Column(db.String(64))
-    about_me = db.Column(db.Text)
-    staff_since = db.Column(db.DateTime, default=datetime.utcnow)
-    staff_end = db.Column(db.DateTime, default=None)
-    avatar_hash = db.Column(db.String(32)) # 头像
-
-    def __init__(self, **kwargs):
-        super(User, self).__init__(**kwargs)
-
-    @property
-    def password(self):
-        raise AttributeError('password is not a readable attribute')
-
-    @password.setter
-    def password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def verify_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-    def generate_confirmation_token(self, expiration=3600):
-        s = Serializer(current_app.config['SECRET_KEY'], expiration)
-        return s.dumps({'confirm': self.id})
-
-    def confirm(self, token):
-        s = Serializer(current_app.config['SECRET_KEY'])
-        try:
-            data = s.loads(token)
-        except:
-            return False
-        if data.get('confirm') != self.id:
-            return False
-        self.confirmed = True
-        db.session.add(self)
-        return True
-
-    def generate_reset_token(self, expiration=3600):
-        s = Serializer(current_app.config['SECRET_KEY'], expiration)
-        return s.dumps({'reset': self.id})
-
-    def reset_password(self, token, new_password):
-        s = Serializer(current_app.config['SECRET_KEY'])
-        try:
-            data = s.loads(token)
-        except:
-            return False
-        if data.get('reset') != self.id:
-            return False
-        self.password = new_password
-        db.session.add(self)
-        return True
-
-    def generate_email_change_token(self, new_email, expiration=3600):
-        s = Serializer(current_app.config['SECRET_KEY'], expiration)
-        return s.dumps({'change_email': self.id, 'new_email': new_email})
-
-    def change_email(self, token):
-        s = Serializer(current_app.config['SECRET_KEY'])
-        try:
-            data = s.loads(token)
-        except:
-            return False
-        if data.get('change_email') != self.id:
-            return False
-        new_email = data.get('new_email')
-        if new_email is None:
-            return False
-        if self.query.filter_by(email=new_email).first() is not None:
-            return False
-        self.email = new_email
-        self.avatar_hash = hashlib.md5(
-            self.email.encode('utf-8')).hexdigest()
-        db.session.add(self)
-        return True
-
-    def ping(self):
-        self.last_seen = datetime.utcnow()
-        db.session.add(self)
-
-    def gravatar(self, size=100, default='identicon', rating='g'):
-        if request.is_secure:
-            url = 'https://secure.gravatar.com/avatar'
-        else:
-            url = 'http://www.gravatar.com/avatar'
-        hash = self.avatar_hash or hashlib.md5(
-            self.email.encode('utf-8')).hexdigest()
-        return '{url}/{hash}?s={size}&d={default}&r={rating}'.format(
-            url=url, hash=hash, size=size, default=default, rating=rating)
-
-    def to_json(self):
-        json_user = {
-            'url': url_for('rest.get_user', id=self.id, _external=True),
-            'staff_name': self.staff_name,
-            'staff_since': self.staff_since,
-            'last_seen': self.last_seen,
-        }
-        return json_user
-
-    def generate_auth_token(self, expiration):
-        s = Serializer(current_app.config['SECRET_KEY'],
-                       expires_in=expiration)
-        return s.dumps({'id': self.id}).decode('ascii')
-
-    @staticmethod
-    def verify_auth_token(token):
-        s = Serializer(current_app.config['SECRET_KEY'])
-        try:
-            data = s.loads(token)
-        except:
-            return None
-        return Staff.query.get(data['id'])
-
-    def __repr__(self):
-        return '<Staff %r>' % self.staff_name
-        return self.name
-"""

@@ -6,9 +6,10 @@ def member_required(fn):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            if not current_user.member:
-                #abort(403)
-                return redirect(url_for('shop.myshop', _method='GET'))
+            if current_user.is_anonymous:
+                return redirect(url_for('auth.login', _method='GET'))
+            elif not current_user.member:
+                return redirect(url_for('shop.myinfo', _method='GET'))
             return f(*args, **kwargs)
         return decorated_function
     return decorator(fn)

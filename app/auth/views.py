@@ -34,7 +34,6 @@ def login():
             user = UserAuth.query.filter(or_(UserAuth.email==form.email.data, UserAuth.mobile==form.email.data)).first()
             if user is not None and user.verify_password(form.password.data):
                 login_user(user)
-                current_user=user
                 return redirect(request.args.get('next') or url_for('shop.index'))
             flash('Invalid username or password.')
     return render_template('auth/login.html', form=form)

@@ -12,13 +12,13 @@ class Config:
     MAIL_USE_TLS = True
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    CARO_MAIL_SUBJECT_PREFIX = '[CAROBakery]'
-    CARO_MAIL_SENDER = 'CAROBakery Admin <warmlab@outlook.com>'
-    CARO_ADMIN = os.environ.get('CAROBAKERY_ADMIN')
-    CARO_POSTS_PER_PAGE = 20
-    CARO_FOLLOWERS_PER_PAGE = 50
-    CARO_COMMENTS_PER_PAGE = 30
-    CARO_SLOW_DB_QUERY_TIME=0.5
+    BAKERY_MAIL_SUBJECT_PREFIX = '[CAROBakery]'
+    BAKERY_MAIL_SENDER = 'CAROBakery Admin <warmlab@outlook.com>'
+    BAKERY_ADMIN = os.environ.get('CAROBAKERY_ADMIN')
+    BAKERY_POSTS_PER_PAGE = 20
+    BAKERY_FOLLOWERS_PER_PAGE = 50
+    BAKERY_COMMENTS_PER_PAGE = 30
+    BAKERY_SLOW_DB_QUERY_TIME=0.5
     UPLOAD_FOLDER = os.environ.get('BAKERYCMS_UPLOAD_DIR') or os.path.join(basedir, 'media')
 
     WEIXIN_TOKEN = os.environ.get('WEIXIN_TOKEN')
@@ -71,9 +71,9 @@ class ProductionConfig(Config):
                 secure = ()
         mail_handler = SMTPHandler(
             mailhost=(cls.MAIL_SERVER, cls.MAIL_PORT),
-            fromaddr=cls.CARO_MAIL_SENDER,
-            toaddrs=[cls.CARO_ADMIN],
-            subject=cls.CARO_MAIL_SUBJECT_PREFIX + ' Application Error',
+            fromaddr=cls.BAKERY_MAIL_SENDER,
+            toaddrs=[cls.BAKERY_ADMIN],
+            subject=cls.BAKERY_MAIL_SUBJECT_PREFIX + ' Application Error',
             credentials=credentials,
             secure=secure)
         mail_handler.setLevel(logging.ERROR)
