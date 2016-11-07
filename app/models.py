@@ -253,6 +253,7 @@ class Product(db.Model):
     is_available_on_pos = db.Column(db.Boolean, default=True) # POS端显示标志
     is_deleted = db.Column(db.Boolean, default=False) # 删除标志
     to_point = db.Column(db.Boolean, default=False) # 是否参与积分
+    pre_order_hours = db.Column(db.Integer, default=24) # 需要预定的时间，一般为提前一天预定
     pub_date = db.Column(db.DateTime, default=datetime.utcnow)
     #unit = db.Column(db.String(8))
     description = db.Column(db.Text)
