@@ -1,7 +1,7 @@
 import hashlib
 from decimal import Decimal
 
-from flask import render_template
+from flask import render_template, abort
 from flask import request, current_app, make_response
 
 from flask_login import login_required, current_user
@@ -39,7 +39,7 @@ def access():
         echostr = request.args.get('echostr')
         if check_signature('TODO', signature, timestamp, nonce):
             return echostr
-        return "you're not weixin", 400
+        abort(400)
     else:
         openid = request.args.get('openid')
         body = request.data.decode('utf-8')

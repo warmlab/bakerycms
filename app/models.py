@@ -6,7 +6,7 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 #import bleach
 from flask import current_app#, url_for
 from flask import json, jsonify
-from flask_login import UserMixin
+from flask_login import UserMixin, AnonymousUserMixin
 
 from sqlalchemy import or_
 #from .exceptions import ValidationError
@@ -185,7 +185,6 @@ class UserAuth(db.Model, UserMixin):
     def is_active(self):
         return self.active
 
-    @property
     def is_authenticated(self):
         return True
 
@@ -204,9 +203,26 @@ class UserAuth(db.Model, UserMixin):
             return False
         if data.get('confirm') != self.id:
             return False
-        self.confirmed = True
+        self.confirmed_at = datetime.utcnow();
         db.session.add(self)
         return True
+
+    def ping(self):
+        pass
+        #self.last_seen = datetime.utcnow()
+        #db.session.add(self)
+
+class AnonymousUser(AnonymousUserMixin):
+    def can(self, permissions):
+        return False
+
+    def is_administrator(self):
+        return False
+
+    def is_authenticated(self):
+        return False
+
+login_manager.anonymous_user = AnonymousUser
 
 class Supplier(db.Model): # 存储供应商和物流商信息
     __tablename__ = 'supplier'
@@ -557,6 +573,7 @@ class ShoppingCart(db.Model):
 @login_manager.user_loader
 def user_loader(email):
     user = UserAuth.query.filter(or_(UserAuth.email==email, UserAuth.mobile==email)).first()
+    print('user loader', user)
     if not user:
         return None
 
@@ -576,7 +593,6 @@ def request_loader(request):
     #staff.is_authenticated = request.form.get('password') == staff.password
 
     return staff
-
 
 class GalleryCategory(db.Model):
     __tablename__ = 'gallery_category'

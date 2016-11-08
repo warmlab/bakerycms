@@ -26,11 +26,11 @@
               rules: [
                 {
                   type   : 'empty',
-                  prompt : 'Please enter your e-mail'
+                  prompt : 'Please enter your e-mail or telephone number'
                 },
                 {
                   type   : 'email',
-                  prompt : 'Please enter a valid e-mail'
+                  prompt : 'Please enter a valid e-mail or telephone number'
                 }
               ]
             },
@@ -57,26 +57,23 @@
 <body>{% block header_block %}{% endblock %}{% block main_content_section %}
 <div class="ui middle aligned center aligned grid">
   <div class="column">
-    <h2 class="ui orange image header">
-        {#<img src="assets/images/logo.png" class="image">#}
+    <h2 class="ui orange image header">{#<img src="assets/images/logo.png" class="image">#}
       <div class="content">
         Login Amei Bakery's Backend
       </div>
     </h2>
-    <form class="ui large form" method="POST" action="{{url_for('.login')}}">
+    <form class="ui large form" method="POST" action="{{url_for('.login')}}{%if request.args.get('next')%}?next={{request.args.get('next')}}{%endif%}">
         {{form.csrf_token}}
       <div class="ui stacked segment">
         <div class="field">
           <div class="ui left icon input">
-            <i class="user icon"></i>
-            {#<input type="text" name="email" placeholder="E-mail address">#}
+            <i class="user icon"></i>{#<input type="text" name="email" placeholder="E-mail address">#}
             {{ form.email(placeholder="E-mail address") }}
           </div>
         </div>
         <div class="field">
           <div class="ui left icon input">
-            <i class="lock icon"></i>
-            {#<input type="password" name="password" placeholder="Password">#}
+            <i class="lock icon"></i>{#<input type="password" name="password" placeholder="Password">#}
             {{ form.password(placeholder="Password") }}
           </div>
         </div>

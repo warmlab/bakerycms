@@ -8,7 +8,7 @@
 		<div class="sub header">Manage your Category.</div>
 	</div>
   </h2>
-  <form class="ui form" method="POST" action="/category{%if not category%}?new=1{%else%}?code={{ category.id }}{%endif%}">
+  <form class="ui form" method="POST" action="{{url_for('.category_detail')}}{%if not category%}?new=1{%else%}?code={{ category.id }}{%endif%}">
 	  <div class="inline field">
 		  <label for="inputname">分类名称</label>
 		  <input id="inputname" name="inputname" placeholder="面包" type="text" value="{{ category.name }}">

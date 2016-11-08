@@ -8,7 +8,7 @@
 			<div class="sub header">Manage your Categories.</div>
 		</div>
 	</h2>
-	<a href="/category?new=1" class="ui basic button"><i class="plus icon"></i>新增产品分类</a>
+	<a href="{{url_for('.category_detail')}}?new=1" class="ui basic button"><i class="plus icon"></i>新增产品分类</a>
     <table class="ui three column table">
         <thead>
             <tr>
@@ -31,7 +31,7 @@
 	  </tbody>
 	  <tfoot>
 	  <tr>
-          <th>{{categories|length}} Categories</th>
+          <th>{{categories.count()}} Categories</th>
           <th></th>
           <th></th>
 	  </tr>

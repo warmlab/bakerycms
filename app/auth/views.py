@@ -13,19 +13,18 @@ from .forms import LoginForm, RegistrationForm, ChangePasswordForm,\
 
 @auth.before_app_request
 def before_request():
-    if current_user.is_authenticated \
-        and not current_user.confirmed \
+    if current_user.is_authenticated():
+        current_user.ping()
+        if not current_user.confirmed \
                 and request.endpoint[:5] != 'auth.' \
                 and request.endpoint != 'static':
             return redirect(url_for('auth.unconfirmed'))
 
-
 @auth.route('/unconfirmed')
 def unconfirmed():
     if current_user.is_anonymous or current_user.confirmed:
-        return redirect(url_for('main.index'))
+        return redirect(url_for('shop.index'))
     return render_template('auth/unconfirmed.html')
-
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
@@ -34,7 +33,8 @@ def login():
         if form.validate_on_submit():
             user = UserAuth.query.filter(or_(UserAuth.email==form.email.data, UserAuth.mobile==form.email.data)).first()
             if user is not None and user.verify_password(form.password.data):
-                login_user(user, form.remember_me.data)
+                login_user(user)
+                current_user=user
                 return redirect(request.args.get('next') or url_for('shop.index'))
             flash('Invalid username or password.')
     return render_template('auth/login.html', form=form)

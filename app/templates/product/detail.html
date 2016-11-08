@@ -8,7 +8,7 @@
 			<div class="sub header">Manage your product.</div>
 		</div>
 	</h2>
-  <form class="ui form" method="POST" action="/product{%if product %}?code={{ product.code }}{%else%}?new=1{%endif%}">
+  <form class="ui form" method="POST" action="{{url_for('.product_detail')}}{%if product %}?code={{ product.code }}{%else%}?new=1{%endif%}">
 	  <div class="inline field">
 		  <label>产品编码</label>
 		  {% if product %}
@@ -104,6 +104,10 @@
 	  {% endif %}
 	  {% endfor %}
 	  <div class="inline field">
+	  <div class="field">
+		  <label for="inputdesc">描述</label>
+		  <textarea name="inputdesc" rows="3">{{ product.description }}</textarea>
+	  </div>
           <button type="submit" class="ui primary right button">保存</button>
 	  </div>
   <div id="image-selector" class="ui large modal">
@@ -246,7 +250,6 @@ function remove_line(line)
 {
 	var this_line = line.parentNode;
 	this_line.parentNode.removeChild(this_line);
-
 }
 </script>
 {% endblock %}

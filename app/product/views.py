@@ -22,20 +22,19 @@ from ..decorators import staff_required
 @product.after_app_request
 def after_request(response):
     for query in get_debug_queries():
-        if query.duration >= current_app.config['CARO_SLOW_DB_QUERY_TIME']:
+        if query.duration >= current_app.config['BAKERY_SLOW_DB_QUERY_TIME']:
             current_app.logger.warning(
                 'Slow query: %s\nParameters: %s\nDuration: %fs\nContext: %s\n'
                 % (query.statement, query.parameters, query.duration,
                    query.context))
     return response
 
-
 # If GET is present, HEAD will be added automatically for you
-@product.route('/products', methods=['GET', 'POST'])
+@product.route('/', methods=['GET'])
 @login_required
 @staff_required
 def product_list():
-    products = Product.query.all()
+    products = Product.query.filter_by(is_available_on_web=True)
     return render_template('product/list.html', products=products)
 
 def _product_images(product, image_names):
@@ -120,6 +119,7 @@ def product_detail():
                               request.form['inputpinyin'], category, request.form['inputoriginalprice'],
                               request.form['inputprice'], request.form['inputmemberprice'], request.form['inputstock'],
                               checkweb, checkpos, checkpoint)
+            product.description = request.form.get('inputdesc')
             print ("The new product is: %s" % product)
         else:
             code = request.args.get('code')
@@ -141,6 +141,7 @@ def product_detail():
             product.is_available_on_pos = checkpos
             product.is_deleted = False
             product.to_point = checkpoint
+            product.description = request.form.get('inputdesc')
             #categories = ProductCategory.query.get_or_404()
 
         # set product images
@@ -157,8 +158,8 @@ def product_detail():
         removed_parameters = []
 
         # save product to database
-        db.session.add(product)
-        db.session.commit()
+        #db.session.add(product)
+        #db.session.commit()
 
         #product = Product.query.filter_by(code=slug).first()
         #categories = ProductCategory.query.all()
@@ -176,9 +177,9 @@ def product_detail():
         if not code:
             abort(400)
         product = Product.query.filter_by(code=code).first()
-    categories = ProductCategory.query.all()
-    parameter_categories = ParameterCategory.query.all()
-    images = Image.query.all()
+    categories = ProductCategory.query
+    parameter_categories = ParameterCategory.query
+    images = Image.query
     #specifications = Specification.query.all()
     #parameters = Parameter.query.all()
 
@@ -189,7 +190,7 @@ def product_detail():
 @login_required
 @staff_required
 def category_list():
-    categories = ProductCategory.query.all()
+    categories = ProductCategory.query
     return render_template('category/list.html', categories=categories)
 
 @product.route('/category', methods=['GET', 'POST'])

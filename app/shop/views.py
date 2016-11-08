@@ -14,6 +14,7 @@ from ..decorators import member_required
 
 from ..models import Product, Member, Address
 from ..models import Ticket, TicketProduct, TicketAddress
+from ..models import AnonymousUser
 
 @shop.route('/products', methods=['GET'])
 @shop.route('/', methods=['GET'])
@@ -160,12 +161,15 @@ def weixin_pay():
 def payresult():
     return render_template('shop/payresult.html')
 
-@shop.route('/myshop', methods=['GET', 'POST'])
+@shop.route('/myshop', methods=['GET'])
 @login_required
 @member_required
 def myshop():
-    tickets = Ticket.query.filter_by(member_id=current_user.member_id)
-    return render_template('shop/myshop.html', tickets=tickets, user=current_user)
+    if not current_user.is_anonymous:
+        tickets = Ticket.query.filter_by(member_id=current_user.member_id)
+        return render_template('shop/myshop.html', tickets=tickets, user=current_user)
+    else:
+        return redirect(url_for('auth.login'))
 
 @shop.route('/myinfo', methods=['GET', 'POST'])
 @login_required
