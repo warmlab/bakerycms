@@ -1,3 +1,4 @@
+import os
 import urllib
 
 from flask import json
@@ -5,7 +6,9 @@ from flask import current_app
 
 from werkzeug.contrib.cache import MemcachedCache
 
-from ..models import Member
+from .. import db
+
+from ..models import Member, Image
 
 from ..exceptions import AccessTokenGotError
 
@@ -19,6 +22,19 @@ def _access_weixin_api(url, **kwargs):
         info = json.loads(result)
 
         return info
+
+def store_weixin_picture(url, name):
+    if not url or not name:
+        return
+
+    print(url)
+    with urllib.request.urlopen(url) as f:
+        p = open(os.path.join(current_app.config['UPLOAD_FOLDER'], '.'.join([name, 'jpg'])), 'wb')
+        p.write(f.read())
+
+        image = Image(name, name, current_app.config['UPLOAD_FOLDER'], 'jpg')
+        db.session.add(image)
+        db.session.commit()
 
 def _get_access_token(force=False):
     cache = MemcachedCache(['/var/run/memcached/bakerycms.sock']) #TODO move memcached socket to config

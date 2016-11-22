@@ -8,16 +8,18 @@ class Message():
         self.__properties = {}
 
     def generate_response_body(self):
+        if self.event == 'CLICK' and self.event_key == 'my_location':
+            return self._generate_location_body()
         return self._generate_text_body()
 
     def _generate_text_body(self):
-        home_web = "http://m.wecakes.com/shop"
+        home_web = "http://m.wecakes.com"
         body = """<xml>
         <ToUserName><![CDATA[%s]]></ToUserName>
         <FromUserName><![CDATA[%s]]></FromUserName>
         <CreateTime>%d</CreateTime>
         <MsgType><![CDATA[text]]></MsgType>
-        <Content><![CDATA[您好，欢迎关注我们，请移步至 %s 选购]]></Content>
+        <Content><![CDATA[您好，欢迎关注我们，请致电18053214078，0532-58806365订购。%s 正在积极装修中，敬请期待]]></Content>
         </xml>""" % (self.__properties['FromUserName'], self.__properties['ToUserName'], int(time()), home_web)
 
         return body
@@ -39,10 +41,15 @@ class Message():
                 </SendLocationInfo>
             </xml>""" % (self.__properties['FromUserName'], self.__properties['ToUserName'], int(time()))
 
+        print(body)
+
         return body
 
     def set_value(self, tag, value):
         self.__properties[tag] = value
+
+    def get_value(self, tag):
+        return self.__properties.get(tag)
 
     @property
     def type(self):
@@ -50,7 +57,11 @@ class Message():
 
     @property
     def event(self):
-        return self.__properties['Event'];
+        return self.__properties.get('Event');
+
+    @property
+    def event_key(self):
+        return self.__properties.get('EventKey')
 
 def parse_message(xmlbody):
     root = etree.fromstring(xmlbody)

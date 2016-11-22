@@ -63,7 +63,6 @@ def image_upload():
     files = request.files.getlist('upload-image')
     for f in files:
         filename = f.filename
-        print('aaa',filename)
         if not filename:
             abort(400)
         upload_name, name, ext = __generate_filename(filename)

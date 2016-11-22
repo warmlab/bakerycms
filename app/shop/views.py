@@ -1,7 +1,8 @@
+from time import time
 from datetime import datetime
 from decimal import Decimal
 
-from flask import render_template, redirect
+from flask import render_template, redirect, current_app
 from flask import request, url_for, abort, json
 
 from flask_login import login_required, current_user
@@ -15,6 +16,8 @@ from ..decorators import member_required
 from ..models import Product, Member, Address
 from ..models import Ticket, TicketProduct, TicketAddress
 from ..models import AnonymousUser
+
+from ..weixin import pay as weixin_pay
 
 @shop.route('/products', methods=['GET'])
 @shop.route('/', methods=['GET'])
@@ -87,7 +90,7 @@ def checkout():
 
     return render_template('shop/pre-order.html', user=current_user, items=items)
 
-@shop.route('/order', methods=['POST', 'GET'])
+@shop.route('/order/', methods=['POST', 'GET'])
 @login_required
 @member_required
 def order():
@@ -147,14 +150,35 @@ def order():
                     mobile=address.mobile, address=address.address)
             ticket.address = ta
 
-    return render_template('shop/order.html', ticket=ticket, user=current_user)
+    weixin = weixin_pay.unified_order_js_config(current_app.config['WEIXIN_APPID'], current_app.config['WEIXIN_APPSECRET'])
+    return render_template('shop/order.html', ticket=ticket, user=current_user, weixin=weixin)
+
+@shop.route('/unifiedorder', methods=['POST'])
+@login_required
+@member_required
+def unified_order():
+    ticket_code = request.form.get('ticket-code')
+    ticket = Ticket.query.get(ticket_code)
+    result = weixin_pay.unified_order(ticket, current_app.config['WEIXIN_APPID'],
+            current_app.config['WEIXIN_MCHID'], current_app.config['WEIXIN_APPSECRET'],
+            current_user, url_for('weixin.pay_notify', _external=True))
+
+    print (result)
+    if result.get('return_code') == "SUCCESS":
+        if result.get('result_code') == "SUCCESS":
+            #ticket.payment_code = prepay_id
+            package = '='.join(['prepay_id', result.get('prepay_id')])
+            params = {'timeStamp': int(time()), 'appId': current_app.config['WEIXIN_APPID'], 'nonceStr': result.get('nonce_str'), 'package': package, 'signType': 'MD5'}
+            params['signature'], signType = weixin_pay.generate_sign(params, current_app.config['WEIXIN_APPSECRET'])
+            params['pack'] = [package]
+
+            return json.dumps(params), 201
+        elif result.get('result_code') == 'FAIL' and result.get('err_code') == 'OUT_TRADE_NO_USED':
+            return result, 409
+    return '{"error-code": 1, "errMsg": "error"}', 403 # TODO
 
 @shop.route('/dopay', methods=['POST'])
 def do_pay():
-    return render_template('shop/payresult.html')
-
-@shop.route('/wxpay', methods=['POST'])
-def weixin_pay():
     return render_template('shop/payresult.html')
 
 @shop.route('/payresult', methods=['POST', 'GET'])
@@ -212,7 +236,13 @@ def my_address():
     print (request.data)
     return render_template('shop/myaddress.html', user=current_user)
 
+@shop.route('/diy')
+def diy():
+    return redirect('https://mp.weixin.qq.com/s?__biz=MzAwMjE3MzEyNw==&mid=2455220715&idx=1&sn=d0798bb8779fd9dec89f9958017f249b&chksm=8d6d6043ba1ae9551cdc202ce9bbd2040fe18f950096a8f26eda4d2345bbedb17cd1e7ef3bbd&mpshare=1&scene=1&srcid=1123XB5W4s9PqTG1KAS8WxtG&pass_ticket=0Y41Ml3EcPHX%2B%2FVBw5imdigDDp8ejLPhVIR%2Fj7DUZlr0jaLe7oh9G6Q404U66%2BEN#rd')
+
+"""
 @shop.route('/member/<username>')
+@login_required
 def user(username):
     user = Member.query.filter_by(username=username).first_or_404()
     page = request.args.get('page', 1, type=int)
@@ -222,7 +252,6 @@ def user(username):
     posts = pagination.items
     return render_template('user.html', user=user, posts=posts,
                            pagination=pagination)
-
 
 @shop.route('/edit-profile', methods=['GET', 'POST'])
 @login_required
@@ -266,3 +295,4 @@ def edit_profile_admin(id):
     form.location.data = user.location
     form.about_me.data = user.about_me
     return render_template('edit_profile.html', form=form, user=user)
+"""

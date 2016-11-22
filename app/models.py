@@ -148,6 +148,10 @@ class UserAuth(db.Model, UserMixin):
     def is_authenticated(self):
         return True
 
+    @property
+    def is_anonymous(self):
+        return False
+
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
 
@@ -361,8 +365,8 @@ class ProductSupplier(db.Model):
 # order table
 class Ticket(db.Model):
     __tablename__ = 'ticket'
-    code = db.Column(db.String(64), primary_key=True, index=True) # 订单编号
-    payment_code = db.Column(db.String(64), nullable=True) # 第三方支付平台订单编号
+    code = db.Column(db.String(32), primary_key=True, index=True) # 订单编号
+    payment_code = db.Column(db.String(128), nullable=True) # 第三方支付平台订单编号
     #cashier = models.ForeignKey(Staff) # 收银员
     product_amount = db.Column(db.Integer, default=1) # 商品总数量
     original_price = db.Column(db.Numeric(7,2), default=0) # 订单原始总价格

@@ -34,7 +34,7 @@ def after_request(response):
 @login_required
 @staff_required
 def product_list():
-    products = Product.query.filter_by(is_available_on_web=True)
+    products = Product.query.filter_by()
     return render_template('product/list.html', products=products)
 
 def _product_images(product, image_names):
@@ -56,6 +56,7 @@ def _product_images(product, image_names):
     for pi in pis:
         if pi not in found_images:
             print('delete pi: ', pi.product_id)
+            db.session.delete(pi)
             product.images.remove(pi)
 
     # append added images

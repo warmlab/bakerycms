@@ -24,6 +24,8 @@ class Config:
     WEIXIN_TOKEN = os.environ.get('WEIXIN_TOKEN')
     WEIXIN_APPID = os.environ.get('WEIXIN_APPID')
     WEIXIN_APPSECRET = os.environ.get('WEIXIN_APPSECRET')
+    WEIXIN_MCHID = os.environ.get('WEIXIN_MCHID')
+    #WEIXIN_DEVICEID = os.environ.get('WEIXIN_DEVICEID')
 
     @staticmethod
     def init_app(app):
