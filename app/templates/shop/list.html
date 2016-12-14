@@ -27,7 +27,7 @@
 <div class="ui basic segments">
 	{% for product in products %}
 	<div class="ui clearing segment">
-		<a href="{{url_for('.product_detail', code=product.code, _method='GET')}}">
+		<a href="{{url_for('.product_detail', shoppoint=shoppoint.code, code=product.code, _method='GET')}}">
 			<div class="ui image middle aligned header">
 				<img src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" class="ui small rounded image">
 				<div class="content">
@@ -60,9 +60,7 @@
 {% block bottom_nav_section %}
 {% include "includes/bottom_fixed.html" %}
 {% endblock %}
-{% block special_script_section %}
-	<script src="{{url_for('static', filename='js/shop.js')}}"></script>
-{% endblock %}
+{% block special_script_section %}{% endblock %}
 {% block inline_script_section %}
 <script>
 $(".ui.button").on("click", function(e){
@@ -112,6 +110,7 @@ $('.ui.right.floated.small.icon.orange.button').click(function(e){
 
 $bottom_menu = $('.bottom.fixed.menu');
 //$bottom_menu.children().removeClass('active');
-$bottom_menu.children('[href="{{url_for('.index')}}"]').addClass('active');
+var href = "{{url_for('.index', shoppoint=shoppoint.code)}}";
+$bottom_menu.children('[href=' + href + ']').addClass('active');
 </script>
 {% endblock %}

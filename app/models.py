@@ -1,16 +1,19 @@
 from datetime import datetime
+from time import time
 #import hashlib
+import urllib
+
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 #from markdown import markdown
 #import bleach
 from flask import current_app#, url_for
 from flask import json, jsonify
-from flask_login import UserMixin, AnonymousUserMixin
 
 from sqlalchemy import or_
-#from .exceptions import ValidationError
+from .exceptions import AccessTokenGotError
 from . import db, login_manager
+from flask_login import UserMixin, AnonymousUserMixin
 
 
 class Shoppoint(db.Model):
@@ -18,18 +21,69 @@ class Shoppoint(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(8), unique=True, index=True)
-    login_name = db.Column(db.String(64))
+    english_name = db.Column(db.String(64))
     name = db.Column(db.String(128))
     contact = db.Column(db.String(128)) # 店长或者负责人
     phone = db.Column(db.String(16)) # 店内固定电话
     mobile = db.Column(db.String(16))
     address = db.Column(db.String(1024))
-    password = db.Column(db.String(64))
-    weixin_token = db.Column(db.String(32))
+    banner = db.Column(db.String(256)) # 广告语
     description = db.Column(db.Text)
+
+    # mail section
+    mail = db.Column(db.String(64))
+    mail_server = db.Column(db.String(128))
+    mail_port = db.Column(db.SmallInteger, default=587)
+    mail_use_tls = db.Column(db.Boolean, default=True)
+    mail_login_name = db.Column(db.String(64))
+    mail_login_password = db.Column(db.String(128))
+    mail_subject_prefix = db.Column(db.String(64))
+    mail_sender = db.Column(db.String(64))
+
+    # 微信中的配置
+    weixin_appid = db.Column(db.String(32))
+    weixin_appsecret = db.Column(db.String(64))
+    weixin_mchid = db.Column(db.String(16))
+    weixin_token = db.Column(db.String(64)) # 服务器配置中的token
+    weixin_aeskey = db.Column(db.String(128)) # 服务器配置中的EncodingAESKey
+    weixin_access_token = db.Column(db.String(256))
+    weixin_expires_time = db.Column(db.BigInteger) # timestamp
 
     def __repr__(self):
         return self.name
+
+    @property
+    def access_token(self, provider='weixin'):
+        if self.weixin_access_token and self.weixin_access_token_expires_time < int(time()):
+            return self.weixin_access_token
+
+        print ('Get token from weixin or cannot get access token')
+
+        # get access token
+        #params = urllib.parse.urlencode({'grant_type': 'client_credential', 'appid': app_id, 'secret': app_secret})
+        #params = params.encode('ascii')
+        #with urllib.request.urlopen("https://api.weixin.qq.com/cgi-bin/token?%s", params) as f:
+        #    result = f.read().decode('utf-8')
+        #    print (result)
+        #    j = json.loads(result)
+        #info = _access_weixin_api("https://api.weixin.qq.com/cgi-bin/token?%s",
+        #                        grant_type='client_credential', appid=self.weixin_appid, secret=self.weixin_appsecret)
+        params = {'grant_type':'client_credential', 'appid':self.weixin_appid, 'secret':self.weixin_appsecret}
+        url_param = urllib.parse.urlencode(params).encode('utf-8')
+        with urllib.request.urlopen("https://api.weixin.qq.com/cgi-bin/token?%s", url_param) as f:
+            result = f.read().decode('utf-8')
+            print (result)
+            info = json.loads(result)
+
+            if 'errcode' in info or 'access_token' not in info or 'expires_in' not in info:
+                errcode = info.get('errcode')
+                errmsg = info.get('errmsg')
+                raise AccessTokenGotError(errcode, errmsg)
+
+            self.weixin_access_token = info.get('access_token')
+            self.weixin_access_token_expires_time = int(time()) + info.get('expires_in') - 5
+
+            return self.weixin_access_token
 
 
 class Address(db.Model):
@@ -68,6 +122,7 @@ class Member(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(64), unique=True, index=True, nullable=True) # 实体会员卡的卡面卡号，没有实体卡，可以使用用户名
     name = db.Column(db.String(128), index=True) # 会员姓名
+    gender = db.Column(db.SmallInteger, default=0) # 会员性别, 0为unkown
     mobile = db.Column(db.String(16), unique=True, index=True) #手机号码
     email = db.Column(db.String(64), unique=True, index=True)
     nickname = db.Column(db.String(128)) # 会员姓名
@@ -75,7 +130,7 @@ class Member(db.Model):
     points = db.Column(db.Integer, default=0) # 积分
     member_since = db.Column(db.DateTime, default=datetime.utcnow)
     member_end = db.Column(db.DateTime, default=None)
-    avatar_hash = db.Column(db.String(32)) # 头像
+    headimgurl = db.Column(db.String(1024)) # 头像
     about_me = db.Column(db.Text)
 
     grade_id = db.Column(db.Integer, db.ForeignKey('member_grade.id'))
@@ -84,6 +139,10 @@ class Member(db.Model):
 
     weixin_openid = db.Column(db.String(64), unique=True, nullable=True) # used in weixin
     weixin_unionid = db.Column(db.String(64), unique=True, nullable=True) # used in weixin
+    weixin_token = db.Column(db.String(256))
+    weixin_refresh_token = db.Column(db.String(256))
+    weixin_expires_time = db.Column(db.BigInteger)
+    weixin_privilege = db.Column(db.String(128))
 
 class Staff(db.Model):
     __tablename__ = 'staff'
@@ -116,9 +175,9 @@ class UserAuth(db.Model, UserMixin):
     active = db.Column(db.Boolean, default=False)
 
     # Relationships
-    staff_id = db.Column(db.Integer(), db.ForeignKey('staff.id', ondelete='CASCADE'))
+    staff_id = db.Column(db.Integer, db.ForeignKey('staff.id', ondelete='CASCADE'))
     staff = db.relationship('Staff', uselist=False, foreign_keys=staff_id)
-    member_id = db.Column(db.Integer(), db.ForeignKey('member.id', ondelete='CASCADE'))
+    member_id = db.Column(db.Integer, db.ForeignKey('member.id', ondelete='CASCADE'))
     member = db.relationship('Member', uselist=False, foreign_keys=member_id)
 
     shoppoint_id = db.Column(db.Integer, db.ForeignKey('shoppoint.id'), nullable=True)
@@ -249,6 +308,9 @@ class Product(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey('product_category.id'))
     category = db.relationship('ProductCategory',
                          backref=db.backref('products', lazy="dynamic"))
+    shoppoint_id = db.Column(db.Integer, db.ForeignKey('shoppoint.id'))
+    shoppoint = db.relationship('Shoppoint',
+                         backref=db.backref('products', lazy="dynamic"))
     original_price = db.Column(db.Numeric(7,2), default=0.0) # 原价
     price = db.Column(db.Numeric(7,2), default=0.0) # 现价
     member_price = db.Column(db.Numeric(7,2), default=0.0) # 会员价
@@ -273,29 +335,6 @@ class Product(db.Model):
     #specifications = db.relationship('ProductSpecification',
     #                    back_populates='product')
 
-    def __init__(self, code, name, english_name, pinyin, category,
-                 original_price, price, member_price, stock,
-                 is_available_on_web=True, is_available_on_pos=True,
-                 to_point=True, pub_date=None, description=None):
-        self.code = code
-        self.name = name
-        self.english_name = english_name
-        self.pinyin = pinyin
-        self.category = category
-        self.original_price = original_price
-        self.price = price
-        self.member_price = member_price
-        self.stock = stock
-        self.is_available_on_web = is_available_on_web
-        self.is_available_on_pos = is_available_on_pos
-        self.is_deleted = False
-        self.to_point = to_point
-        if pub_date == None:
-            self.pub_date = datetime.utcnow()
-        else:
-            self.pub_date = pub_date
-        self.description = description
-
     def __repr__(self):
         return self.name
 
@@ -305,9 +344,6 @@ class ParameterCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), unique=True, index=True, nullable=False)
     #parameter_type = db.Column(db.String(32)) # 选项的类型，比如String, Integer
-
-    def __init__(self, name):
-        self.name = name
 
     def __repr__(self):
         return self.name
@@ -323,10 +359,6 @@ class Parameter(db.Model):
     products = db.relationship('ProductParameter',
                         back_populates='parameter')
 
-    def __init__(self, name, parameter_category):
-        self.name = name
-        self.parameter_category = parameter_category
-
     def __repr__(self):
         return self.name
 
@@ -340,12 +372,6 @@ class ProductParameter(db.Model):
 
     product = db.relationship("Product", back_populates="parameters")
     parameter = db.relationship('Parameter', back_populates='products')
-
-    def __init__(self, product, parameter, plus_price, stock):
-        self.product = product
-        self.parameter = parameter
-        self.plus_price = plus_price
-        self.stock = stock
 
     def __repr__(self):
         return str(self.plus_price)
@@ -485,14 +511,6 @@ class Image(db.Model):
     products = db.relationship('ProductImage',
                         back_populates='image')
 
-    def __init__(self, upload_name, name, directory, ext, title=None, description=None):
-        self.upload_name = upload_name
-        self.name = name
-        self.directory = directory
-        self.ext = ext
-        self.title = title
-        self.description = description
-
     def __repr__(self):
         return self.url
 
@@ -508,12 +526,6 @@ class ProductImage(db.Model):
     product = db.relationship("Product", back_populates="images")
     image = db.relationship('Image', back_populates='products')
 
-    def __init__(self, product, image, sequence=1, description=None):
-        self.product = product
-        self.image = image
-        self.sequence = sequence
-        self.description = description
-
     def __repr__(self):
         return "%s - %s" % (self.product_id, self.image_id)
 
@@ -522,7 +534,7 @@ class ShoppingCart(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     member_id = db.Column(db.Integer, db.ForeignKey('member.id'))
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
-    parameters = db.Column(db.String)
+    parameters = db.Column(db.Text)
 
     product = db.relationship('Product')
     member = db.relationship('Member')
@@ -542,3 +554,15 @@ def user_loader(email):
         return None
 
     return user
+
+class WeixinConfig(db.Model):
+    __tablename__ = 'weixin_config'
+    id = db.Column(db.Integer, primary_key=True)
+
+class WeixinConfigAdmin(db.Model):
+    __tablename__ = 'weixin_admin'
+    id = db.Column(db.Integer, primary_key=True)
+    config_id = db.Column(db.Integer, db.ForeignKey('weixin_config.id'))
+    openid = db.Column(db.String(64), unique=True, nullable=True) # used in weixin
+
+    config = db.relationship('WeixinConfig', backref=db.backref('WeixinConfig', lazy='dynamic'))

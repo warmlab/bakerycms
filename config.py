@@ -7,24 +7,24 @@ class Config:
     SSL_DISABLE = True
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_RECORD_QUERIES = True
-    MAIL_SERVER = 'smtp-mail.outlook.com'
-    MAIL_PORT = 587
-    MAIL_USE_TLS = True
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    BAKERY_MAIL_SUBJECT_PREFIX = '[CAROBakery]'
-    BAKERY_MAIL_SENDER = 'CAROBakery Admin <warmlab@outlook.com>'
-    BAKERY_ADMIN = os.environ.get('CAROBAKERY_ADMIN')
-    BAKERY_POSTS_PER_PAGE = 20
-    BAKERY_FOLLOWERS_PER_PAGE = 50
-    BAKERY_COMMENTS_PER_PAGE = 30
+    #MAIL_SERVER = 'smtp-mail.outlook.com'
+    #MAIL_PORT = 587
+    #MAIL_USE_TLS = True
+    #MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    #MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    #BAKERY_MAIL_SUBJECT_PREFIX = '[CAROBakery]'
+    #BAKERY_MAIL_SENDER = 'CAROBakery Admin <warmlab@outlook.com>'
+    #BAKERY_ADMIN = os.environ.get('CAROBAKERY_ADMIN')
+    #BAKERY_POSTS_PER_PAGE = 20
+    #BAKERY_FOLLOWERS_PER_PAGE = 50
+    #BAKERY_COMMENTS_PER_PAGE = 30
     BAKERY_SLOW_DB_QUERY_TIME=0.5
     UPLOAD_FOLDER = os.environ.get('BAKERYCMS_UPLOAD_DIR') or os.path.join(basedir, 'media')
 
-    WEIXIN_TOKEN = os.environ.get('WEIXIN_TOKEN')
-    WEIXIN_APPID = os.environ.get('WEIXIN_APPID')
-    WEIXIN_APPSECRET = os.environ.get('WEIXIN_APPSECRET')
-    WEIXIN_MCHID = os.environ.get('WEIXIN_MCHID')
+    #WEIXIN_TOKEN = os.environ.get('WEIXIN_TOKEN')
+    #WEIXIN_APPID = os.environ.get('WEIXIN_APPID')
+    #WEIXIN_APPSECRET = os.environ.get('WEIXIN_APPSECRET')
+    #WEIXIN_MCHID = os.environ.get('WEIXIN_MCHID')
     #WEIXIN_DEVICEID = os.environ.get('WEIXIN_DEVICEID')
 
     @staticmethod

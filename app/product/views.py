@@ -62,7 +62,7 @@ def _product_images(product, image_names):
     # append added images
     for name in to_append_images:
         image = Image.query.filter_by(name=name).first()
-        pi = ProductImage(product, image)
+        pi = ProductImage(product=product, image=image)
         product.images.append(pi)
 
 def _product_parameters(product, pc, parameters, price_parameter_values, stock_parameter_values):
@@ -86,7 +86,7 @@ def _product_parameters(product, pc, parameters, price_parameter_values, stock_p
             po.stock = Decimal(s)
             defined_parameters.remove(o)
         else:
-            po = ProductParameter(product, parameter, Decimal(v), Decimal(s))
+            po = ProductParameter(product=product, parameter=parameter, plus_price=Decimal(v), stock=Decimal(s))
             product.parameters.append(po)
         db.session.add(po)
     for o in defined_parameters:
@@ -116,10 +116,10 @@ def product_detail():
         if create == '1':
             category_id = request.form['categoryparameter'] # 产品分类
             category = ProductCategory.query.get_or_404(category_id)
-            product = Product(request.form['inputcode'], request.form['inputname'], request.form['inputenglishname'],
-                              request.form['inputpinyin'], category, request.form['inputoriginalprice'],
-                              request.form['inputprice'], request.form['inputmemberprice'], request.form['inputstock'],
-                              checkweb, checkpos, checkpoint)
+            product = Product(code=request.form['inputcode'], name=request.form['inputname'], english_name=request.form['inputenglishname'],
+                              pinyin=request.form['inputpinyin'], category=category, original_price=Decimal(request.form['inputoriginalprice']),
+                              price=Decimal(request.form['inputprice']), member_price=Decimal(request.form['inputmemberprice']), stock=Decimal(request.form['inputstock']),
+                              is_available_on_web=checkweb, is_available_on_pos=checkpos, to_point=checkpoint)
             product.description = request.form.get('inputdesc')
             print ("The new product is: %s" % product)
         else:

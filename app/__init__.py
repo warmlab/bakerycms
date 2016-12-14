@@ -6,6 +6,8 @@ from flask_login import LoginManager
 #from flask_pagedown import PageDown
 from config import config
 
+from .filters import weixin_authorize
+
 #bootstrap = Bootstrap()
 #mail = Mail()
 #moment = Moment()
@@ -32,6 +34,8 @@ def create_app(config_name):
         from flask_sslify import SSLify
         sslify = SSLify(app)
 
+    app.jinja_env.filters['weixin_authorize'] = weixin_authorize
+
     from .product import product as product_blueprint
     app.register_blueprint(product_blueprint, url_prefix='/manage/product')
 
@@ -41,14 +45,14 @@ def create_app(config_name):
     from .sale import sale as sale_blueprint
     app.register_blueprint(sale_blueprint, url_prefix="/sale")
 
-    from .shop import shop as shop_blueprint
-    app.register_blueprint(shop_blueprint)
-
     from .gallery import gallery as gallery_blueprint
     app.register_blueprint(gallery_blueprint, url_prefix='/gallery')
 
     from .weixin import weixin as weixin_blueprint
     app.register_blueprint(weixin_blueprint, url_prefix='/weixin')
+
+    from .shop import shop as shop_blueprint
+    app.register_blueprint(shop_blueprint)
 
     #from .rest import rest as rest_blueprint
     #app.register_blueprint(rest_blueprint, url_prefix='/rest')

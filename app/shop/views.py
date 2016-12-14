@@ -2,10 +2,10 @@ from time import time
 from datetime import datetime
 from decimal import Decimal
 
-from flask import render_template, redirect, current_app
+from flask import render_template, redirect
 from flask import request, url_for, abort, json
 
-from flask_login import login_required, current_user
+from flask_login import login_required, current_user, login_user
 
 from . import shop
 
@@ -13,20 +13,28 @@ from .. import db
 
 from ..decorators import member_required
 
-from ..models import Product, Member, Address
+from ..models import Shoppoint, Product, Address
+from ..models import Member, UserAuth
 from ..models import Ticket, TicketProduct, TicketAddress
-from ..models import AnonymousUser
 
 from ..weixin import pay as weixin_pay
+from ..weixin import access as weixin_access
+
 
 @shop.route('/products', methods=['GET'])
 @shop.route('/', methods=['GET'])
 def index():
+    sp = Shoppoint.query.first()
+    if not sp:
+        abort(404)
     products = Product.query.filter_by(is_available_on_web=True)
-    return render_template('shop/list.html', products=products)
+    return render_template('shop/list.html', products=products, shoppoint=sp)
 
 @shop.route('/product/<code>', methods=['GET'])
 def product_detail(code):
+    sp = Shoppoint.query.first()
+    if not sp:
+        abort(404)
     product = Product.query.filter_by(code=code).first()
     ppc = {}
     for pp in product.parameters:
@@ -36,26 +44,77 @@ def product_detail(code):
             ppc[pp.parameter.category].append(pp)
     #logger.debug(ppc)
     message = request.args.get('added');
-    return render_template('shop/detail.html', product=product, parameter_categories=ppc, message=message)
+    return render_template('shop/detail.html', product=product, parameter_categories=ppc, message=message, shoppoint=sp)
 
-@shop.route('/add-to-cart', methods=['POST'])
-@login_required
-@member_required
-def add_to_cart():
-    code = request.form.get('code');
-    if not code:
-        abort(400)
-    product = Product.query.filter_by(code=code).first()
-    parameters = request.form.getlist('parameters')
-    item = ShoppingCart(current_user, product, parameters)
-    db.session.add(item)
-    db.session.commit()
-    return redirect(url_for('.product_detail', code=code, added=True, _method='GET'));
+def _get_userinfo_from_weixin(weixin_code):
+    sp = Shoppoint.query.first()
+    if not sp:
+        abort(404)
+    if weixin_code:
+        params = [('appid', sp.weixin_appid),
+                  ('secret', sp.weixin_appsecret),
+                  ('code', weixin_code),
+                  ('grant_type', 'authorization_code')
+                ]
+        # get access token
+        token_info = weixin_access.access_weixin_api('https://api.weixin.qq.com/sns/oauth2/access_token', params)
+        if 'errcode' in token_info:
+            return  None
+        access_token = token_info.get('access_token')
+        expires_in = token_info.get('expires_in')
+        openid = token_info.get('openid')
+        refresh_token = token_info.get('refresh_token')
+        #scope = info.get('scope')
+        member = Member.query.filter_by(weixin_openid=openid)
+        if not member:
+                ## refresh access token
+                #params = [('appid', sp.weixin_appid),
+                #          ('grant_type', 'refresh_token'),
+                #          ('refresh_token', token_info.get('refresh_token'))
+                #        ]
+                #token_info = weixin_access.access_weixin_api('https://api.weixin.qq.com/sns/oauth2/refresh_token', params)
+            member = Member()
+            user = UserAuth(member=member, active=True, confirmed_at=datetime.utcnow())
+        else:
+            user = UserAuth.query.filter_by(member_id=member.id)
+        member.weixin_openid=openid
+        member.weixin_token=access_token
+        member.weixin_expires_time=int(time()) + expires_in - 5
+        member.weixin_refresh_token=refresh_token
+
+        # get user info from weixin
+        params = [('access_token', token_info.get('access_token')),
+                  ('openid', token_info.get('openid')),
+                  ('lang', 'zh_CN')
+                 ]
+        user_info = weixin_access.access_weixin_api('https://api.weixin.qq.com/sns/userinfo', params)
+        member.nickname = user_info.get('nickname')
+        member.gender = user_info.get('sex')
+        member.weixin_unionid = user_info.get('unionid')
+        member.headimgurl = user_info.get('headimgurl')
+
+        return user
 
 @shop.route('/cart', methods=['GET'])
 def cart():
-    products = Product.query.filter_by(is_available_on_web=True)
-    return render_template('shop/cart.html', products=products)
+    #products = Product.query.filter_by(is_available_on_web=True)
+    weixin_code = request.args.get('code')
+    #if not weixin_code:
+    #    params = [('appid', sp.weixin_appid),
+    #              ('redirect_uri', url_for('.cart', _external=True)),
+    #              ('response_type', 'code'),
+    #              ('scope', 'snsapi_userinfo')
+    #            ]
+    #    url = 'https://open.weixin.qq.com/connect/oauth2/authorize'
+    #    url = '?'.join([url, urlparse.urlencode(params)])
+    #    url = '#'.join([url, 'wechat_redirect'])
+    #    print(url)
+    #    return redirect(url)
+    user = _get_userinfo_from_weixin(weixin_code)
+    # login to system
+    login_user(user)
+
+    return render_template('shop/cart.html', user)
 
 @shop.route('/checkout', methods=['POST']) # 结算
 @login_required
@@ -94,6 +153,9 @@ def checkout():
 @login_required
 @member_required
 def order():
+    sp = Shoppoint.query.first()
+    if not sp:
+        abort(404)
     if request.method == 'GET':
         code = request.args.get('order')
         if not code:
@@ -150,17 +212,20 @@ def order():
                     mobile=address.mobile, address=address.address)
             ticket.address = ta
 
-    weixin = weixin_pay.unified_order_js_config(current_app.config['WEIXIN_APPID'], current_app.config['WEIXIN_APPSECRET'])
+    weixin = weixin_pay.unified_order_js_config(sp.weixin_appid, sp.weixin_appsecret)
     return render_template('shop/order.html', ticket=ticket, user=current_user, weixin=weixin)
 
 @shop.route('/unifiedorder', methods=['POST'])
 @login_required
 @member_required
 def unified_order():
+    sp = Shoppoint.query.first()
+    if not sp:
+        abort(404)
     ticket_code = request.form.get('ticket-code')
     ticket = Ticket.query.get(ticket_code)
-    result = weixin_pay.unified_order(ticket, current_app.config['WEIXIN_APPID'],
-            current_app.config['WEIXIN_MCHID'], current_app.config['WEIXIN_APPSECRET'],
+    result = weixin_pay.unified_order(ticket, sp.weixin_appid,
+            sp.weixin_mchid, sp.weixin_appsecret,
             current_user, url_for('weixin.pay_notify', _external=True))
 
     print (result)
@@ -168,8 +233,8 @@ def unified_order():
         if result.get('result_code') == "SUCCESS":
             #ticket.payment_code = prepay_id
             package = '='.join(['prepay_id', result.get('prepay_id')])
-            params = {'timeStamp': int(time()), 'appId': current_app.config['WEIXIN_APPID'], 'nonceStr': result.get('nonce_str'), 'package': package, 'signType': 'MD5'}
-            params['signature'], signType = weixin_pay.generate_sign(params, current_app.config['WEIXIN_APPSECRET'])
+            params = {'timeStamp': int(time()), 'appId': sp.weixin_appid, 'nonceStr': result.get('nonce_str'), 'package': package, 'signType': 'MD5'}
+            params['signature'], signType = weixin_pay.generate_sign(params, sp.weixin_appsecret)
             params['pack'] = [package]
 
             return json.dumps(params), 201
@@ -236,7 +301,7 @@ def my_address():
     print (request.data)
     return render_template('shop/myaddress.html', user=current_user)
 
-@shop.route('/diy')
+@shop.route('/class')
 def diy():
     return redirect('https://mp.weixin.qq.com/s?__biz=MzAwMjE3MzEyNw==&mid=2455220715&idx=1&sn=d0798bb8779fd9dec89f9958017f249b&chksm=8d6d6043ba1ae9551cdc202ce9bbd2040fe18f950096a8f26eda4d2345bbedb17cd1e7ef3bbd&mpshare=1&scene=1&srcid=1123XB5W4s9PqTG1KAS8WxtG&pass_ticket=0Y41Ml3EcPHX%2B%2FVBw5imdigDDp8ejLPhVIR%2Fj7DUZlr0jaLe7oh9G6Q404U66%2BEN#rd')
 

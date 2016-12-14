@@ -6,6 +6,7 @@ class Message():
     def __init__(self):
         #self.message = message
         self.__properties = {}
+        self.member = None
 
     def generate_response_body(self):
         if self.event == 'CLICK' and self.event_key == 'my_location':
@@ -19,8 +20,10 @@ class Message():
         <FromUserName><![CDATA[%s]]></FromUserName>
         <CreateTime>%d</CreateTime>
         <MsgType><![CDATA[text]]></MsgType>
-        <Content><![CDATA[您好，欢迎关注我们，请致电18053214078，0532-58806365订购。%s 正在积极装修中，敬请期待]]></Content>
-        </xml>""" % (self.__properties['FromUserName'], self.__properties['ToUserName'], int(time()), home_web)
+        <Content><![CDATA[亲爱的%s，您好，欢迎关注我们，请致电18053214078，0532-58806365订购。%s 正在积极装修中，敬请期待]]></Content>
+        </xml>""" % (self.member.nickname if self.member and self.member.nickname else "",
+                     self.__properties['FromUserName'], self.__properties['ToUserName'],
+                     int(time()), home_web)
 
         return body
 

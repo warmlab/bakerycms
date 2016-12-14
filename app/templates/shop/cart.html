@@ -9,19 +9,17 @@
 	</div>
 </h2>
 <form method="POST" action="{{url_for('.checkout')}}">
+    <input type="hidden" name="openid" value="{{weixin_user['openid']}}">
 	<div class="ui segments"></div>
-	<button class="ui fluid big orange labeled icon button">
+	<button class="ui fluid big orange labeled icon button" type="button">
 		<i class="payment icon"></i>去结算
 	</button>
 </form>
 <div style="padding-bottom: 50px;"></div>
 {% endblock %}
-{% block bottom_nav_section %}
-{% include "includes/bottom_fixed.html" %}
-{% endblock %}
-{% block special_script_section %}
-{% endblock %}
-{% block inline_script_section %}
+{% block bottom_nav_section %}{% include "includes/bottom_fixed.html" %}{% endblock %}
+{%- block special_script_section %}{% endblock -%}
+{% block inline_script_section -%}
 <script>
 $(document).ready(function(){
 	window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
@@ -168,10 +166,17 @@ $(document).ready(function(){
 			$('.ui.checkbox').checkbox();
 		};
 	};
+	$('div.fluid.big.button').click(function(){
+		if ("{{weixin_code}}" != ""){
+			$('form').submit();
+		} else {
+			// redirect
+		}
+	});
 	$('.ui.checkbox').checkbox();
 
 	$bottom_menu = $('.bottom.fixed.menu');
 	$bottom_menu.children('[href="{{url_for('.cart')}}"]').addClass('active');
 });
 </script>
-{% endblock %}
+{%- endblock -%}

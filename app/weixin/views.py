@@ -10,7 +10,7 @@ from . import weixin
 from .message import parse_message, Message
 from .access import get_member_info, store_weixin_picture
 
-from ..models import Product, ProductCategory
+from ..models import Member
 from ..models import Parameter, ParameterCategory, ProductParameter
 
 from ..decorators import member_required
@@ -40,7 +40,13 @@ def access():
         body = request.data.decode('utf-8')
         message = parse_message(body)
         if message.type == 'event' and message.event == 'subscribe':
-            get_member_info(openid)
+            info = get_member_info(openid)
+            member = Member.query.filter_by(weixin_openid=info.get('openid'))
+            if member:
+                member.weixin_unionid = info.get('unionid')
+                member.gender = info.get('sex')
+                member.nickname = info.get('nickname')
+                message.member = member
         elif message.type == 'image':
             if message.get_value('FromUserName') in ('ox4bxso53hocK9iyC-eKNll-qRoI',
                     'ox4bxsnBj7xpsSndE4TOg_LY-IKQ', 'ox4bxsn8gkt_IqaVzQIPRkuep4v8'): # TODO

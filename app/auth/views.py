@@ -51,7 +51,7 @@ def logout():
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
-        user = Member(email=form.email.data,
+        user = UserAuth(email=form.email.data,
                     username=form.username.data,
                     password=form.password.data)
         db.session.add(user)
@@ -107,7 +107,7 @@ def password_reset_request():
         return redirect(url_for('main.index'))
     form = PasswordResetRequestForm()
     if form.validate_on_submit():
-        user = Member.query.filter_by(email=form.email.data).first()
+        user = UserAuth.query.filter_by(email=form.email.data).first()
         if user:
             token = user.generate_reset_token()
             send_email(user.email, 'Reset Your Password',
@@ -126,7 +126,7 @@ def password_reset(token):
         return redirect(url_for('main.index'))
     form = PasswordResetForm()
     if form.validate_on_submit():
-        user = Member.query.filter_by(email=form.email.data).first()
+        user = UserAuth.query.filter_by(email=form.email.data).first()
         if user is None:
             return redirect(url_for('main.index'))
         if user.reset_password(token, form.password.data):

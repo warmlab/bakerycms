@@ -17,7 +17,6 @@
         <img src="/gallery/media/{{pi.image.name}}.{{pi.image.ext}}">
         {% endfor %}
     </div>
-	<form action="{{url_for('.add_to_cart')}}" method="POST">
     <h3 class="ui header">
         <div class="content">
 			{{product.name}}
@@ -26,7 +25,7 @@
           </div>
         </div>
     </h3>
-	<p>{{product.description}}</p>{#
+    {%if product.description%}<p>{{product.description}}</p>{%endif%}{#
     <div class="ui labeled mini input">
         <div class="ui label">购买数量</div>
         <input id="amount" value="1" maxlength="5" size="6" placeholder="1" type="text">
@@ -58,9 +57,18 @@
 	<div class="ui fluid orange right labeled icon huge button">
 		<i class="add to cart icon"></i>添加到购物车
 	</div>
-	</form>
 </div>
 {% include "includes/delivery.html" %}
+<div class="ui dimmer">
+	<div class="content">
+		<div class="center">
+			<h2 class="ui inverted icon header">
+			<i class="thumbs up icon"></i>
+			成功将 {{product.name}} 加到购物车
+			</h2>
+		</div>
+	</div>
+</div>
 <div style="padding-bottom: 40px;"></div>
 {% endblock %}
 {% block bottom_nav_section %}
@@ -74,6 +82,8 @@
 $(document).ready(function(){
 	var $toggle = $('div.toggle.button');
 	var $active = 'orange';
+	var $notice_message = $('div.floating.message');
+	var $button_dimmer = $('div.dimmer');
 	var parameters = [];
 	var $price = {{product.price}};
 	handler = {
@@ -95,6 +105,8 @@ $(document).ready(function(){
 			$('#product-price').html('￥' + $price);
 		}
 	};
+	$notice_message.hide();
+	$button_dimmer.dimmer('hide');
 	$toggle.click(handler.activate);
 	$banner = $("#banner-image");
 	$(".ui.tiny.images img").click(function(){
@@ -148,6 +160,11 @@ $(document).ready(function(){
 					objectStore.put(product);
 					console.log(product);
 				}
+
+				$button_dimmer.dimmer('show');
+				setTimeout(function(){
+						$button_dimmer.dimmer('hide');
+					}, 800);
 			};
 			item.onerror = function() {
 				console.log("Failed in getting item from objectStore!");
