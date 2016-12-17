@@ -1,0 +1,105 @@
+{% extends "base-user.html" %}
+{% block main_content_section %}
+<div class="ui basic segment">
+	{% if message %}
+	<div class="ui info icon message">
+		<i class="info icon"></i>
+		<div class="content">
+		<div class="header">
+			{{bakery_class.name}}
+		</div>
+		<p>加入到购物车，请到购物车查看</p>
+		</div>
+	</div>
+	{% endif %}
+    <h3 class="ui header">
+        <div class="content">
+			巧克力曲奇
+          <div class="sub header" id="bakery_class-price">
+              
+          </div>
+        </div>
+    </h3>
+    <div>
+        制作材料
+        黄油 糖粉 鸡蛋 低粉 可可粉
+    </div>
+    <div>
+        学会了这个，在家就可以自制一些好吃的曲奇饼干了，自己动手，绝对美味有靠谱
+    </div>
+    <div>
+        曲奇
+    </div>
+    <div class="ui warning message">
+        <div class="header">
+            友情提示
+        </div>
+        本课程有效期至2017年1月27日，请在春节前合理安排时间，谢谢合作
+    </div>
+    {%if bakery_class.description%}<p>{{bakery_class.description}}</p>{%endif%}
+    <form class="ui form segment" action="{{url_for('.book_class')}}" method="POST">
+        <input type="hidden" name="bakery-class-code" value="{{bakery_class.id}}">
+        <div class="field">
+            <label>姓名</label>
+            <input type="text" name="name">
+        </div>
+        <div class="field">
+            <label>电话</label>
+            <input type="text" name="mobile">
+        </div>
+        <div class="field">
+            <label>请在该日期之前合理安排时间</label>
+            <input type="text" name="expires_at" readonly value="2017-1-26">
+        </div>
+        <div class="ui fluid orange right labeled icon huge button">
+            <i class="add to cart icon"></i>预约
+        </div>
+		<div class="ui error message"></div>
+    </form>
+</div>
+<div style="padding-bottom: 40px;"></div>
+{% endblock %}
+{% block bottom_nav_section %}
+{% include "includes/bottom_fixed.html" %}
+{% endblock %}
+{% block special_script_section %}
+<script src="{{url_for('static', filename='js/shop.js')}}"></script>
+{% endblock %}
+{% block inline_script_section %}
+<script>
+$(document).ready(function(){
+	var $form = $('form.form');
+	console.log($form);
+	$('div.ui.fluid.button').click(function(e){
+		if (!$form.form('is valid')){
+			return false;
+		}
+		$form.submit();
+	});
+
+	$form.form({
+		on: 'blur',
+		fields: {
+			name: {
+				identifier: 'name',
+				rules: [
+				{
+					type: 'empty',
+					prompt: '输入联系人姓名'
+				}
+				]
+			},
+			mobile: {
+				identifier: 'mobile',
+				rules: [
+				{
+					type: 'exactLength[11]',
+					prompt: '请输入收件人的手机号码'
+				}
+				]
+			}
+		}
+	});
+});
+</script>
+{% endblock %}

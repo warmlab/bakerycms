@@ -1,0 +1,11 @@
+{% extends "base-user.html" %}
+{% block main_content_section %}
+<div class="ui basic segment">
+    <div class="ui info message">
+        <div class="header">
+			预约成功
+        </div>
+		{{bakery.name}}，您成功预约了的{{bakery.bakery_class.name}}课程，开课时间{{bakery.start_time}}
+    </div>
+</div>
+{% endblock %}

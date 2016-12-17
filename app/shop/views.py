@@ -301,63 +301,43 @@ def my_address():
     print (request.data)
     return render_template('shop/myaddress.html', user=current_user)
 
+from ..models import BakeryClass
 @shop.route('/class')
 def diy():
-    return redirect('https://mp.weixin.qq.com/s?__biz=MzAwMjE3MzEyNw==&mid=2455220715&idx=1&sn=d0798bb8779fd9dec89f9958017f249b&chksm=8d6d6043ba1ae9551cdc202ce9bbd2040fe18f950096a8f26eda4d2345bbedb17cd1e7ef3bbd&mpshare=1&scene=1&srcid=1123XB5W4s9PqTG1KAS8WxtG&pass_ticket=0Y41Ml3EcPHX%2B%2FVBw5imdigDDp8ejLPhVIR%2Fj7DUZlr0jaLe7oh9G6Q404U66%2BEN#rd')
+    #return redirect('https://mp.weixin.qq.com/s?__biz=MzAwMjE3MzEyNw==&mid=2455220715&idx=1&sn=d0798bb8779fd9dec89f9958017f249b&chksm=8d6d6043ba1ae9551cdc202ce9bbd2040fe18f950096a8f26eda4d2345bbedb17cd1e7ef3bbd&mpshare=1&scene=1&srcid=1123XB5W4s9PqTG1KAS8WxtG&pass_ticket=0Y41Ml3EcPHX%2B%2FVBw5imdigDDp8ejLPhVIR%2Fj7DUZlr0jaLe7oh9G6Q404U66%2BEN#rd')
+    bakery_class = BakeryClass.query.first()
 
-"""
-@shop.route('/member/<username>')
-@login_required
-def user(username):
-    user = Member.query.filter_by(username=username).first_or_404()
-    page = request.args.get('page', 1, type=int)
-    pagination = user.posts.order_by(Post.timestamp.desc()).paginate(
-        page, per_page=current_app.config['FLASKY_POSTS_PER_PAGE'],
-        error_out=False)
-    posts = pagination.items
-    return render_template('user.html', user=user, posts=posts,
-                           pagination=pagination)
+    return render_template('class/detail.html', bakery_class=bakery_class)
 
-@shop.route('/edit-profile', methods=['GET', 'POST'])
-@login_required
-def edit_profile():
-    form = EditProfileForm()
-    if form.validate_on_submit():
-        current_user.name = form.name.data
-        current_user.location = form.location.data
-        current_user.about_me = form.about_me.data
-        db.session.add(current_user)
-        flash('Your profile has been updated.')
-        return redirect(url_for('.user', username=current_user.username))
-    form.name.data = current_user.name
-    form.location.data = current_user.location
-    form.about_me.data = current_user.about_me
-    return render_template('edit_profile.html', form=form)
+from ..models import Bakery
+from uuid import uuid4
 
+@shop.route('/class/book', methods=['POST'])
+def book_class():
+    name = request.form.get('name')
+    mobile = request.form.get('mobile')
 
-@shop.route('/edit-profile/<int:id>', methods=['GET', 'POST'])
-@login_required
-#@admin_required
-def edit_profile_admin(id):
-    user = Member.query.get_or_404(id)
-    form = EditProfileAdminForm(user=user)
-    if form.validate_on_submit():
-        user.email = form.email.data
-        user.username = form.username.data
-        user.confirmed = form.confirmed.data
-        user.role = Role.query.get(form.role.data)
-        user.name = form.name.data
-        user.location = form.location.data
-        user.about_me = form.about_me.data
-        db.session.add(user)
-        flash('The profile has been updated.')
-        return redirect(url_for('.user', username=user.username))
-    form.email.data = user.email
-    form.username.data = user.username
-    form.confirmed.data = user.confirmed
-    form.role.data = user.role_id
-    form.name.data = user.name
-    form.location.data = user.location
-    form.about_me.data = user.about_me
-    return render_template('edit_profile.html', form=form, user=user)
-"""
+    if not name or not mobile:
+        abort(400)
+
+    userauth = UserAuth.query.filter_by(mobile=mobile).first()
+    if not userauth:
+        member = Member(name=name, mobile=mobile)
+        userauth = UserAuth(mobile=mobile, active=True, confirmed_at=datetime.utcnow())
+        userauth.password = uuid4().hex
+    elif not userauth.member:
+        member = Member(name=name, mobile=mobile)
+        userauth.member = member
+    bakery_class = BakeryClass.query.get(request.form.get('bakery-class-code'))
+    if not bakery_class:
+        abort(404)
+
+    bakery = Bakery.query.filter_by(userauth_id=userauth.id, bakery_class_id=bakery_class.id).first()
+    if bakery:
+        return render_template('class/already_booked.html', bakery=bakery)
+
+    #member = Member(name=name, mobile=mobile)
+    #userauth = UserAuth(mobile=mobile, active=True, confirmed_at=datetime.utcnow(), member=member)
+    if bakery_class:
+        bakery = Bakery(bakery_class=bakery_class, member=userauth)
+        return render_template('class/succeed_booking.html', bakery=bakery)

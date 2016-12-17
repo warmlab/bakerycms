@@ -1,0 +1,11 @@
+{% extends "base-user.html" %}
+{% block main_content_section %}
+<div class="ui basic segment">
+    <div class="ui warning message">
+        <div class="header">
+			重复预约
+        </div>
+		{{bakery.name}}，您已经预约了{{bakery.start_time}}的{{bakery.bakery_class.name}}课程
+    </div>
+</div>
+{% endblock %}

@@ -184,6 +184,8 @@ class UserAuth(db.Model, UserMixin):
     shoppoint = db.relationship('Shoppoint',
                          backref=db.backref('userauth', lazy="dynamic"))
 
+    bakery_classes = db.relationship('Bakery', back_populates="member")
+
     @property
     def password(self):
         raise AttributeError('password is not a readable attribute')
@@ -337,6 +339,45 @@ class Product(db.Model):
 
     def __repr__(self):
         return self.name
+
+class BakeryClass(db.Model):
+    __tablename__ = 'bakery_class'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(128), unique=True, index=True, nullable=False)
+    description = db.Column(db.Text) # 说明
+
+    members = db.relationship('Bakery',
+                        back_populates='bakery_class')
+
+    images = db.relationship('BakeryImage', back_populates='bakery_class')
+    #specifications = db.relationship('ProductSpecification',
+
+class BakeryTime(db.Model):
+    __tablename__ = 'bakery_time'
+    id = db.Column(db.Integer, primary_key=True)
+    start_time = db.Column(db.DateTime) # 上课开始时间
+    required_time = db.Column(db.SmallInteger, default=45) # 上课所需时间
+
+    original_price = db.Column(db.Numeric(7,2), default=0) # 课程原始价格
+    price = db.Column(db.Numeric(7,2), default=0) #课程现在价格
+
+    bakery_class_id = db.Column(db.Integer, db.ForeignKey('bakery_class.id'))
+    bakery_class = db.relationship('BakeryClass',
+                         backref=db.backref('bakerytimes', lazy="dynamic"))
+
+class Bakery(db.Model):
+    __tablename__ = 'bakery'
+    id = db.Column(db.Integer, primary_key=True)
+
+    bakery_class_id = db.Column(db.Integer, db.ForeignKey('bakery_class.id'))
+    userauth_id = db.Column(db.Integer, db.ForeignKey('userauth.id'))
+    start_time = db.Column(db.DateTime) # 上课开始时间
+    required_time = db.Column(db.SmallInteger, default=45) # 上课所需时间
+
+    expires_at = db.Column(db.DateTime) # 课程过期时间
+
+    bakery_class = db.relationship("BakeryClass", back_populates="members")
+    member = db.relationship("UserAuth", back_populates="bakery_classes")
 
 
 class ParameterCategory(db.Model):
@@ -511,6 +552,9 @@ class Image(db.Model):
     products = db.relationship('ProductImage',
                         back_populates='image')
 
+    classes = db.relationship('BakeryImage',
+                        back_populates='image')
+
     def __repr__(self):
         return self.url
 
@@ -525,6 +569,21 @@ class ProductImage(db.Model):
 
     product = db.relationship("Product", back_populates="images")
     image = db.relationship('Image', back_populates='products')
+
+    def __repr__(self):
+        return "%s - %s" % (self.product_id, self.image_id)
+
+# N:N relationship
+class BakeryImage(db.Model):
+    __tablename__ = 'bakery_image'
+
+    bakery_class_id = db.Column(db.Integer, db.ForeignKey('bakery_class.id'), primary_key=True)
+    image_id = db.Column(db.Integer, db.ForeignKey('image.id'), primary_key=True)
+    sequence = db.Column(db.Integer, default=1) # 做为封面的图片，sequence定义为0, 其余为1或者排序
+    description = db.Column(db.Text) # 产品图片描述
+
+    bakery_class = db.relationship("BakeryClass", back_populates="images")
+    image = db.relationship('Image', back_populates='classes')
 
     def __repr__(self):
         return "%s - %s" % (self.product_id, self.image_id)
