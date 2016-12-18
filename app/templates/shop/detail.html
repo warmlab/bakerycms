@@ -119,56 +119,59 @@ $(document).ready(function(){
 		}
 	});
 
+	// IndexedDB
+	window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+	var $db;
+	var request = window.indexedDB.open('ShoppingCart', 1);
+	request.onerror = function(event) {
+		console.log('open indexeddb failed');
+	};
+	request.onupgradeneeded = function (event) {
+		$db = event.target.result;
+		$db.createObjectStore("products", {keyPath: ["code", "parameters"], indexNames: ["name", "image", "amouont", "price"]});
+	};
+
+	request.onsuccess = function(event) {
+		$db = event.target.result;
+		console.log('open indexeddb successfully');
+	};
+
 	$('.ui.fluid.button').click(function(e){
 		// add product to cart
 		var code = "{{product.code}}";
 		var image = "/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}";
-		// IndexedDB
-		window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
-		var $db;
-		var request = window.indexedDB.open('ShoppingCart', 1);
-		request.onerror = function(event) {
-			console.log('open indexeddb failed');
+		parameters.sort(function(v1, v2){ return v1.code.localeCompare(v2.code);});
+		var parameter_string = JSON.stringify(parameters);
+
+		var trans = $db.transaction("products", "readwrite");
+		trans.oncomplete  = function(event) {
+			console.log("All done!");
 		};
-		request.onupgradeneeded = function (event) {
-			$db = event.target.result;
-			$db.createObjectStore("products", {keyPath: ["code", "parameters"], indexNames: ["parameters", "amouont", "image"]});
+		trans.onerror = function(event) {
+			console.log("transaction failed");
 		};
+		var objectStore = trans.objectStore("products");
 
-		request.onsuccess = function(event) {
-			$db = event.target.result;
-			console.log('open indexeddb successfully');
+		var item = objectStore.get([code, parameter_string]);
+		item.onsuccess = function() {
+			if (item.result === undefined) {
+				objectStore.add({code: code, parameters: parameter_string,
+								 name: "{{product.name}}", image: image,
+								 amount: 1, price: $price});
+			} else {
+				product = item.result;
+				product.amount += 1;
+				objectStore.put(product);
+				console.log(product);
+			}
 
-			var trans = $db.transaction("products", "readwrite");
-			trans.oncomplete  = function(event) {
-				console.log("All done!");
-			};
-			trans.onerror = function(event) {
-				console.log("transaction failed");
-			};
-			var objectStore = trans.objectStore("products");
-			var parameter_string = JSON.stringify(parameters);
-			var item = objectStore.get([code, parameter_string]);
-			item.onsuccess = function() {
-				if (item.result === undefined) {
-					objectStore.add({code: code, parameters: parameter_string,
-									 name: "{{product.name}}", image: image,
-									 amount: 1, price: $price});
-				} else {
-					product = item.result;
-					product.amount += 1;
-					objectStore.put(product);
-					console.log(product);
-				}
-
-				$button_dimmer.dimmer('show');
-				setTimeout(function(){
-						$button_dimmer.dimmer('hide');
-					}, 800);
-			};
-			item.onerror = function() {
-				console.log("Failed in getting item from objectStore!");
-			};
+			$button_dimmer.dimmer('show');
+			setTimeout(function(){
+					$button_dimmer.dimmer('hide');
+				}, 800);
+		};
+		item.onerror = function() {
+			console.log("Failed in getting item from objectStore!");
 		};
 	});
 });

@@ -1,15 +1,9 @@
 {% extends "base-user.html"%}
 {% block main_content_section %}
-<h2 class="ui center aligned icon header">{#ui centered#}
-	<i class="payment icon"></i>
-	<div class="content">
-		订单信息
-		<div class="sub header">确认商品及数量，确认送货时间和收货地址</div>
-	</div>
-</h2>
 <form class="ui form" action="{{url_for('.order')}}" method="POST" id="action-form">
-	{% for item in items %}<div class="ui basic segment">
-		{% set product = item[0] %}{% set amount = item[3] %}
+	<div class="ui basic segment">
+		{%- for item in items -%}
+		{%- set product = item[0] -%}{%- set amount = item[3] -%}
 		<div class="ui image middle aligned header">
 			<img src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" class="ui small image">
 			<input type="hidden" name="product" value="{{product.code}}">
@@ -22,7 +16,7 @@
 				<input type="hidden" name="amount" value="{{amount}}">
 			</div>
 		</div>
-	{% endfor %}
+		{%- endfor -%}
 		<div class="ui items">
 			<div class="item">{% if user.addresses.all() %}
 				<div class="content" id="target-location">
@@ -88,9 +82,9 @@
 				<p>本店蛋糕是纯天然乳脂奶油蛋糕，不加入任何的稳定剂和防腐剂，温度稍高一点，就容易融化；需要放置到冰箱的<strong>保鲜层</strong>；在保鲜层也只能保质48小时!</p>
 			</div>
 		</div>
-		<button class="ui fluid orange right labeled icon huge button">
+		<div class="ui fluid orange right labeled icon huge button">
 			<i class="payment icon"></i>生成订单
-		</button>
+		</div>
 	</div>
 </form>
 <div class="ui coupled first modal">
@@ -142,8 +136,38 @@
 {% block inline_script_section %}
 <script>
 $(document).ready(function(){
-	$('.huge.button').click(function(e){
+	var $action_form = $('#action-form');
+	window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+	var $db;
+	var request = window.indexedDB.open('ShoppingCart', 1);
+	request.onupgradeneeded = function (event) {
+		$db = event.target.result;
+		$db.createObjectStore("products", {keyPath: ["code", "parameters"], indexNames: ["amouont", "image"]});
+	};
+
+	request.onerror = function(event) {
+		console.log('open indexeddb failed');
+	};
+
+	request.onsuccess = function(event) {
+		$db = event.target.result;
+		console.log('open indexeddb successfully');
+	};
+
+	$('div.huge.button').click(function(e){
+		var trans = $db.transaction("products", "readwrite");
+		trans.oncomplete  = function(event) {
+			console.log("All done!");
+		};
+		trans.onerror = function(event) {
+			console.log("transaction failed");
+		};
+		var objectStore = trans.objectStore("products");
+		objectStore.clear();
+
+		$action_form.submit();
 	});
+
 	$('.coupled.modal').modal({
 		allowMultiple: true,
 	});
@@ -203,12 +227,15 @@ $(document).ready(function(){
 							var $radio = $('<div class="ui radio checkbox"><input name="address" checked class="hidden" type="radio"></div>');
 							$radio.data('code', info.code);
 							var $header = $('<div class="header"></div>');
-							$header.html(fields.name + " " + fields.mobile);
+							$header.html(fields.contact);
 							var $meta = $('<div class="meta"></div>');
-							$meta.html(fields.address);
+							$meta.html(fields.mobile);
+							var $desc = $('<div class="description"></div>');
+							$desc.html(fields.address);
 							$radio.appendTo($content);
 							$header.appendTo($content);
 							$meta.appendTo($content);
+							$desc.appendTo($content);
 							$content.appendTo($item);
 							$item.appendTo($('#addresses'));
 							$radio.checkbox();
@@ -223,7 +250,7 @@ $(document).ready(function(){
 				});
 			}
 		});
-	$('#action-form').form({
+	$action_form.form({
 		on: 'blur',
 		fields: {
 			contact: {

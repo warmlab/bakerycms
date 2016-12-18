@@ -65,7 +65,7 @@ def _get_userinfo_from_weixin(weixin_code):
         openid = token_info.get('openid')
         refresh_token = token_info.get('refresh_token')
         #scope = info.get('scope')
-        member = Member.query.filter_by(weixin_openid=openid)
+        member = Member.query.filter_by(weixin_openid=openid).first()
         if not member:
                 ## refresh access token
                 #params = [('appid', sp.weixin_appid),
@@ -76,7 +76,7 @@ def _get_userinfo_from_weixin(weixin_code):
             member = Member()
             user = UserAuth(member=member, active=True, confirmed_at=datetime.utcnow())
         else:
-            user = UserAuth.query.filter_by(member_id=member.id)
+            user = UserAuth.query.filter_by(member_id=member.id).first()
         member.weixin_openid=openid
         member.weixin_token=access_token
         member.weixin_expires_time=int(time()) + expires_in - 5
@@ -114,7 +114,7 @@ def cart():
     # login to system
     login_user(user)
 
-    return render_template('shop/cart.html', user)
+    return render_template('shop/cart.html', weixin_user=user)
 
 @shop.route('/checkout', methods=['POST']) # 结算
 @login_required

@@ -1,17 +1,7 @@
 {% extends "base-user.html" %}
 {% block main_content_section %}
 <div class="ui basic segment">
-	{% if message %}
-	<div class="ui info icon message">
-		<i class="info icon"></i>
-		<div class="content">
-		<div class="header">
-			{{bakery_class.name}}
-		</div>
-		<p>加入到购物车，请到购物车查看</p>
-		</div>
-	</div>
-	{% endif %}
+	<img id="banner-image" class="ui big image" src="/media/biscuit.jpg"><p/>
     <h3 class="ui header">
         <div class="content">
 			巧克力曲奇
@@ -20,15 +10,23 @@
           </div>
         </div>
     </h3>
+	<div class="ui icon message">
+		<i class="paint brush"></i>
+		<div class="content">
+			<div class="header">
+				制作材料
+			</div>
+			<p>黄油 糖粉 鸡蛋 低粉 可可粉</p>
+		</div>
+	</div>
     <div>
-        制作材料
-        黄油 糖粉 鸡蛋 低粉 可可粉
-    </div>
-    <div>
-        学会了这个，在家就可以自制一些好吃的曲奇饼干了，自己动手，绝对美味有靠谱
-    </div>
-    <div>
-        曲奇
+	<div class="ui icon message">
+		<i class="paint brush"></i>
+		<div class="content">
+			<div class="header">
+			</div>
+			<p>学会了这个，在家就可以自制一些好吃的曲奇饼干了，自己动手，绝对美味有靠谱</p>
+		</div>
     </div>
     <div class="ui warning message">
         <div class="header">
@@ -52,7 +50,7 @@
             <input type="text" name="expires_at" readonly value="2017-1-26">
         </div>
         <div class="ui fluid orange right labeled icon huge button">
-            <i class="add to cart icon"></i>预约
+            <i class="book icon"></i>预约
         </div>
 		<div class="ui error message"></div>
     </form>
@@ -61,9 +59,6 @@
 {% endblock %}
 {% block bottom_nav_section %}
 {% include "includes/bottom_fixed.html" %}
-{% endblock %}
-{% block special_script_section %}
-<script src="{{url_for('static', filename='js/shop.js')}}"></script>
 {% endblock %}
 {% block inline_script_section %}
 <script>

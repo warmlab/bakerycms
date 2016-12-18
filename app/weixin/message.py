@@ -21,9 +21,8 @@ class Message():
         <CreateTime>%d</CreateTime>
         <MsgType><![CDATA[text]]></MsgType>
         <Content><![CDATA[亲爱的%s，您好，欢迎关注我们，请致电18053214078，0532-58806365订购。%s 正在积极装修中，敬请期待]]></Content>
-        </xml>""" % (self.member.nickname if self.member and self.member.nickname else "",
-                     self.__properties['FromUserName'], self.__properties['ToUserName'],
-                     int(time()), home_web)
+        </xml>""" % (self.__properties['FromUserName'], self.__properties['ToUserName'],
+                     int(time()), self.member.nickname if self.member and self.member.nickname else "", home_web)
 
         return body
 
