@@ -54,7 +54,7 @@ class Shoppoint(db.Model):
 
     @property
     def access_token(self, provider='weixin'):
-        if self.weixin_access_token and self.weixin_access_token_expires_time < int(time()):
+        if self.weixin_access_token and self.weixin_expires_time and self.weixin_expires_time > int(time()):
             return self.weixin_access_token
 
         print ('Get token from weixin or cannot get access token')
@@ -81,7 +81,8 @@ class Shoppoint(db.Model):
                 raise AccessTokenGotError(errcode, errmsg)
 
             self.weixin_access_token = info.get('access_token')
-            self.weixin_access_token_expires_time = int(time()) + info.get('expires_in') - 5
+            self.weixin_expires_time = int(time()) + info.get('expires_in') - 5
+            db.session.commit()
 
             return self.weixin_access_token
 
@@ -169,6 +170,7 @@ class UserAuth(db.Model, UserMixin):
     # User authentication information
     email = db.Column(db.String(64), unique=True, index=True)
     mobile = db.Column(db.String(16), unique=True, index=True) #手机号码
+    openid = db.Column(db.String(64), unique=True, nullable=True) # used in weixin
     password_hash = db.Column(db.String(128), nullable=False)
     #reset_password_token = db.Column(db.String(128), nullable=False)
     confirmed_at = db.Column(db.DateTime)
@@ -340,6 +342,16 @@ class Product(db.Model):
     def __repr__(self):
         return self.name
 
+class BakeryCategory(db.Model):
+    __tablename__ = 'bakery_category'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(128), unique=True, index=True)
+    english_name = db.Column(db.String(128), unique=True, index=True, nullable=False)
+    description = db.Column(db.Text)
+
+    def __repr__(self):
+        return self.name
+
 class BakeryClass(db.Model):
     __tablename__ = 'bakery_class'
     id = db.Column(db.Integer, primary_key=True)
@@ -350,6 +362,10 @@ class BakeryClass(db.Model):
                         back_populates='bakery_class')
 
     images = db.relationship('BakeryImage', back_populates='bakery_class')
+
+    category_id = db.Column(db.Integer, db.ForeignKey('bakery_category.id'))
+    category = db.relationship('BakeryCategory',
+                         backref=db.backref('classes', lazy="dynamic"))
     #specifications = db.relationship('ProductSpecification',
 
 class BakeryTime(db.Model):
@@ -607,10 +623,10 @@ class ShoppingCart(db.Model):
         return "shopping cart"
 
 @login_manager.user_loader
-def user_loader(email):
-    user = UserAuth.query.filter(or_(UserAuth.email==email, UserAuth.mobile==email)).first()
-    if not user:
-        return None
+def user_loader(condition):
+    user = UserAuth.query.filter(or_(UserAuth.email==condition,
+                                     UserAuth.mobile==condition,
+                                     UserAuth.openid==condition)).first()
 
     return user
 

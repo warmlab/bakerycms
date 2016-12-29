@@ -22,6 +22,17 @@ def _access_weixin_api(url, **kwargs):
 
         return info
 
+def post_weixin_api(url, body, **kwargs):
+    params = urllib.parse.urlencode(kwargs)
+    final_url = '?'.join([url, params])
+    data = body.encode('utf-8')
+    with urllib.request.urlopen(final_url, data=data) as f:
+        result = f.read().decode('utf-8')
+
+        info = json.loads(result)
+
+        return info
+
 def access_weixin_api(url, param_tuples):
     print ('accesssing ', url)
     params = urllib.parse.urlencode(param_tuples).encode('utf-8')
@@ -47,13 +58,13 @@ def store_weixin_picture(url, name):
         db.session.commit()
 
 def get_member_info(openid, language='zh-CN'):
-    token = Shoppoint.query.first().weixin_access_token
+    token = Shoppoint.query.first().access_token
     info = _access_weixin_api('https://api.weixin.qq.com/cgi-bin/user/info?%s', access_token=token, openid=openid, lang=language)
-    if 'errcode' in info:
-        errcode = info.get('errcode')
-        errmsg = info.get('errmsg')
+    #if 'errcode' in info:
+    #    errcode = info.get('errcode')
+    #    errmsg = info.get('errmsg')
 
-        return errcode, errmsg
+    #    return errcode, errmsg
 
     return info
     #subscribe = info.get('subscribe')

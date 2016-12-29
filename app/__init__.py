@@ -39,6 +39,9 @@ def create_app(config_name):
     from .product import product as product_blueprint
     app.register_blueprint(product_blueprint, url_prefix='/manage/product')
 
+    from .bakery import bakery as bakery_blueprint
+    app.register_blueprint(bakery_blueprint, url_prefix='/manage/bakery')
+
     from .auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
 

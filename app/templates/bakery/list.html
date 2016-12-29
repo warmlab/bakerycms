@@ -1,0 +1,55 @@
+{% extends "base-admin.html" %}
+{% block main_content_section %}
+<div class="ui basic segment">
+	<h2 class="ui header">
+		<i class="list layout icon"></i>
+		<div class="content">
+			Product
+			<div class="sub header">Manage your bakery classes.</div>
+		</div>
+	</h2>
+	<a href="{{url_for('.bakery_detail')}}?new=1" class="ui basic button"><i class="plus icon"></i>新增产品</a>
+    <table class="ui six column table">
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Category</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+	  {% for p in bakery_classes %}
+	  <tr>
+		  <td>{{ p.code }}</td>
+		  <td>{{ p.name }}</td>
+          <td>{{ p.price }}</td>
+          <td>{{ p.stock }}</td>
+		  <td>{{ p.category }}</td>
+		  <td>
+              <a href="{{url_for('.bakery_detail')}}?code={{p.code}}" class="ui circular icon button"><i class="edit icon"></i></a>
+			  <button type="button" class="ui circular icon negative button"><i class="remove icon"></i></a>
+		  </td>
+	  </tr>
+	  {% endfor %}
+	  </tbody>
+	  <tfoot>
+	  <tr>
+          <th>{{bakery_classes.count()}} Products</th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+	  </tr>
+	  </tfoot>
+	  </table>
+</div>
+<!--main content end-->
+{% endblock %}
+{% block special_script_section %}
+{% endblock %}
+{% block inline_script_section %}
+{% endblock %}

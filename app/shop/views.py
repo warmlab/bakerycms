@@ -93,6 +93,11 @@ def _get_userinfo_from_weixin(weixin_code):
         member.weixin_unionid = user_info.get('unionid')
         member.headimgurl = user_info.get('headimgurl')
 
+        # TODO create a random passcode
+        user.password = uuid4().hex
+        db.session.add(member)
+        db.session.add(user)
+
         return user
 
 @shop.route('/cart', methods=['GET'])
@@ -112,7 +117,9 @@ def cart():
     #    return redirect(url)
     user = _get_userinfo_from_weixin(weixin_code)
     # login to system
-    login_user(user)
+    print('in shoppoint cart ', user)
+    r = login_user(user)
+    print('login result: ', r)
 
     return render_template('shop/cart.html', weixin_user=user)
 
@@ -228,10 +235,9 @@ def unified_order():
             sp.weixin_mchid, sp.weixin_appsecret,
             current_user, url_for('weixin.pay_notify', _external=True))
 
-    print (result)
     if result.get('return_code') == "SUCCESS":
         if result.get('result_code') == "SUCCESS":
-            #ticket.payment_code = prepay_id
+            ticket.payment_code = result.get('prepay_id')
             package = '='.join(['prepay_id', result.get('prepay_id')])
             params = {'timeStamp': int(time()), 'appId': sp.weixin_appid, 'nonceStr': result.get('nonce_str'), 'package': package, 'signType': 'MD5'}
             params['signature'], signType = weixin_pay.generate_sign(params, sp.weixin_appsecret)
