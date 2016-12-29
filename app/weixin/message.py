@@ -1,3 +1,5 @@
+import hashlib
+
 from time import time
 from datetime import datetime
 
@@ -67,12 +69,30 @@ class Message():
     def event_key(self):
         return self.__properties.get('EventKey')
 
+    def check_signature(self, key):
+        if 'sign' not in self.__properties:
+            return False
+        sign = self.__properties.pop('sign')
+        t = [(k, v) for k,v in self.__properties.items()]
+        self.__properties['sign'] = sign
+        t.sort()
+        t.append(('key', key))
+        r = hashlib.md5(('&'.join(['='.join(i) for i in t])).encode('utf8')).hexdigest().upper()
+
+        if r == sign:
+            return True
+
+        return False
+
 def parse_message(xmlbody):
-    root = etree.fromstring(xmlbody)
+    try:
+        root = etree.fromstring(xmlbody)
 
-    message = Message()
-    for e in root:
-        print(e.tag, e.text)
-        message.set_value(e.tag, e.text)
+        message = Message()
+        for e in root:
+            print(e.tag, e.text)
+            message.set_value(e.tag, e.text)
 
-    return message
+        return message
+    except Exception as e:
+        return None

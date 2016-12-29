@@ -184,13 +184,19 @@ def pay_callback():
 def pay_notify():
     shoppoint = Shoppoint.query.first()
     message = parse_message(request.data.decode('utf-8'))
-    #check_signature('TODO', message.get_value('sign'), message.get_value('nonce_str'))
+    if not message:
+        abort(400)
+
     if message.get_value('result_code') != 'SUCCESS' or message.get_value('return_code') != 'SUCCESS':
-        return
+        return "<xml><return_code><![CDATA[{0}]]></return_code><return_msg><![CDATA[{1}]]></return_msg></xml>".format(
+                                                     message.get_value('result_code'), message.get_value('return_code'))
+
+    if not message.check_signature(shoppoint.weixin_appsecret):
+        return "<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[签名不正确]]></return_msg></xml>"
 
     ticket = Ticket.query.get(message.get_value('out_trade_no'))
     if not ticket:
-        return
+        return "<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[out trade no error]]></return_msg></xml>"
 
     ticket.payment_code = message.get_value('transaction_id')
     if int(ticket.real_price * 100) <= int(message.get_value('cash_fee')):
@@ -256,4 +262,4 @@ def pay_notify():
                                                  message.get_value('openid'), data))
     post_weixin_api('https://api.weixin.qq.com/cgi-bin/message/template/send', body, access_token=shoppoint.access_token)
 
-    return "SUCCESS"
+    return "<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>"
