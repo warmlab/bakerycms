@@ -7,6 +7,8 @@ from flask import request, url_for, abort, json
 
 from flask_login import login_required, current_user, login_user
 
+from flask_sqlalchemy import Pagination
+
 from . import shop
 
 from .. import db
@@ -27,8 +29,11 @@ def index():
     sp = Shoppoint.query.first()
     if not sp:
         abort(404)
+
+    page = request.args.get('page', type=int, default=1)
     products = Product.query.filter_by(is_available_on_web=True)
-    return render_template('shop/list.html', products=products, shoppoint=sp)
+    pagination = products.paginate(page=page, per_page=7, error_out=False)
+    return render_template('shop/list.html', products=products, shoppoint=sp, pagination=pagination)
 
 @shop.route('/product/<code>', methods=['GET'])
 def product_detail(code):
@@ -97,6 +102,7 @@ def _get_userinfo_from_weixin(weixin_code):
         user.password = uuid4().hex
         db.session.add(member)
         db.session.add(user)
+        db.session.commit()
 
         return user
 
@@ -311,9 +317,10 @@ from ..models import BakeryClass
 @shop.route('/class')
 def diy():
     #return redirect('https://mp.weixin.qq.com/s?__biz=MzAwMjE3MzEyNw==&mid=2455220715&idx=1&sn=d0798bb8779fd9dec89f9958017f249b&chksm=8d6d6043ba1ae9551cdc202ce9bbd2040fe18f950096a8f26eda4d2345bbedb17cd1e7ef3bbd&mpshare=1&scene=1&srcid=1123XB5W4s9PqTG1KAS8WxtG&pass_ticket=0Y41Ml3EcPHX%2B%2FVBw5imdigDDp8ejLPhVIR%2Fj7DUZlr0jaLe7oh9G6Q404U66%2BEN#rd')
-    bakery_class = BakeryClass.query.first()
+    return redirect('https://mp.weixin.qq.com/s?__biz=MzAwMjE3MzEyNw==&mid=2455220732&idx=1&sn=42f816f59e2e6fc3b01078e59612ca47&pass_ticket=hibJGWHAmwSe%2BaA76YYeyTQRqpBY%2Fzo%2B6HCCr8s9utveCV2TJFOuU6dVGMNJauP2')
+    #bakery_class = BakeryClass.query.first()
 
-    return render_template('class/detail.html', bakery_class=bakery_class)
+    #return render_template('class/detail.html', bakery_class=bakery_class)
 
 from ..models import Bakery
 from uuid import uuid4

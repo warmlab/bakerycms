@@ -62,8 +62,7 @@ def access():
             elif message.event == 'user_pay_from_pay_cell':
                 data = {
                     "productType": {
-                        "value":"请您放心",
-                        "color":"#754c24"
+                        "value":"卡诺烘焙",
                         },
                     "name":{
                         "value":"用心做，不做作",

@@ -25,7 +25,7 @@
 	</div>
 </div>
 <div class="ui basic segments">
-	{% for product in products %}
+	{% for product in pagination.items %}
 	<div class="ui clearing segment">
 		<a href="{{url_for('.product_detail', shoppoint=shoppoint.code, code=product.code, _method='GET')}}">
 			<div class="ui image middle aligned header">
@@ -43,7 +43,20 @@
 	</div>
 	{% endfor %}
 </div>
-<div style="padding-bottom: 40px;"></div>{#
+	<div class="ui pagination menu">
+		{%- for page in pagination.iter_pages() %}
+			{%- if page %}
+				{% if page != pagination.page %}
+			<a class="item" href="{{ url_for('.index', page=page)}}">{{page}}</a>
+				{% else %}
+			<a class="active item" href="{{ url_for('.index', page=page)}}">{{page}}</a>
+				{% endif %}
+			{% else %}
+				<div class="disabled item">...</div>
+			{%- endif %}
+		{%- endfor %}
+	</div>
+<div style="padding-bottom: 50px;"></div>{#
 				  <p>
 	<p class="lead">这是我的故事，或许也有你的影子，因为我们都是善良的……</p>
 	<p class="lead">大学毕业后，和老公开始了北漂的生活，漂着漂着，买了房子，买了车子，有了两个可爱的孩子，就这样在北京生活了十来年，朋友啊，工作啊，挺好挺满足。</p> 
