@@ -68,7 +68,7 @@ def image_upload():
         upload_name, name, ext = __generate_filename(filename)
         f.save(os.path.join(current_app.config['UPLOAD_FOLDER'], '.'.join([name, ext])))
 
-        image = Image(upload_name, name, current_app.config['UPLOAD_FOLDER'], ext)
+        image = Image(upload_name=upload_name, name=name, directory=current_app.config['UPLOAD_FOLDER'], ext=ext)
         db.session.add(image)
         db.session.commit()
 

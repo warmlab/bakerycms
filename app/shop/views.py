@@ -70,33 +70,35 @@ def _get_userinfo_from_weixin(weixin_code):
         openid = token_info.get('openid')
         refresh_token = token_info.get('refresh_token')
         #scope = info.get('scope')
-        member = Member.query.filter_by(weixin_openid=openid).first()
-        if not member:
+        #member = Member.query.filter_by(weixin_openid=openid).first()
+        user = UserAuth.query.filter_by(openid=openid).first()
+        if not user:
                 ## refresh access token
                 #params = [('appid', sp.weixin_appid),
                 #          ('grant_type', 'refresh_token'),
                 #          ('refresh_token', token_info.get('refresh_token'))
                 #        ]
                 #token_info = weixin_access.access_weixin_api('https://api.weixin.qq.com/sns/oauth2/refresh_token', params)
+            user = UserAuth(openid=openid, active=True, confirmed_at=datetime.utcnow())
+        member = Member.query.filter_by(weixin_openid=openid).first()
+        if not member:
             member = Member()
-            user = UserAuth(member=member, active=True, confirmed_at=datetime.utcnow())
-        else:
-            user = UserAuth.query.filter_by(member_id=member.id).first()
-        member.weixin_openid=openid
+            member.weixin_openid=openid
+
+            # get user info from weixin
+            params = [('access_token', token_info.get('access_token')),
+                      ('openid', token_info.get('openid')),
+                      ('lang', 'zh_CN')
+                     ]
+            user_info = weixin_access.access_weixin_api('https://api.weixin.qq.com/sns/userinfo', params)
+            member.nickname = user_info.get('nickname')
+            member.gender = user_info.get('sex')
+            member.weixin_unionid = user_info.get('unionid')
+            member.headimgurl = user_info.get('headimgurl')
         member.weixin_token=access_token
         member.weixin_expires_time=int(time()) + expires_in - 5
         member.weixin_refresh_token=refresh_token
-
-        # get user info from weixin
-        params = [('access_token', token_info.get('access_token')),
-                  ('openid', token_info.get('openid')),
-                  ('lang', 'zh_CN')
-                 ]
-        user_info = weixin_access.access_weixin_api('https://api.weixin.qq.com/sns/userinfo', params)
-        member.nickname = user_info.get('nickname')
-        member.gender = user_info.get('sex')
-        member.weixin_unionid = user_info.get('unionid')
-        member.headimgurl = user_info.get('headimgurl')
+        user.member=member
 
         # TODO create a random passcode
         user.password = uuid4().hex

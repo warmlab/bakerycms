@@ -144,7 +144,17 @@ def access():
             if message.get_value('FromUserName') in ('ox4bxso53hocK9iyC-eKNll-qRoI',
                     'ox4bxsnBj7xpsSndE4TOg_LY-IKQ', 'ox4bxsn8gkt_IqaVzQIPRkuep4v8'): # TODO
                 # save image to gallery
-                store_weixin_picture(message.get_value('PicUrl'), message.get_value('MsgId'))
+                r = store_weixin_picture(message.get_value('PicUrl'), message.get_value('MsgId'))
+                if r == 0:
+                    body = message.generate_text_body('亲，您上传的图片已经保存至服务器，http://m.wecakes.com/media/%s.jpg' % message.get_value('MsgId'))
+                else:
+                    body = message.generate_text_body('亲，上传失败，请联系管理员')
+                response = make_response()
+                response.headers['Content-type'] = 'application/xml'
+                response.data = body.encode('utf-8')
+
+                return response
+
         else:
             body = message.generate_response_body()
             response = make_response()

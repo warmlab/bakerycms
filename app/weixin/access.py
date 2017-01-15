@@ -46,16 +46,18 @@ def access_weixin_api(url, param_tuples):
 
 def store_weixin_picture(url, name):
     if not url or not name:
-        return
+        return 1
 
     print(url)
     with urllib.request.urlopen(url) as f:
         p = open(os.path.join(current_app.config['UPLOAD_FOLDER'], '.'.join([name, 'jpg'])), 'wb')
         p.write(f.read())
 
-        image = Image(name, name, current_app.config['UPLOAD_FOLDER'], 'jpg')
+        image = Image(name=name, upload_name=name, directory=current_app.config['UPLOAD_FOLDER'], ext='jpg')
         db.session.add(image)
         db.session.commit()
+
+        return 0
 
 def get_member_info(openid, language='zh-CN'):
     token = Shoppoint.query.first().access_token

@@ -25,6 +25,18 @@ class Message():
 
         return dic
 
+    def generate_text_body(self, text):
+        body = """<xml>
+        <ToUserName><![CDATA[%s]]></ToUserName>
+        <FromUserName><![CDATA[%s]]></FromUserName>
+        <CreateTime>%d</CreateTime>
+        <MsgType><![CDATA[text]]></MsgType>
+        <Content><![CDATA[%s]]></Content>
+        </xml>""" % (self.__properties['FromUserName'], self.__properties['ToUserName'],
+                     int(time()), text)
+
+        return body
+
     def _generate_text_body(self):
         home_web = "http://m.wecakes.com"
         body = """<xml>

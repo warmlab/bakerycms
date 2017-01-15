@@ -203,7 +203,7 @@ class UserAuth(db.Model, UserMixin):
         return False
 
     def get_id(self):
-        return self.mobile if self.mobile else self.email
+        return self.openid if self.openid else self.mobile if self.mobile else self.email
 
     def is_active(self):
         return self.active
