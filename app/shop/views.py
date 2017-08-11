@@ -319,7 +319,8 @@ from ..models import BakeryClass
 @shop.route('/class')
 def diy():
     #return redirect('https://mp.weixin.qq.com/s?__biz=MzAwMjE3MzEyNw==&mid=2455220715&idx=1&sn=d0798bb8779fd9dec89f9958017f249b&chksm=8d6d6043ba1ae9551cdc202ce9bbd2040fe18f950096a8f26eda4d2345bbedb17cd1e7ef3bbd&mpshare=1&scene=1&srcid=1123XB5W4s9PqTG1KAS8WxtG&pass_ticket=0Y41Ml3EcPHX%2B%2FVBw5imdigDDp8ejLPhVIR%2Fj7DUZlr0jaLe7oh9G6Q404U66%2BEN#rd')
-    return redirect('https://mp.weixin.qq.com/s?__biz=MzAwMjE3MzEyNw==&mid=2455220732&idx=1&sn=42f816f59e2e6fc3b01078e59612ca47&pass_ticket=hibJGWHAmwSe%2BaA76YYeyTQRqpBY%2Fzo%2B6HCCr8s9utveCV2TJFOuU6dVGMNJauP2')
+    #return redirect('https://mp.weixin.qq.com/s?__biz=MzAwMjE3MzEyNw==&mid=2455220732&idx=1&sn=42f816f59e2e6fc3b01078e59612ca47&pass_ticket=hibJGWHAmwSe%2BaA76YYeyTQRqpBY%2Fzo%2B6HCCr8s9utveCV2TJFOuU6dVGMNJauP2')
+    return redirect('http://mp.weixin.qq.com/mp/homepage?__biz=MzAwMjE3MzEyNw==&hid=1&sn=fb9900c39fa5dbcbba1454e90b672a38#wechat_redirect')
     #bakery_class = BakeryClass.query.first()
 
     #return render_template('class/detail.html', bakery_class=bakery_class)
