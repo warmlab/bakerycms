@@ -300,6 +300,13 @@ class ProductCategory(db.Model):
     def __repr__(self):
         return self.name
 
+    def to_json(self):
+        return {"id": self.id,
+                "name": self.name,
+                "english_name": self.english_name,
+                "description": self.description
+                }
+
 
 class Product(db.Model):
     __tablename__ = 'product'
@@ -317,6 +324,7 @@ class Product(db.Model):
                          backref=db.backref('products', lazy="dynamic"))
     original_price = db.Column(db.Numeric(7,2), default=0.0) # 原价
     price = db.Column(db.Numeric(7,2), default=0.0) # 现价
+    #spec = db.Column(db.String(32))
     member_price = db.Column(db.Numeric(7,2), default=0.0) # 会员价
     stock = db.Column(db.Numeric(7,2), default=0.0) # 库存
     is_available_on_web = db.Column(db.Boolean, default=True) # web端显示标志
@@ -326,6 +334,7 @@ class Product(db.Model):
     pre_order_hours = db.Column(db.Integer, default=24) # 需要预定的时间，一般为提前一天预定
     pub_date = db.Column(db.DateTime, default=datetime.utcnow)
     #unit = db.Column(db.String(8))
+    summary = db.Column(db.Text)
     description = db.Column(db.Text)
 
     suppliers = db.relationship('ProductSupplier',
@@ -409,6 +418,10 @@ class Parameter(db.Model):
     __tablename__ = 'parameter'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), nullable=False)
+    size_desc = db.Column(db.String(64))
+    share_desc = db.Column(db.String(64))
+    tool_desc = db.Column(db.String(64))
+    order_time_desc = db.Column(db.String(64))
     category_id = db.Column(db.Integer, db.ForeignKey('parameter_category.id'))
 
     category = db.relationship('ParameterCategory',
@@ -432,7 +445,13 @@ class ProductParameter(db.Model):
 
     def __repr__(self):
         return str(self.plus_price)
-    
+
+    def to_json(self):
+        return {
+                "plus_price": float(self.plus_price),
+                "stock": float(self.stock)
+                }
+
 
 class ProductSupplier(db.Model):
     __tablename__ = 'product_supplier'

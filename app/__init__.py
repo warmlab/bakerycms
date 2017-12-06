@@ -12,6 +12,7 @@ from .filters import weixin_authorize
 #mail = Mail()
 #moment = Moment()
 db = SQLAlchemy()
+#api = APIManager()
 #pagedown = PageDown()
 
 login_manager = LoginManager()
@@ -37,10 +38,10 @@ def create_app(config_name):
     app.jinja_env.filters['weixin_authorize'] = weixin_authorize
 
     from .product import product as product_blueprint
-    app.register_blueprint(product_blueprint, url_prefix='/manage/product')
+    app.register_blueprint(product_blueprint, url_prefix='/manage')
 
-    from .bakery import bakery as bakery_blueprint
-    app.register_blueprint(bakery_blueprint, url_prefix='/manage/bakery')
+    #from .bakery import bakery as bakery_blueprint
+    #app.register_blueprint(bakery_blueprint, url_prefix='/manage/bakery')
 
     from .auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
@@ -57,7 +58,7 @@ def create_app(config_name):
     from .shop import shop as shop_blueprint
     app.register_blueprint(shop_blueprint)
 
-    #from .rest import rest as rest_blueprint
-    #app.register_blueprint(rest_blueprint, url_prefix='/rest')
+    from .api import api as api_blueprint
+    app.register_blueprint(api_blueprint, url_prefix='/api')
 
     return app

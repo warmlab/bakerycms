@@ -30,7 +30,7 @@ def after_request(response):
     return response
 
 # If GET is present, HEAD will be added automatically for you
-@product.route('/', methods=['GET'])
+@product.route('/products', methods=['GET'])
 @login_required
 @staff_required
 def product_list():
@@ -70,7 +70,7 @@ def _product_parameters(product, pc, parameters, price_parameter_values, stock_p
     all_parameters = [o.id for o in pc.parameters]
     defined_parameters = []
     for po in product.parameters:
-        if po.parameter.parameter_category_id == pc.id:
+        if po.parameter.category_id == pc.id:
             defined_parameters.append(po.parameter_id)
     print (defined_parameters)
 
@@ -78,9 +78,7 @@ def _product_parameters(product, pc, parameters, price_parameter_values, stock_p
     for o,v,s in zip(parameters, price_parameter_values, stock_parameter_values):
         o = int(o)
         parameter = Parameter.query.get_or_404(o)
-        print ('ooooooooooo: ', o)
         if o in defined_parameters:
-            print ('ooooooooooo: ', o in defined_parameters)
             po = ProductParameter.query.get_or_404((product.id, parameter.id))
             po.price = Decimal(v)
             po.stock = Decimal(s)

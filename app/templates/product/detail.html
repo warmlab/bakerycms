@@ -171,8 +171,8 @@ PRODUCT = {
 };
 $(document).ready(function(){
     {% for po in product.parameters %}
-	var option_values = [{% for o in po.parameter.parameter_category.parameters %}"{{o.id}}",{%endfor%}];
-	var options = [{% for o in po.parameter.parameter_category.parameters %}"{{o}}",{%endfor%}];
+	var option_values = [{% for o in po.parameter.category.parameters %}"{{o.id}}",{%endfor%}];
+	var options = [{% for o in po.parameter.category.parameters %}"{{o}}",{%endfor%}];
 	var category_id = "{{po.parameter.parameter_category_id}}";
 	var selected_option = "{{po.parameter_id}}";
 	var price = "{{po.plus_price}}";

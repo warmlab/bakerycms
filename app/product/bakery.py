@@ -7,7 +7,8 @@ from flask_login import login_required, current_user
 from flask_sqlalchemy import get_debug_queries
 
 from .. import db
-from . import bakery # blueprint
+#from . import bakery # blueprint
+from . import product
 
 #from application import app
 
@@ -18,7 +19,7 @@ from ..models import Image, BakeryImage
 from ..decorators import staff_required
 
 
-@bakery.after_app_request
+@product.after_app_request
 def after_request(response):
     for query in get_debug_queries():
         if query.duration >= current_app.config['BAKERY_SLOW_DB_QUERY_TIME']:
@@ -29,7 +30,7 @@ def after_request(response):
     return response
 
 # If GET is present, HEAD will be added automatically for you
-@bakery.route('/', methods=['GET'])
+@product.route('/bakery/classes', methods=['GET'])
 @login_required
 @staff_required
 def class_list():
@@ -67,7 +68,7 @@ def _bakery_images(bakery, image_names):
 def _bakery_times(bakery, class_times):
     print("bakery parameters: %s" % class_times)
 
-@bakery.route('/bakery', methods=['GET', 'POST'])
+@product.route('/bakery/class', methods=['GET', 'POST'])
 @login_required
 @staff_required
 def bakery_detail():
@@ -149,17 +150,17 @@ def bakery_detail():
     return render_template('bakery/detail.html', bakery=bakery, categories=categories,
                            images=images)
 
-@bakery.route('/categories', methods=['GET'])
+@product.route('/bakery/categories', methods=['GET'])
 @login_required
 @staff_required
-def category_list():
+def bakery_category_list():
     categories = BakeryCategory.query
     return render_template('bakery/category_list.html', categories=categories)
 
-@bakery.route('/category', methods=['GET', 'POST'])
+@product.route('/bakery/category', methods=['GET', 'POST'])
 @login_required
 @staff_required
-def category_detail():
+def bakery_category_detail():
     create = request.args.get('new')
     if request.method == 'POST':
         name = request.form.get('inputname')

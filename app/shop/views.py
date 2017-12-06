@@ -3,7 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from flask import render_template, redirect
-from flask import request, url_for, abort, json
+from flask import request, url_for, abort, json, jsonify
 
 from flask_login import login_required, current_user, login_user
 
@@ -15,7 +15,7 @@ from .. import db
 
 from ..decorators import member_required
 
-from ..models import Shoppoint, Product, Address
+from ..models import Shoppoint, Product, Address, ParameterCategory
 from ..models import Member, UserAuth
 from ..models import Ticket, TicketProduct, TicketAddress
 
@@ -23,17 +23,35 @@ from ..weixin import pay as weixin_pay
 from ..weixin import access as weixin_access
 
 
-@shop.route('/products', methods=['GET'])
 @shop.route('/', methods=['GET'])
-def index():
+def home():
+    return render_template('shop/popular.html')
+
+@shop.route('/products', methods=['GET'])
+def products():
     sp = Shoppoint.query.first()
     if not sp:
         abort(404)
 
-    page = request.args.get('page', type=int, default=1)
+    #page = request.args.get('page', type=int, default=1)
     products = Product.query.filter_by(is_available_on_web=True)
-    pagination = products.paginate(page=page, per_page=7, error_out=False)
-    return render_template('shop/list.html', products=products, shoppoint=sp, pagination=pagination)
+    parameter_categories = ParameterCategory.query.all()
+    #pagination = products.paginate(page=page, per_page=8, error_out=False)
+    return render_template('shop/list.html', products=products, pcs=parameter_categories, shoppoint=sp) #, pagination=pagination)
+
+@shop.route('/product/parameters/<code>', methods=['GET'])
+def product_parameters(code):
+    sp = Shoppoint.query.first()
+    if not sp:
+        abort(404)
+
+    pps = []
+    product = Product.query.filter_by(code=code).first()
+    for pp in product.parameters:
+        d = {'id': pp.parameter.id, 'name': pp.parameter.name, 'price': float(pp.plus_price)}
+        pps.append(d)
+
+    return jsonify(pps), 200
 
 @shop.route('/product/<code>', methods=['GET'])
 def product_detail(code):

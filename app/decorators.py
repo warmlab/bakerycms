@@ -18,6 +18,8 @@ def staff_required(fn):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
+            if current_user.is_anonymous:
+                return redirect(url_for('auth.login', _method='GET'))
             if not current_user.staff \
                or not current_user.staff.can(0):
                 abort(403)

@@ -1,9 +1,9 @@
 <div class="ui three item bottom fixed compact menu">
-	<a class="item" href="{{url_for('.index')}}">
-		<i class="food icon"></i>美味
+	<a class="item" href="{{url_for('.home')}}">
+		<i class="thumbs up icon"></i>人气
 	</a>
-	<a class="item" id="cart" href="{{url_for('.cart', _external=True)|weixin_authorize('snsapi_userinfo')|safe}}">
-		<i class="shopping cart icon"></i>购物车
+	<a class="item" id="cart" href="{{url_for('.products', _external=True)}}">
+		<i class="block layout icon"></i>分类
 	</a>
 	<a class="item" href="{{url_for('.myshop', _external=True)|weixin_authorize('snsapi_userinfo')|safe}}">
 		<i class="user icon"></i>我的
