@@ -15,7 +15,7 @@ from .. import db
 
 from ..decorators import member_required
 
-from ..models import Shoppoint, Product, Address, ParameterCategory
+from ..models import Shoppoint, Product, Address, ParameterCategory, Parameter
 from ..models import Member, UserAuth
 from ..models import Ticket, TicketProduct, TicketAddress
 
@@ -36,8 +36,9 @@ def products():
     #page = request.args.get('page', type=int, default=1)
     products = Product.query.filter_by(is_available_on_web=True)
     parameter_categories = ParameterCategory.query.all()
+    parameters = Parameter.query.all()
     #pagination = products.paginate(page=page, per_page=8, error_out=False)
-    return render_template('shop/list.html', products=products, pcs=parameter_categories, shoppoint=sp) #, pagination=pagination)
+    return render_template('shop/list.html', products=products, pcs=parameter_categories, parameters=parameters, shoppoint=sp) #, pagination=pagination)
 
 @shop.route('/product/parameters/<code>', methods=['GET'])
 def product_parameters(code):
@@ -48,7 +49,7 @@ def product_parameters(code):
     pps = []
     product = Product.query.filter_by(code=code).first()
     for pp in product.parameters:
-        d = {'id': pp.parameter.id, 'name': pp.parameter.name, 'price': float(pp.plus_price)}
+        d = {'id': pp.parameter.id, 'name': pp.parameter.name, 'size': pp.parameter.size, 'price': float(pp.plus_price)}
         pps.append(d)
 
     return jsonify(pps), 200

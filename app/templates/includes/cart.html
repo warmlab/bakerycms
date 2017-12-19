@@ -4,12 +4,12 @@
     <div class="image content">
     <div class="ui mobile equal width grid">
         <div class="column">
-            <p><i class="circle icon"></i>15x15cm</p>
-            <p><i class="food icon"></i>含有5套餐具</p>
+            <p id="para-size"><i class="circle icon"></i>直径15cm</p>
+            <p id="para-tableware"><i class="food icon"></i>含有5套餐具</p>
         </div>
         <div class="column">
-            <p><i class="users icon"></i>适合2-4人分享</p>
-            <p><i class="time icon"></i>必须提前4小时预定</p>
+            <p id="para-share"><i class="users icon"></i>适合2-4人分享</p>
+            <p id="para-time"><i class="time icon"></i>必须提前4小时预定</p>
         </div>
     </div><br>
         <img id="pre-cart-image" class="ui image">
@@ -29,7 +29,8 @@
     <div class="header">
         购物车
     </div>
-    <div id="cart-list" class="image content">
+    <div class="image content" id="cart-form">
+    {#<form id="cart-form" method="POST" action="{{url_for('.checkout')}}">#}
         {#<div class="ui relaxed list">
             <div class="item">
                 <img class="ui avatar image" src="/images/avatar/small/daniel.jpg">
@@ -39,8 +40,37 @@
                 </div>
             </div>
         </div>#}
+    {#</form>#}
     </div>
     <div class="actions">
-        <div class="ui brown button" id="pay-action-button">去支付</div>
+        <a class="ui brown button" href="{{url_for('.checkout', _external=True)|weixin_authorize('snsapi_userinfo')|safe}}">去支付</a>
     </div>
 </div>
+<script>
+const cake_infos = [
+    {%-for parameter in parameters %}
+    {id : {{parameter.id}}, name: "{{parameter.name}}", size: "{{parameter.size}}",  share_min:"{{parameter.share_min}}", share_max:"{{parameter.share_max}}", tableware:"{{parameter.tableware}}", pre_order_time:"{{parameter.pre_order_time}}"},
+    {%-endfor %}
+];
+
+function get_cake_info(id) {
+    console.log("want to find cake info by id", id);
+    for (var i = 0; i < cake_infos.length; i++) {
+        if (cake_infos[i].id === id)
+            return cake_infos[i];
+    }
+
+    return undefined;
+}
+
+function show_cake_info(spec_id) {
+    var cake_info = get_cake_info(spec_id);
+    console.log(cake_info);
+    $('#para-size').html('<i class="circle icon"></i>直径' + cake_info.size + "cm");
+    $('#para-tableware').html('<i class="food icon"></i>含有' + cake_info.tableware + '套餐具');
+    $('#para-share').html('<i class="users icon"></i>适合' + cake_info.share_min + '-' + cake_info.share_max + '人分享');
+    $('#para-time').html('<i class="time icon"></i>必须提前' + cake_info.pre_order_time + '小时预定');
+
+    return cake_info.size;
+}
+</script>

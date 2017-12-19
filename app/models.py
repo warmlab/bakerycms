@@ -418,10 +418,11 @@ class Parameter(db.Model):
     __tablename__ = 'parameter'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), nullable=False)
-    size_desc = db.Column(db.String(64))
-    share_desc = db.Column(db.String(64))
-    tool_desc = db.Column(db.String(64))
-    order_time_desc = db.Column(db.String(64))
+    size = db.Column(db.Integer) # 蛋糕尺寸大小，单位cm
+    share_min = db.Column(db.Integer) # 可以分享的最小人数
+    share_max = db.Column(db.Integer) # 可以分享的最大人数
+    tableware = db.Column(db.Integer) # 包含餐具个数
+    pre_order_time = db.Column(db.Integer) # 需提前预定时间，单位hour
     category_id = db.Column(db.Integer, db.ForeignKey('parameter_category.id'))
 
     category = db.relationship('ParameterCategory',

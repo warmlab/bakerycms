@@ -6,7 +6,7 @@ import app
 #@evalcontextfilter
 def weixin_authorize(redirect_url, scope): 
     conn = app.db.engine.connect()
-    appid, = conn.execute('select weixin_appid from shoppoint').first()
+    appid, expires_time = conn.execute('select weixin_appid, weixin_expires_time from shoppoint').first()
     conn.close()
     params = [('appid', appid), # get appid from db
               #('redirect_uri', url_for('.cart', _external=True)),
