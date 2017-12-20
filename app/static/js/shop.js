@@ -21,7 +21,7 @@ req.onsuccess = function(e) {
 req.onupgradeneeded = function(e) {
     console.log("init DB onupgradeneeded");
     var store = e.currentTarget.result.createObjectStore(
-        TABLE_NAME, {keyPath: ['code', 'spec']}
+        TABLE_NAME, {keyPath: ['code', 'spec'], indexNames: ["amount", "image"]}
     );
 
     store.createIndex('name', 'name', {unique: false});

@@ -127,8 +127,33 @@ def _get_userinfo_from_weixin(weixin_code):
 
         return user
 
-@shop.route('/cart', methods=['GET'])
-def cart():
+@shop.route('/confirm_test', methods=['GET'])
+def confirm_test():
+    #products = Product.query.filter_by(is_available_on_web=True)
+    weixin_code = request.args.get('code')
+    #if not weixin_code:
+    #    params = [('appid', sp.weixin_appid),
+    #              ('redirect_uri', url_for('.cart', _external=True)),
+    #              ('response_type', 'code'),
+    #              ('scope', 'snsapi_userinfo')
+    #            ]
+    #    url = 'https://open.weixin.qq.com/connect/oauth2/authorize'
+    #    url = '?'.join([url, urlparse.urlencode(params)])
+    #    url = '#'.join([url, 'wechat_redirect'])
+    #    print(url)
+    #    return redirect(url)
+    #user = _get_userinfo_from_weixin(weixin_code)
+    print(weixin_code)
+    user = UserAuth.query.filter_by(openid=weixin_code).first()
+    # login to system
+    print('in shoppoint cart ', user.member.nickname)
+    r = login_user(user)
+    print('login result: ', r)
+
+    return render_template('shop/confirm.html', user=user)
+
+@shop.route('/confirm', methods=['GET'])
+def confirm():
     #products = Product.query.filter_by(is_available_on_web=True)
     weixin_code = request.args.get('code')
     #if not weixin_code:
@@ -148,7 +173,7 @@ def cart():
     r = login_user(user)
     print('login result: ', r)
 
-    return render_template('shop/cart.html', weixin_user=user)
+    return render_template('shop/confirm.html', user=user)
 
 @shop.route('/checkout', methods=['POST']) # 结算
 @login_required
