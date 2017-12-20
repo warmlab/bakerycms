@@ -1,33 +1,150 @@
-{% extends "base-user.html" %}{% block main_content_section %}
-<h2 class="ui center aligned icon header">
-	<i class="shopping cart icon"></i>
-	<div class="content">
-		My Shopping cart.
-		<div class="sub header">
-			Manage your shopping cart.
+{% extends "base-user.html" %}
+{%- block main_content_section %}
+<div class="ui unstackable three mini steps">
+	<div class="active step">
+		<i class="edit icon"></i>
+		<div class="content">
+			<div class="title">订单</div>
 		</div>
 	</div>
-</h2>
-<form method="POST" action="{{url_for('.checkout')}}">
-    <input type="hidden" name="openid" value="{{weixin_user['openid']}}">
-	<div class="ui segments"></div>
+	<div class="step">
+		<i class="dollar icon"></i>
+		<div class="content">
+			<div class="title">付款</div>
+		</div>
+	</div>
+	<div class="step">
+		<i class="shipping icon"></i>
+		<div class="content">
+			<div class="title">运输</div>
+		</div>
+	</div>
+</div>
+<div class="ui basic segment">
+<div class="ui divided list"></div>
+<form class="ui form" method="POST" action="{{url_for('.checkout')}}">
+	<input type="hidden" name="openid" value="{{user['openid']}}">
+	<h4 class="ui dividing header">ddddddddd</h4>
+	<div class="field">
+		<label>用餐具体时间</label>
+		<div class="tow fields">
+		<div class="required field">
+			<input name="date" type="date">
+		</div>
+		<div class="required field">
+			<input name="time" type="time">
+		</div>
+		</div>
+	</div>
+	<div class="ui items">
+		<div class="item">
+		{%- if user.addresses.all() %}
+			<div class="content" id="target-location">
+				<div class="header">{{user.addresses[0].contact_name}}</div>
+				<div class="meta">{{user.addresses[0].mobile}}</div>
+				<div class="description">{{user.addresses[0].address}}</div>
+				<div class="extra" id="location-btn">
+					<div class="ui tiny right floated button">
+					更换配送地址
+					<i class="right chevron icon"></i>
+					</div>
+				</div>
+			</div>
+			<input type="hidden" name="target-location" value="{{user.addresses[0].id}}">
+			<input style="display:none;" name="contact" type="text" value="{{user.addresses[0].contact_name}}">
+			<input style="display:none;" name="mobile" type="text" value="{{user.addresses[0].mobile}}">
+			<input style="display:none;" name="address" type="text" value="{{user.addresses[0].address}}">
+		{%-else%}
+			<div class="content" id="target-location">
+				<div class="header"><i class="marker icon"></i></div>
+				<div class="meta">{{user.member.nickname}}</div>
+				<div class="description"></div>
+				<div class="extra" id="location-btn">
+					<div class="ui tiny right floated button">
+					<i class="right chevron icon"></i>
+					</div>
+				</div>
+				<input type="hidden" name="target-location">
+			</div>
+			<input style="display:none;" name="contact" type="text">
+			<input style="display:none;" name="mobile" type="text">
+			<input style="display:none;" name="address" type="text">
+		{%- endif %}
+		</div>
+	</div>
 	<button class="ui fluid big orange labeled icon button">
 		<i class="payment icon"></i>去结算
 	</button>
 </form>
-<div style="padding-bottom: 50px;"></div>
-{% endblock %}
-{% block bottom_nav_section %}{% include "includes/bottom_fixed.html" %}{% endblock %}
+</div>
+{%- endblock %}
+{%- block bottom_nav_section %}{% endblock %}
+{#{%- include "includes/bottom_fixed.html" %} #}
 {%- block special_script_section %}{% endblock -%}
-{% block inline_script_section -%}
+{%- block inline_script_section %}
 <script>
+const DB_STORE_NAME = "shop_cart";
+const DB_VERSION = 1;
+const TABLE_NAME = "product";
+var $db;
+
+function init_order() {
+	var trans = $db.transaction(TABLE_NAME, "readonly");
+
+	trans.oncomplete  = function(event) {
+		console.log("All done!");
+	};
+
+	trans.onerror = function(event) {
+		console.log("transaction failed");
+	};
+
+	var objectStore = trans.objectStore(TABLE_NAME);
+	var req_count = objectStore.count();
+	req_count.onsuccess = function(e) {
+        console.log("There are " + e.target.result + " records in db");
+    };
+
+    req_count.onerror = function(e) {
+        console.error("display error", this.error);
+    };
+
+	objectStore.openCursor().onsuccess = function(e) {
+		var cursor = e.target.result;
+		var $product_list = $('.ui.divided.list');
+		var $form = $('form:first');
+		if (cursor) {
+			console.log("cursor.value", cursor.value);
+			if (cursor.value.checked) {
+				$('<div class="item">\
+					<div class="ui tiny image"><image src="' + cursor.value.image + '"></div>\
+					<div class="middle aligned content">\
+						<a class="header">我们的幸福时光</a>\
+						<div class="meta">\
+							<span class="price">￥' + cursor.value.price + '</span>\
+							<span class="stay">' + cursor.value.spec_name + '</span>\
+							<span class="stay">数量 ' + cursor.value.amount + '</span>\
+						</div>\
+					</div>\
+				</div>').appendTo($product_list);
+
+				$('<input type="hidden" name="product" value="'
+					+ cursor.value.code + ':' + cursor.value.spec + '">').appendTo($form);
+			}
+
+			cursor.continue();
+		} else {
+			console.log("no more entries!");
+		}
+		//$('.ui.checkbox').checkbox();
+	};
+}
+
 $(document).ready(function(){
-	window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
-	var $db;
-	var request = window.indexedDB.open('ShoppingCart', 1);
+	var request = indexedDB.open(DB_STORE_NAME, DB_VERSION);
 	request.onupgradeneeded = function (event) {
 		$db = event.target.result;
-		$db.createObjectStore("products", {keyPath: ["code", "parameters"], indexNames: ["amouont", "image"]});
+		$db.createObjectStore(TABLE_NAME, {keyPath: ["code", "spec"], indexNames: ["amount", "image"]});
 	};
 
 	request.onerror = function(event) {
@@ -37,135 +154,9 @@ $(document).ready(function(){
 	request.onsuccess = function(event) {
 		$db = event.target.result;
 		console.log('open indexeddb successfully');
-
-		var trans = $db.transaction("products", "readwrite");
-		trans.oncomplete  = function(event) {
-			console.log("All done!");
-		};
-		trans.onerror = function(event) {
-			console.log("transaction failed");
-		};
-		var objectStore = trans.objectStore("products");
-		objectStore.openCursor().onsuccess = function(e) {
-			var cursor = e.target.result;
-			if (cursor) {
-				var $segment = $('<div class="ui basic segment"></div>');
-				var $item = $('<div class="ui image middle aligned header"></div>');
-				var $checkdiv = $('<div class="ui checkbox"></div>');
-				var $checkbox = $('<input type="checkbox" checked="checked"></input>');
-				var $image = $('<img class="ui tiny image"></img>');
-				var $content = $('<div class="content"></div>');
-				var $sub_header = $('<div class="sub header"></div>');
-				var $meta = $('<div class="sub header"></div>');
-				var $amount_div = $('<div class="ui mini action input"></div>');
-				var $amount_input = $('<input name="amount" type="text" size="2" readonly></input>');
-				var $amount_minus = $('<div class="ui mini icon button"><i class="minus icon"></i></div>');
-				var $amount_plus = $('<div class="ui mini icon button"><i class="plus icon"></i></div>');
-				var $remove_btn = $('<div class="ui mini circular icon negative button"><i class="remove icon"></i></div>');
-				var code = cursor.value.code;
-				var parameters = JSON.parse(cursor.value.parameters);
-				var metas = "";
-				for (var para of parameters) {
-					//console.log(para);
-					metas += para.name + " ";
-				}
-				$meta.html(metas);
-				$checkbox.attr("name", "tobuy-" + cursor.value.code);
-				$checkbox.appendTo($checkdiv);
-				$sub_header.html('￥' + cursor.value.price);
-				$image.attr("src", cursor.value.image);
-				$content.html(cursor.value.name);
-
-				$amount_input.appendTo($amount_div);
-				$amount_input.attr('value', cursor.value.amount);
-				$amount_minus.appendTo($amount_div);
-				$amount_plus.appendTo($amount_div);
-
-				$sub_header.appendTo($content);
-				$meta.appendTo($content);
-
-				$checkdiv.appendTo($item);
-				$image.appendTo($item);
-				$content.appendTo($item);
-
-				$item.appendTo($segment);
-				$amount_div.appendTo($segment);
-				$remove_btn.appendTo($segment);
-
-				var $input_product = $('<input type="hidden" name="product"></input>').attr('value', JSON.stringify(cursor.value));
-
-				$segment.appendTo($('.ui.segments'));
-
-				$form = $('form:first');
-				$input_product.appendTo($form);
-
-				$remove_btn.click(function(e){
-					// need to reopen transcation
-					var trans = $db.transaction(["products"], "readwrite");
-					trans.oncomplete  = function(event) {
-						console.log("Remove done!");
-					};
-					var objectStore = trans.objectStore("products");
-					var req = objectStore.delete([code, JSON.stringify(parameters)]);
-					req.onsuccess = function(e) {
-						$segment.remove();
-					};
-					req.onerror = function(e) {
-						console.log('delete failed');
-					};
-				});
-
-				$amount_minus.click(function(e){
-					// need to reopen transcation
-					var trans = $db.transaction(["products"], "readwrite");
-					trans.oncomplete  = function(event) {
-						console.log("substract done!");
-					};
-					var objectStore = trans.objectStore("products");
-					var req = objectStore.get([code, JSON.stringify(parameters)]);
-					req.onsuccess = function(e) {
-						var data = e.target.result;
-						if (data.amount > 1) {
-							data.amount -= 1;
-							var req_update = objectStore.put(data);
-							req_update.onsuccess = function(e){
-								$amount_input.attr('value', data.amount);
-							};
-						}
-					};
-					req.onerror = function(e) {
-						console.log('substract failed');
-					};
-				});
-
-				$amount_plus.click(function(e){
-					// need to reopen transcation
-					var trans = $db.transaction(["products"], "readwrite");
-					trans.oncomplete  = function(event) {
-						console.log("plus done!");
-					};
-					var objectStore = trans.objectStore("products");
-					var req = objectStore.get([code, JSON.stringify(parameters)]);
-					req.onsuccess = function(e) {
-						var data = e.target.result;
-						data.amount += 1;
-						var req_update = objectStore.put(data);
-						req_update.onsuccess = function(e){
-							$amount_input.attr('value', data.amount);
-						};
-					};
-					req.onerror = function(e) {
-						console.log('plus failed');
-					};
-				});
-
-				cursor.continue();
-			} else {
-				console.log("no more entries!");
-			}
-			$('.ui.checkbox').checkbox();
-		};
+		init_order();
 	};
+
 	$('div.fluid.big.button').click(function(){
 		if ("{{weixin_code}}" != ""){
 			$('form').submit();
@@ -173,10 +164,10 @@ $(document).ready(function(){
 			// redirect
 		}
 	});
-	$('.ui.checkbox').checkbox();
+	//$('.ui.checkbox').checkbox();
 
-	$bottom_menu = $('.bottom.fixed.menu');
-	$bottom_menu.children('[href="{{url_for('.cart')}}"]').addClass('active');
+	//$bottom_menu = $('.bottom.fixed.menu');
+	//$bottom_menu.children('[href="{{url_for('.confirm')}}"]').addClass('active');
 });
 </script>
 {%- endblock -%}
