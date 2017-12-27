@@ -3,7 +3,7 @@ from decimal import Decimal
 from datetime import datetime
 
 from flask import render_template, abort
-from flask import request, current_app, make_response
+from flask import request, current_app, make_response, url_for
 from flask import json
 
 from flask_login import login_required, current_user
@@ -18,12 +18,14 @@ from ..models import Parameter, ParameterCategory, ProductParameter
 
 from ..decorators import member_required
 
+
 def check_signature(code, signature, timestamp, nonce):
     #token = current_app.config['WEIXIN_TOKEN']
     shoppoint = Shoppoint.query.first()
     token = shoppoint.weixin_token
     if signature and timestamp and nonce:
         array = [token, timestamp, nonce]
+        print(array)
         array.sort()
         joined = "".join(array)
 
@@ -62,7 +64,7 @@ def access():
             elif message.event == 'user_pay_from_pay_cell':
                 data = {
                     "productType": {
-                        "value":"卡诺烘焙",
+                        "value":"小麦芬烘焙工作室",
                         },
                     "name":{
                         "value":"用心做，不做作",
@@ -83,7 +85,7 @@ def access():
                         }
                 }
                 body = json.dumps(message.generate_template_body('9EMNExtVNw81PxQt7dT0mTeWhJjDOvmo_dn48Y_tdLE',
-                                                                 message.get_value('FromUserName'), data))
+                                                 message.get_value('FromUserName'), url_for('shop.home'), data))
                 post_weixin_api('https://api.weixin.qq.com/cgi-bin/message/template/send', body, access_token=shoppoint.access_token)
 
                 return ""
@@ -119,7 +121,7 @@ def access():
                         }
                 }
                 body = json.dumps(message.generate_template_body('YXKo5tUIvkDpd_x9T6HgI3twkIGMLrcDoVIBWNPOkUA',
-                                                                  message.get_value('FromUserName'), data))
+                                                          message.get_value('FromUserName'), url_for('shop.home'), data))
                 post_weixin_api('https://api.weixin.qq.com/cgi-bin/message/template/send', body, access_token=shoppoint.access_token)
 
                 return ""
@@ -245,7 +247,7 @@ def pay_notify():
     for u in ('ox4bxso53hocK9iyC-eKNll-qRoI',
             'ox4bxsnBj7xpsSndE4TOg_LY-IKQ', 'ox4bxsn8gkt_IqaVzQIPRkuep4v8'):
         body = json.dumps(message.generate_template_body('pkl-0GTnDHxthXtR381PPNAooBT1JwUYuuP-YK1nRSA',
-                                                     u,  data))
+                                     u, url_for('shop.payresult', _external=True, ticket_code=ticket.code),  data))
         post_weixin_api('https://api.weixin.qq.com/cgi-bin/message/template/send', body, access_token=shoppoint.access_token)
 
     # 提醒顾客订单已经付款
@@ -268,7 +270,7 @@ def pay_notify():
             }
     }
     body = json.dumps(message.generate_template_body('hes3WdAVpnWrS1VenAUM8MFJbKQmTlKnBLOr7SAuvcI',
-                                                 message.get_value('openid'), data))
+         message.get_value('openid'), url_for('shop.payresult', _external=True, ticket_code=ticket.code), data))
     post_weixin_api('https://api.weixin.qq.com/cgi-bin/message/template/send', body, access_token=shoppoint.access_token)
 
     return "<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>"

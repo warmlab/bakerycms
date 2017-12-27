@@ -43,7 +43,7 @@
     {#</form>#}
     </div>
     <div class="actions">
-        <a class="ui brown button" href="{{url_for('.confirm', _external=True)|weixin_authorize('snsapi_userinfo')|safe}}">去支付</a>
+        <a class="ui brown button" href="{{url_for('.confirm', _external=True)|weixin_authorize('snsapi_base')|safe}}">去支付</a>
     </div>
 </div>
 <script>

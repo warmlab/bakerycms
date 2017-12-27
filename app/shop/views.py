@@ -15,7 +15,7 @@ from .. import db
 
 from ..decorators import member_required
 
-from ..models import Shoppoint, Product, Address, ParameterCategory, Parameter
+from ..models import Shoppoint, Product, Address, ParameterCategory, Parameter, ProductParameter
 from ..models import Member, UserAuth
 from ..models import Ticket, TicketProduct, TicketAddress
 
@@ -23,9 +23,27 @@ from ..weixin import pay as weixin_pay
 from ..weixin import access as weixin_access
 
 
+def _generate_ticket_address(member, address_id, contact, mobile, addr):
+    address = None
+    if address_id:
+        address = Address.query.get(address_id)
+
+    if not address:
+        address = Address()
+        address.contact_name = contact
+        address.mobile = mobile
+        address.address = addr
+        member.address = address
+
+    return TicketAddress(contact_name=contact, mobile=mobile, address=addr)
+
+
 @shop.route('/', methods=['GET'])
 def home():
-    return render_template('shop/popular.html')
+    sp = Shoppoint.query.first()
+    if not sp:
+        abort(404)
+    return render_template('shop/popular.html', shoppoint=sp)
 
 @shop.route('/products', methods=['GET'])
 def products():
@@ -127,33 +145,11 @@ def _get_userinfo_from_weixin(weixin_code):
 
         return user
 
-@shop.route('/confirm_test', methods=['GET'])
-def confirm_test():
-    #products = Product.query.filter_by(is_available_on_web=True)
-    weixin_code = request.args.get('code')
-    #if not weixin_code:
-    #    params = [('appid', sp.weixin_appid),
-    #              ('redirect_uri', url_for('.cart', _external=True)),
-    #              ('response_type', 'code'),
-    #              ('scope', 'snsapi_userinfo')
-    #            ]
-    #    url = 'https://open.weixin.qq.com/connect/oauth2/authorize'
-    #    url = '?'.join([url, urlparse.urlencode(params)])
-    #    url = '#'.join([url, 'wechat_redirect'])
-    #    print(url)
-    #    return redirect(url)
-    #user = _get_userinfo_from_weixin(weixin_code)
-    print(weixin_code)
-    user = UserAuth.query.filter_by(openid=weixin_code).first()
-    # login to system
-    print('in shoppoint cart ', user.member.nickname)
-    r = login_user(user)
-    print('login result: ', r)
-
-    return render_template('shop/confirm.html', user=user)
-
 @shop.route('/confirm', methods=['GET'])
 def confirm():
+    sp = Shoppoint.query.first()
+    if not sp:
+        abort(404)
     #products = Product.query.filter_by(is_available_on_web=True)
     weixin_code = request.args.get('code')
     #if not weixin_code:
@@ -172,8 +168,13 @@ def confirm():
     print('in shoppoint cart ', user)
     r = login_user(user)
     print('login result: ', r)
+    weixin = weixin_pay.unified_order_js_config(sp.weixin_appid, sp.jsapi_ticket, request.url, sp.weixin_appsecret)
+    print(weixin)
+    now = datetime.now()
+    now = {'date': now.strftime('%Y-%m-%d'), 'time': now.strftime('%H:%M')}
+    print(now)
 
-    return render_template('shop/confirm.html', user=user)
+    return render_template('shop/confirm.html', user=user, weixin=weixin, want_time=now)
 
 @shop.route('/checkout', methods=['POST']) # 结算
 @login_required
@@ -230,24 +231,21 @@ def order():
         total_price = Decimal(0)
         total_amount = 0
         #amounts = request.form.getlist('amount')
-        product_codes = request.form.getlist('product')
-        parameters_ids = request.form.getlist('parameter')
-        amounts = request.form.getlist('amount')
-        for code, para_ids, amount in zip(product_codes, parameters_ids, amounts):
+        product_infos = request.form.getlist('product')
+        #parameters_ids = request.form.getlist('parameter')
+        #amounts = request.form.getlist('amount')
+        #for code, para_ids, amount in zip(product_codes, parameters_ids, amounts):
+        for product_info in product_infos:
+            code, spec_id, amount = product_info.split(':')
             amount = Decimal(amount)
             product = Product.query.filter_by(code=code).first()
-            price = product.price;
-            parameters = []
-            for para in product.parameters:
-                if para.parameter_id in para_ids:
-                    price += para.plus_price
-                    parameters.append({"code": para.product_id, "name": para.parameter.name})
-                    para_ids.remove(para.parameter_id)
-            if para_ids:
-                abort(400)
+            spec = ProductParameter.query.get((product.id, spec_id))
+            price = product.price + spec.plus_price;
 
             tp = TicketProduct(product=product) 
-            tp.parameters = json.dumps(parameters),
+            #tp.parameters = json.dumps(parameters),
+            #tp.parameters = spec_id
+            tp.parameters = {"name": spec.parameter.name, "code":spec.parameter_id}
             tp.original_price = price
             tp.real_price = price
             tp.amount = amount
@@ -256,22 +254,28 @@ def order():
             total_price += price * amount
             total_amount += amount
 
-        ticket.required_datetime = now #request.form.get('date') + request.form.get('time')
+        ticket.required_datetime = datetime.strptime(request.form.get('date') + ' ' + request.form.get('time'), 
+                                                     "%Y-%m-%d %H:%M");
         ticket.note = request.form.get('note')
+
+        candle = request.form.get('candle')
+        if candle == 'number':
+            age = request.form.get("age")
+            ticket.candle = age
+        else:
+            ticket.candle = request.form.get('candle-color')
 
         ticket.product_amount = total_amount
         ticket.original_price = total_price
         ticket.real_price = total_price
         ticket.member = current_user.member
-        address = Address.query.get(request.form.get('target-location'))
-        if address not in current_user.addresses:
-            abort(400)
-        else:
-            ta = TicketAddress(contact_name=address.contact_name,
-                    mobile=address.mobile, address=address.address)
-            ticket.address = ta
+        contact = request.form.get('contact');
+        mobile = request.form.get('mobile');
+        addr = request.form.get('address');
+        address_id = request.form.get('target-location')
+        ticket.address = _generate_ticket_address(current_user.member, address_id, contact, mobile, addr)
 
-    weixin = weixin_pay.unified_order_js_config(sp.weixin_appid, sp.weixin_appsecret)
+    weixin = weixin_pay.unified_order_js_config(sp.weixin_appid, sp.jsapi_ticket, request.url, sp.weixin_appsecret)
     return render_template('shop/order.html', ticket=ticket, user=current_user, weixin=weixin)
 
 @shop.route('/unifiedorder', methods=['POST'])
@@ -287,26 +291,30 @@ def unified_order():
             sp.weixin_mchid, sp.weixin_appsecret,
             current_user, url_for('weixin.pay_notify', _external=True))
 
+    print(result)
     if result.get('return_code') == "SUCCESS":
         if result.get('result_code') == "SUCCESS":
             ticket.payment_code = result.get('prepay_id')
             package = '='.join(['prepay_id', result.get('prepay_id')])
             params = {'timeStamp': int(time()), 'appId': sp.weixin_appid, 'nonceStr': result.get('nonce_str'), 'package': package, 'signType': 'MD5'}
-            params['signature'], signType = weixin_pay.generate_sign(params, sp.weixin_appsecret)
+            params['signature'], signType = weixin_pay.generate_pay_sign(params, sp.weixin_appsecret)
             params['pack'] = [package]
 
             return json.dumps(params), 201
         elif result.get('result_code') == 'FAIL' and result.get('err_code') == 'OUT_TRADE_NO_USED':
             return result, 409
-    return '{"error-code": 1, "errMsg": "error"}', 403 # TODO
+    return jsonify({"error-code": 1, "errMsg": result["return_msg"]}), 400 # TODO
 
-@shop.route('/dopay', methods=['POST'])
-def do_pay():
-    return render_template('shop/payresult.html')
+#@shop.route('/dopay', methods=['POST'])
+#def do_pay():
+#    return render_template('shop/payresult.html')
 
-@shop.route('/payresult', methods=['POST', 'GET'])
-def payresult():
-    return render_template('shop/payresult.html')
+@shop.route('/payresult/<ticket_code>', methods=['POST', 'GET'])
+@login_required
+@member_required
+def payresult(ticket_code):
+    ticket = Ticket.query.get(ticket_code)
+    return render_template('shop/payresult.html', ticket=ticket)
 
 @shop.route('/myshop', methods=['GET'])
 @login_required
@@ -341,18 +349,17 @@ def my_address():
     if request.method == 'PUT':
         # new address
         info = json.loads(request.data)
-        print(info['user'])
-        print(current_user.id)
+        print(info)
         if info['user'] != current_user.id:
             abort(400)
-        address = Address(address=info['address'], contact_name=info['contact'], mobile=info['mobile'])
+        address = Address(address=info['address-new'], contact_name=info['contact-new'], mobile=info['mobile-new'])
         current_user.addresses.append(address)
         db.session.add(address)
         db.session.commit()
-        info = {'code': address.id}
+        info = {'code': address.id, 'address': address.address, 'contact': address.contact_name, 'mobile': address.mobile}
 
         if 'application/json' in request.headers.get('Accept'):
-            return json.dumps(info)
+            return jsonify(info), 200
     elif request.method == 'DELETE':
         pass
     print (request.headers)

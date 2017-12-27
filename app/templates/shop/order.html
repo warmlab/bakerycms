@@ -1,51 +1,105 @@
 {% extends "base-user.html"%}
 {% block main_content_section %}
-<h2 class="ui center aligned icon header">{#ui centered#}
-	<i class="payment icon"></i>
+<div class="ui basic segment">
+<h2 class="ui block header">{#ui centered#}
+	<i class="alarm outline icon"></i>
 	<div class="content">
-		订单编号
-        <div class="sub header">{{ticket.code}}</div>
+		确认订单信息
+		<div class="sub header">请您确认下列信息后再付款</div>
 	</div>
 </h2>
-<div class="ui basic segment">
-    {% for tp in ticket.products %}<div class="ui image middle aligned header">
-        <img src="/gallery/media/{{tp.product.images[0].image.name}}.{{tp.product.images[0].image.ext}}" class="ui small image">
-        <div class="content">
-            {{tp.product.name}}
-            <div class="sub header">￥{{tp.product.price}}</div>
-            {%if tp.parameters%}<div class="sub header">{% for p in tp.parameters %}{{p["name"]}}{%endfor%}</div>{%endif%}
-            <div class="sub header">数量: {{tp.amount}}</div>
-        </div>
-    </div>{% endfor %}
-    <div class="ui items">
-        <div class="item">
-            <div class="content" id="target-location">
-                <div class="header">{{ticket.address.contact_name}}</div>
-                <div class="meta">{{ticket.address.mobile}}</div>
-                <div class="description">{{ticket.address.address}}</div>
-            </div>
+	<div class="ui divided list">
+    {%- for tp in ticket.products %}
+		<div class="item">
+			<div class="ui tiny image"><img src="/gallery/media/{{tp.product.images[0].image.name}}.{{tp.product.images[0].image.ext}}" class="ui small image"></div>
+			<div class="middle aligned content">
+				<a class="header">{{tp.product.name}}</a>
+				<div class="meta">
+					<div class="price">￥{{tp.real_price}}</div>
+					<div class="stay">{{tp.parameters.name}}</div>
+					<div class="stay">数量 {{tp.amount}}</div>
+				</div>
+			</div>
         </div>
     </div>
-    {% if not ticket.pay_datetime and not ticket.payments %}
-		<div class="ui fluid orange labeled icon huge button" id="pay-button">
-			<i class="payment icon"></i>去支付
+	{%- endfor %}
+	<div class="ui divider"></div>
+    <div class="ui divided items">
+		<div class="item">
+			<div class="header"><i class="file outline icon"></i>订单编号</div>
+			<div class="description">{{ticket.code}}</div>
 		</div>
-	{% else %}
-	<a class="ui fluid orange labeled icon huge button" href="{{url_for('.myinfo')}}">
+		<div class="item">
+			<div class="header"><i class="wait icon"></i>用餐具体日期和时间</div>
+			<div class="description">{{ticket.required_datetime}}</div>
+		</div>
+		<div class="item">
+			<div class="header"><i class="alarm outline icon"></i>备注</div>
+			<div class="description">蜡烛: {{ticket.candle}}<br>{{ticket.note}}</div>
+		</div>
+        <div class="item">
+			<div class="header"><i class="marker icon"></i>{{ticket.address.contact_name}} {{ticket.address.mobile}}</div>
+			<div class="description">{{ticket.address.address}}</div>
+        </div>
+    </div>
+	<div class="ui divider"></div>
+    {%- if not ticket.pay_datetime and not ticket.payments %}
+		<div class="ui fluid left labeled huge button" id="pay-button">
+			<a class="ui basic right pointing label">￥{{ticket.real_price}}</a>
+			<div class="ui fluid huge brown button">
+				<i class="payment icon"></i>支付
+			</div>
+		</div>
+	{%- else %}
+	<a class="ui fluid brown labeled icon huge button" href="{{url_for('.myinfo')}}">
         <i class="home icon"></i>返回
     </a>
-    {% endif %}
+    {%- endif %}
 </div>
 {% endblock %}
 {% block special_script_section %}
-<script src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+<script src="http://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
 {% endblock %}
 {% block inline_script_section %}
 <script>
+const DB_STORE_NAME = "shop_cart";
+const DB_VERSION = 1;
+const TABLE_NAME = "product";
+var $db;
+$(document).ready(function(){
+	var request = indexedDB.open(DB_STORE_NAME, DB_VERSION);
+	request.onupgradeneeded = function (event) {
+		$db = event.target.result;
+		$db.createObjectStore(TABLE_NAME, {keyPath: ["code", "spec"], indexNames: ["amount", "image"]});
+	};
+
+	request.onerror = function(event) {
+		console.log('open indexeddb failed');
+	};
+
+	request.onsuccess = function(event) {
+		$db = event.target.result;
+		console.log('open indexeddb successfully');
+		var trans = $db.transaction(TABLE_NAME, "readwrite");
+		var objectStore = trans.objectStore(TABLE_NAME);
+		var products = [{% for tp in ticket.products %}{code: "{{tp.product.code}}", spec: {{tp.parameters.code}}},{%endfor%}]
+		for (p of products) {
+			console.log("begin to delete product", p);
+			var req = objectStore.delete([p.code, p.spec]);
+			req.onsuccess = function(e) {
+				console.debug("delete product successful");
+			};
+			req.onerror = function(e) {
+				console.error("delete product error", this.error);
+			};
+		}
+	};
+
+});
 wx.config({
     debug: false, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
     appId: '{{weixin.get("appId")}}', // 必填，公众号的唯一标识
-    timestamp: {{weixin.get("timeStamp")}}, // 必填，生成签名的时间戳
+    timestamp: {{weixin.get("timestamp")}}, // 必填，生成签名的时间戳
     nonceStr: '{{weixin.get("nonceStr")}}', // 必填，生成签名的随机串
     signature: '{{weixin.get("signature")}}',// 必填，签名，见附录1
     jsApiList: ['chooseWXPay'] // 必填，需要使用的JS接口列表，所有JS接口列表见附录2
@@ -66,14 +120,18 @@ wx.ready(function() {
                         signType: result.signType, // 签名方式，默认为'SHA1'，使用新版支付需传入'MD5'
                         paySign: result.signature, // 支付签名
                         success: function (res) {
-                            var str = JSON.stringfy(res);
                             // 支付成功后的回调函数
-                            if(res.errMsg == "chooseWXPay:ok"){
-                                alert("支付成功！");
+                            if(res.errMsg === "chooseWXPay:ok"){
+                                console.log("支付成功！");
+								location.href = '{{url_for(".payresult",ticket_code=ticket.code)}}';
                             }else{
-                                alert("支付失败！");
+                                console.log("支付失败！");
                             }
-                        }
+                        },
+						cancel: function(e) {
+							alert(res.errMsg);
+							console.log(e);
+						}
                     });
                 }
             }

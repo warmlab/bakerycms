@@ -1,66 +1,68 @@
 {% extends "base-user.html"%}
 {% block main_content_section %}
-	<h2 class="ui center aligned icon header">{#ui centered#}
-		{#
-	<div class="image">
-		<img src="/static/img/logo/caro.jpg">
-	</div>
-	#}
-	<i class="ticket icon"></i>
+<div class="ui basic segment">
+<h2 class="ui block header">{#ui centered#}
+	{% if ticket.pay_time %}<i class="check mark icon"></i>{%else%}<i class="frown icon"></i>{%endif%}
 	<div class="content">
-		Pay Successfully
-		<div class="sub header">
-			Verify order details.
+		{% if ticket.pay_time %}您已成功支付{%else%}订单尚未支付{%endif%}
+		<div class="sub header">{% if ticket.pay_time %}请您保持手机畅通{%else%}请到支付页面支付订单，如果您已支付，请稍后刷新{%endif%}</div>
+	</div>
+</h2>
+	<div class="ui divided list">
+    {%- for tp in ticket.products %}
+		<div class="item">
+			<div class="ui tiny image"><img src="/gallery/media/{{tp.product.images[0].image.name}}.{{tp.product.images[0].image.ext}}" class="ui small image"></div>
+			<div class="middle aligned content">
+				<a class="header">{{tp.product.name}}</a>
+				<div class="meta">
+					<div class="price">￥{{tp.real_price}}</div>
+					<div class="stay">{{tp.parameters.name}}</div>
+					<div class="stay">数量 {{tp.amount}}</div>
+				</div>
+			</div>
+        </div>
+    </div>
+	{%- endfor %}
+	<div class="ui divider"></div>
+    <div class="ui divided items">
+		<div class="item">
+			<div class="header"><i class="file outline icon"></i>订单编号</div>
+			<div class="description">{{ticket.code}}</div>
 		</div>
-	</div>{#
-	<div class="extra content">
-		<span>
-			<i class="birthday icon"></i>
-			{{products|length}} Products
-		</span>
-		<span class="right floated">
-			<i class="registered icon"></i>
-			 Since August 2014
-		</span>
-	</div>#}
-	</h2>
-<!-- page start-->
-	<table class="ui unstackable table">
-		<tbody>
-			{% for product in products %}
-			<tr>
-				<td>
-					<div class="ui image top aligned header">
-						<img src="{{product.image}}" class="ui small rounded image">
-					</div>
-				</td>
-				<td>
-					<div class="content">
-						{{product.name}} - <span class="ui label">￥{{product.price}}</span>
-						<div class="sub header">数量: 1</div>
-					</div>
-				</td>
-			</tr>
-			{% endfor %}
-		</tbody>
-	</table>
-	<div class="ui divided selection list">
-		<a class="item">
-			使用日期
-			<div class="ui horizontal label">2017-12-23</div>
+		<div class="item">
+			<div class="header"><i class="wait icon"></i>用餐具体日期和时间</div>
+			<div class="description">{{ticket.required_datetime}}</div>
+		</div>
+		<div class="item">
+			<div class="header"><i class="alarm outline icon"></i>备注</div>
+			<div class="description">蜡烛: {{ticket.candle}}<br>{{ticket.note}}</div>
+		</div>
+        <div class="item">
+			<div class="header"><i class="marker icon"></i>{{ticket.address.contact_name}} {{ticket.address.mobile}}</div>
+			<div class="description">{{ticket.address.address}}</div>
+        </div>
+		<div class="item">
+			<div class="header"><i class="alarm outline icon"></i>支付时间</div>
+			<div class="description">{{ticket.pay_time}}</div>
+		</div>
+		<div class="item">
+			<div class="header"><i class="alarm outline icon"></i>支付金额</div>
+			<div class="description">￥{{ticket.real_price}}</div>
+		</div>
+    </div>
+	<div class="ui divider"></div>
+    {%- if not ticket.pay_time %}
+		<a class="ui fluid brown labeled icon huge button" href="{{url_for('.order')}}">
+				<i class="payment icon"></i>转到支付页面
 		</a>
-		<a class="item">
-			具体时间
-			<div class="ui horizontal label">23:59:59</div>
-		</a>
-		<p class="item">
-			留言
-			<div class="ui label">dddddddddd
-				ddddddddddd ddddddddddddddd dddddddddddddddd ddddddddddddddddd dddddddddddddddd ddddddddddddddddd</div>
-		</p>
-	</div>
-	</div>
-</form>
+	{%- else %}
+	<a class="ui fluid brown labeled icon huge button" href="{{url_for('.products')}}">
+        <i class="home icon"></i>返回
+    </a>
+    {%- endif %}
+</div>
+{% endblock %}
+{% block special_script_section %}
 {% endblock %}
 {% block inline_script_section %}
 {% endblock %}

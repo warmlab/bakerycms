@@ -1,86 +1,164 @@
 {% extends "base-user.html" %}
 {%- block main_content_section %}
-<div class="ui unstackable three mini steps">
-	<div class="active step">
+<div class="ui basic segment">
+	<h2 class="ui block header">{#ui centered#}
 		<i class="edit icon"></i>
 		<div class="content">
-			<div class="title">订单</div>
+			填写订单信息
+			<div class="sub header">请您保证信息的正确性</div>
 		</div>
-	</div>
-	<div class="step">
-		<i class="dollar icon"></i>
-		<div class="content">
-			<div class="title">付款</div>
-		</div>
-	</div>
-	<div class="step">
-		<i class="shipping icon"></i>
-		<div class="content">
-			<div class="title">运输</div>
-		</div>
-	</div>
-</div>
-<div class="ui basic segment">
-<div class="ui divided list"></div>
-<form class="ui form" method="POST" action="{{url_for('.checkout')}}">
-	<input type="hidden" name="openid" value="{{user['openid']}}">
-	<h4 class="ui dividing header">ddddddddd</h4>
-	<div class="field">
-		<label>用餐具体时间</label>
-		<div class="tow fields">
-		<div class="required field">
-			<input name="date" type="date">
-		</div>
-		<div class="required field">
-			<input name="time" type="time">
-		</div>
-		</div>
-	</div>
-	<div class="ui items">
+	</h2>
+	<div class="ui list">
 		<div class="item">
-		{%- if user.addresses.all() %}
 			<div class="content" id="target-location">
-				<div class="header">{{user.addresses[0].contact_name}}</div>
-				<div class="meta">{{user.addresses[0].mobile}}</div>
-				<div class="description">{{user.addresses[0].address}}</div>
+			{%- if user.addresses.all() %}
+				<div class="header" id="recv_header"><i class="marker icon"></i>{{user.addresses[0].contact_name}} {{user.addresses[0].mobile}}</div>
+				<div class="description" id="recv_address">{{user.addresses[0].address}}</div>
 				<div class="extra" id="location-btn">
-					<div class="ui tiny right floated button">
-					更换配送地址
-					<i class="right chevron icon"></i>
-					</div>
+					<div class="ui tiny right floated positive button">修改地址<i class="right chevron icon"></i></div>
+				</div>
+			{%-else%}
+				<div class="header" id="recv_header"><i class="marker icon"></i></div>
+				<div class="description" id="recv_address"></div>
+				<div class="extra" id="location-btn">
+					<div class="ui tiny right floated positive button">添加地址<i class="right chevron icon"></i></div>
+				</div>
+			{%- endif %}
+			</div>
+		</div>
+	</div>
+<div class="ui divided list"></div>
+<form class="ui form" method="POST" action="{{url_for('.order')}}">
+	<input type="hidden" name="openid" value="{{user['openid']}}">
+	{%- if user.addresses and user.addresses[0] %}
+	<input type="hidden" name="target-location" value="{{user.addresses[0].id}}">
+	<input type="hidden" name="contact" value="{{user.addresses[0].contact_name}}">
+	<input type="hidden" name="mobile" value="{{user.addresses[0].mobile}}">
+	<input type="hidden" name="address" value="{{user.addresses[0].address}}">
+	{%- else -%}
+	<input type="hidden" name="target-location">
+	<input type="hidden" name="contact">
+	<input type="hidden" name="mobile">
+	<input type="hidden" name="address">
+	{%- endif %}
+	<h4 class="ui dividing header">请认真填写以下信息</h4>
+	<div class="field">
+		<label>蛋糕使用的具体日期和时间</label>
+		<div class="tow fields">
+			<div class="required field">
+				<input name="date" type="date" value="{{want_time.date}}">
+			</div>
+			<div class="required field">
+				<input name="time" type="time" value="{{want_time.time}}">
+			</div>
+		</div>
+	</div>
+	<div class="field">
+		<label>选择蜡烛</label>
+		<div class="inline fields">
+			<div class="field">
+				<div class="ui radio checkbox" id="candle-number">
+					<input name="candle" tabindex="0" class="hidden" type="radio" value="number" checked>
+					<label>数字蜡烛</label>
 				</div>
 			</div>
-			<input type="hidden" name="target-location" value="{{user.addresses[0].id}}">
-			<input style="display:none;" name="contact" type="text" value="{{user.addresses[0].contact_name}}">
-			<input style="display:none;" name="mobile" type="text" value="{{user.addresses[0].mobile}}">
-			<input style="display:none;" name="address" type="text" value="{{user.addresses[0].address}}">
-		{%-else%}
-			<div class="content" id="target-location">
-				<div class="header"><i class="marker icon"></i></div>
-				<div class="meta">{{user.member.nickname}}</div>
-				<div class="description"></div>
-				<div class="extra" id="location-btn">
-					<div class="ui tiny right floated button">
-					<i class="right chevron icon"></i>
-					</div>
-				</div>
-				<input type="hidden" name="target-location">
+			<div class="field" id="age-field">
+				<input name="age" type="number" maxlength="2" placeholder="18">
 			</div>
-			<input style="display:none;" name="contact" type="text">
-			<input style="display:none;" name="mobile" type="text">
-			<input style="display:none;" name="address" type="text">
-		{%- endif %}
+		</div>
+		<div class="inline fields">
+			<div class="field">
+				<div class="ui radio checkbox" id="candle-ten">
+					<input name="candle" tabindex="0" class="hidden" type="radio" value="ten">
+					<label>10支小蜡烛</label>
+				</div>
+			</div>
+			<div class="field" id="color-field-pink">
+				<div class="ui radio checkbox">
+					<input name="candle-color" tabindex="1" class="hidden" type="radio" value="粉红色">
+					<label>粉红色</label>
+				</div>
+			</div>
+			<div class="field" id="color-field-blue">
+				<div class="ui radio checkbox">
+					<input name="candle-color" tabindex="1" class="hidden" type="radio" value="蓝色">
+					<label>蓝色</label>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="field">
+		<label>留言</label>
+		<textarea rows="2" name="note"></textarea>
+	</div>
+	<div class="ui info icon message">
+		<i class="info icon"></i>
+		<div class="content">
+			<div class="header">
+				注意事项
+			</div>
+			<p>请在收到蛋糕后2小时内食用完</p>
+			<p>本店蛋糕是纯天然乳脂奶油蛋糕，不加入任何的稳定剂和防腐剂，温度稍高一点，就容易融化；需要放置到冰箱的<strong>保鲜层</strong>；即使在保鲜层也只能保质48小时!</p>
 		</div>
 	</div>
 	<button class="ui fluid big orange labeled icon button">
 		<i class="payment icon"></i>去结算
 	</button>
 </form>
+{%- include "includes/delivery.html" %}
+<div class="ui coupled first modal">
+	<div class="ui header">配送地址</div>
+	<div class="content">
+		<div class="ui items" id="addresses">
+			{% for address in user.addresses %}
+			<div class="item">
+				<div class="middle aligned content">
+                    <div class="ui radio checkbox" data-code="{{address.id}}">
+						<input name="address" class="hidden" type="radio">
+					</div>
+					<div class="header">{{address.contact_name}}</div>
+					<div class="meta">{{address.mobile}}</div>
+					<div class="description">{{address.address}}</div>
+				</div>
+			</div>
+			{% endfor %}
+		</div>
+	</div>
+	<div class="actions">
+		<div class="ui orange button" id="new-address">增加新地址</div>
+		<div class="ui cancel button">取消</div>
+		<div class="ui approve button">确定</div>
+	</div>
+</div>
+<div class="ui coupled second modal">
+	<div class="ui header">新增配送地址</div>
+	<form class="ui form basic segment" id="new-address-form">
+	<div class="required field">
+		<label>联系人</label>
+		<input name="contact-new" placeholder="小麦芬" type="text">
+	</div>
+	<div class="required field">
+		<label>联系人手机</label>
+		<input name="mobile-new" placeholder="13370836021" type="text">
+	</div>
+	<div class="required field">
+		<label>联系人地址</label>
+		<input name="address-new" placeholder="青岛市李沧区九水路227号3层小麦芬烘焙课堂" type="text">
+	</div>
+	</form>
+	<div class="actions">
+		<div class="ui green button" id="wx-location-btn">使用微信地址</div>
+		<div class="ui cancel button">取消</div>
+		<div class="ui approve button">确定</div>
+	</div>
+</div>
 </div>
 {%- endblock %}
 {%- block bottom_nav_section %}{% endblock %}
 {#{%- include "includes/bottom_fixed.html" %} #}
-{%- block special_script_section %}{% endblock -%}
+{%- block special_script_section %}
+<script src="http://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
+{% endblock -%}
 {%- block inline_script_section %}
 <script>
 const DB_STORE_NAME = "shop_cart";
@@ -119,7 +197,7 @@ function init_order() {
 				$('<div class="item">\
 					<div class="ui tiny image"><image src="' + cursor.value.image + '"></div>\
 					<div class="middle aligned content">\
-						<a class="header">我们的幸福时光</a>\
+						<a class="header">' + cursor.value.name + '</a>\
 						<div class="meta">\
 							<span class="price">￥' + cursor.value.price + '</span>\
 							<span class="stay">' + cursor.value.spec_name + '</span>\
@@ -129,7 +207,7 @@ function init_order() {
 				</div>').appendTo($product_list);
 
 				$('<input type="hidden" name="product" value="'
-					+ cursor.value.code + ':' + cursor.value.spec + '">').appendTo($form);
+					+ cursor.value.code + ':' + cursor.value.spec + ':' + cursor.value.amount + '">').appendTo($form);
 			}
 
 			cursor.continue();
@@ -164,10 +242,213 @@ $(document).ready(function(){
 			// redirect
 		}
 	});
-	//$('.ui.checkbox').checkbox();
+
+	// set candle
+	$('.ui.radio.checkbox').checkbox();
+	$('#color-field-pink').hide();
+	$('#color-field-blue').hide();
+	$('#candle-number').on("change", function() {
+		$('#color-field-pink').hide();
+		$('#color-field-blue').hide();
+		$('#age-field').show();
+	});
+	$('#candle-ten').on("change", function() {
+		$('#color-field-pink').show();
+		$('#color-field-blue').show();
+		$('#age-field').hide();
+	});
 
 	//$bottom_menu = $('.bottom.fixed.menu');
 	//$bottom_menu.children('[href="{{url_for('.confirm')}}"]').addClass('active');
+
+	// set default datetime
+	//var $want_date = $('input[type="date"]');
+	//var $want_time = $('input[type="time"]');
+	//var cur_time = new Date();
+	//var iso_string = cur_time.toISOString();
+	//console.log(iso_string);
+	//if (!$want_date.attr('value')) {
+	//	console.log(iso_string.split('T')[0]);
+	//	//$want_date.attr('value', cur_time.getFullYear() + '-' + (cur_time.getMonth() + 1) + '-' + cur_time.getDate());
+	//	$want_date.attr('value', iso_string.split('T')[0]);
+	//}
+	//if (!$want_time.attr('value')) {
+	//	console.log(cur_time.getTime());
+	//	//$want_time.attr('value', cur_time.getHours() + ':' + cur_time.getMinutes());
+	//	$want_time.attr('value', iso_string.split('T')[1].split(':').splice(0,2).join(':'));
+	//}
+
+	var $new_address_form = $('#new-address-form');
+	$new_address_form.form({
+		on: 'blur',
+		fields: {
+			contact: {
+				identifier: 'contact-new',
+				rules: [
+				{
+					type: 'empty',
+					prompt: '输入联系人姓名'
+				}
+				]
+			},
+			mobile: {
+				identifier: 'mobile-new',
+				rules: [
+				{
+					type: 'exactLength[11]',
+					prompt: '请输入收件人的手机号码'
+				}
+				]
+			},
+			address: {
+				identifier: 'address-new',
+				rules: [
+					{
+					type: 'empty',
+					prompt: '请选择配送信息'
+					}
+				]
+			}
+		}
+	});
+
+	$('#location-btn').click(function(){
+		$('.first.modal')
+		.modal({
+			closeable: false,
+			onDeny: function() {
+				console.log('Deny');
+			},
+			onApprove: function() {
+				var $target_location = $('#target-location');
+				$contents = $('#addresses > .item > .content > .checkbox');
+				for (var $cb of $contents) {
+					$cb = $($cb);
+					if ($cb.checkbox('is checked')) {
+						var to_name = $cb.siblings('.header').html();
+						var to_mobile = $cb.siblings('.meta').html();
+						var to_address = $cb.siblings('.description').html();
+						console.log(to_name);
+						$target_location.children('.header').html('<i class="marker icon"></i>' + to_name + ' ' + to_mobile);
+						$target_location.children('.description').html(to_address);
+						$('input[name="target-location"]').attr('value', $cb.data('code'));
+						$('input[name="contact"]').attr('value', to_name);
+						$('input[name="mobile"]').attr('value', to_mobile);
+						$('input[name="address"]').attr('value', to_address);
+
+						$('input[name="contact"]').val(to_name);
+						$('input[name="mobile"]').val(to_mobile);
+						$('input[name="address"]').val(to_address);
+						break;
+					}
+				}
+			}
+		})
+		.modal('show');
+	});
+	$('.ui.second.modal')
+		.modal('attach events', '.first.modal #new-address')
+		.modal({
+			onApprove: function() {
+				if (!$('#new-address-form').form('is valid')) {
+					return false;
+				}
+
+				var fields = $new_address_form.form('get values');
+				//var data = JSON.stringify({"contact": fields.contact, "mobile": fields.mobile, "address": fields.address, "user": {{user.id}}});
+				fields.user = {{user.id}};
+				var data = JSON.stringify(fields);
+				console.log(data);
+
+				$.ajax({
+					url: "{{url_for('.my_address')}}",
+					contentType:  'application/json',
+					data: data,
+					method: 'PUT',
+					dataType: 'json',
+					statusCode: {
+						200: function(info) {
+							console.log(info);
+							var $item = $('<div class="item"></div>');
+							var $content = $('<div class="middle aligned content"></div>');
+							var $radio = $('<div class="ui radio checkbox"><input name="address" checked class="hidden" type="radio"></div>');
+							$radio.data('code', info.code);
+							var $header = $('<div class="header"></div>');
+							$header.html(info.contact);
+							var $meta = $('<div class="meta"></div>');
+							$meta.html(info.mobile);
+							var $desc = $('<div class="description"></div>');
+							$desc.html(info.address);
+							$radio.appendTo($content);
+							$header.appendTo($content);
+							$meta.appendTo($content);
+							$desc.appendTo($content);
+							$content.appendTo($item);
+							$item.appendTo($('#addresses'));
+							$radio.checkbox();
+
+							$('input[name="target-location"]').val(info.code);
+							$('input[name="contact"]').val(info.contact);
+							$('input[name="mobile"]').val(info.mobile);
+							$('input[name="address"]').val(info.address);
+
+							var $target_location = $('#target-location');
+							$target_location.val(info.code);
+							$target_location.children('.header').html('<i class="marker icon"></i>' + info.contact + ' ' + info.mobile);
+							$target_location.children('.description').html(info.address);
+
+							return true;
+						},
+						400: function(info) {
+							$('.ui.error.message').html('error');
+							return false;
+						}
+					}
+				});
+			}
+		});
+});
+
+// 收货地址共享
+wx.config({
+    debug: false, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
+    appId: '{{weixin.get("appId")}}', // 必填，公众号的唯一标识
+    timestamp: {{weixin.get("timestamp")}}, // 必填，生成签名的时间戳
+    nonceStr: '{{weixin.get("nonceStr")}}', // 必填，生成签名的随机串
+    signature: '{{weixin.get("signature")}}',// 必填，签名，见附录1
+    jsApiList: ['openAddress'] // 必填，需要使用的JS接口列表，所有JS接口列表见附录2
+});
+
+wx.ready(function() {
+	$('#wx-location-btn').on('click', function() {
+	wx.openAddress({
+		success: function(res) {
+			console.log(res);
+
+			//var userName = res.userName; // 收货人姓名
+			//var postalCode = res.postalCode; // 邮编
+			//var provinceName = res.provinceName; // 国标收货地址第一级地址（省）
+			//var cityName = res.cityName; // 国标收货地址第二级地址（市）
+			//var countryName = res.countryName; // 国标收货地址第三级地址（国家）
+			//var detailInfo = res.detailInfo; // 详细收货地址信息
+			//var nationalCode = res.nationalCode; // 收货地址国家码
+			//var telNumber = res.telNumber; // 收货人手机号码
+
+			//$('#recv_header').html('<i class="marker icon"></i>' + res.userName + ' ' + res.telNumber);
+			//$('#recv_address').html(res.provinceName + res.cityName + res.detailInfo);
+			$('input[name="contact-new"]').attr('value', res.userName);
+			$('input[name="mobile-new"]').attr('value', res.telNumber);
+			$('input[name="address-new"]').attr('value', res.provinceName + res.cityName + res.detailInfo);
+		},
+		cancel: function(e) {
+			console.log(e);
+		}
+	});
+	});
+});
+
+wx.error(function(res){
+    console.log('weixin pay load eror');
 });
 </script>
 {%- endblock -%}

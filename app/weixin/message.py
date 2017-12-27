@@ -14,11 +14,11 @@ class Message():
     def generate_response_body(self):
         return self._generate_text_body()
 
-    def generate_template_body(self, template_id, touser, data):
+    def generate_template_body(self, template_id, touser, url, data):
         dic = {
             'template_id': template_id,
             'touser': touser,
-            'url': 'http://m.wecakes.com'
+            'url':  url,
         }
 
         dic['data'] = data
@@ -44,7 +44,7 @@ class Message():
         <FromUserName><![CDATA[%s]]></FromUserName>
         <CreateTime>%d</CreateTime>
         <MsgType><![CDATA[text]]></MsgType>
-        <Content><![CDATA[亲爱的%s，您好，欢迎关注我们，请致电13370836021，0532-58806365订购或预约烘焙课程。%s 正在积极装修中，敬请期待]]></Content>
+        <Content><![CDATA[亲爱的%s，您好，欢迎关注小麦芬烘焙工作室，请致电13370836021订购或者访问%s]]></Content>
         </xml>""" % (self.__properties['FromUserName'], self.__properties['ToUserName'],
                      int(time()), self.member.nickname if self.member and self.member.nickname else "", home_web)
 
@@ -56,7 +56,7 @@ class Message():
                 <FromUserName><![CDATA[%s]]></FromUserName>
                 <CreateTime>%d</CreateTime>
                 <MsgType><![CDATA[text]]></MsgType>
-                <Content><![CDATA[青岛市李沧区九水路227号宝龙城市广场一层南门卡诺烘焙 | 青岛市李沧区九水路227号宝龙城市广场三层小麦芬烘焙课堂]]></Content>
+                <Content><![CDATA[青岛市李沧区九水路227号宝龙城市广场彩虹城三层小麦芬烘焙课堂]]></Content>
             </xml>""" % (self.__properties['FromUserName'], self.__properties['ToUserName'], int(time()))
 
         print(body)

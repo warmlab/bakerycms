@@ -28,41 +28,51 @@
 	</div>
 </header>#}
 <header class="my-segment">
-	<a href="#"><img class="ui huge image" src="/static/banner/1.jpg"></a>
+	<div class="ui secondary pointing three item menu">
+		<a class="active item">奶油蛋糕</a>
+		<a class="item">慕斯蛋糕</a>
+		<a class="item">面包</a>
+		{#<a class="item"><i class="student icon"></i>课堂</a>#}
+	</div>
 </header>
 	<div class="my-segment">
-		<div class="ui link my-cards">
-	{% for product in pagination.items %}
+		<div class="ui my-cards">
+	{% for product in products %}
 		<section class="my-card">
-	<!--<a class="my-card" href="{{url_for('.product_detail', shoppoint=shoppoint.code, code=product.code, _method='GET')}}"> -->
-			<div class="ui medium image">
-				<img src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}">
-			</div>
-				<div class="content">
-					<div class="header">{{ product.english_name }}</div>
-					<div class="header">{{ product.name }}</div>
-					<div class="description"><i class="tag icon"></i>{%if product.summary %}{{product.summary}}{%else%}100%天然乳脂奶油{%endif%}</div>
-					<div class="meta">
-						<span class="price">￥{{product.price}}{%if product.spec%}/{{product.sepc}}{%endif%}</span>
-						<span class="addtocart"><i class="icon add to cart"></i></span>
-					</div>
+			<a class="ui medium image" href="{{url_for('.product_detail', shoppoint=shoppoint.code, code=product.code, _method='GET')}}">
+				<img data-src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}">
+			</a>
+			<div class="content">
+				<div class="header">{{ product.english_name }}</div>
+				<div class="header">{{ product.name }}</div>
+				<div class="description"><i class="tag icon"></i>{%if product.summary %}{{product.summary}}{%else%}100%天然乳脂奶油{%endif%}</div>
+				<div class="meta">
+					<span class="price">￥{%if product.parameters%}{{product.price+product.parameters[0].plus_price}}/{{product.parameters[0].parameter.name}}{%else%}{{product.price}}{%endif%}</span>
+					{%- if product.parameters %}
+					<span class="addtocart" data-code="{{product.code}}" data-name="{{product.name}}"
+						data-spec="{{product.parameters[0].parameter.id}}" data-image="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" data-price="{{product.price}}"><i class="icon add to cart"></i></span>
+					{%- else %}
+					<span class="addtocart" data-code="{{product.code}}" data-name="{{product.name}}"
+						data-image="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" data-price="{{product.price}}"><i class="icon add to cart"></i></span>
+					{% endif -%}
 				</div>
+			</div>
 		</section>{#
-		<div class="ui right floated small icon orange button" data-code="{{product.code}}" data-name="{{product.name}}" data-image="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" data-price="{{product.price}}">
+		<div class="ui right floated small icon orange button" data-code="{{product.code}}" data-name="{{product.name}}" data-spec="{{product.parameters[0]}}" data-image="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" data-price="{{product.price}}">
 			<i class="add to cart icon"></i>
     </div>#}
-    </section>
 	{% endfor %}
 		</div>
 	</div>
+	{#
 	<div class="ui basic fluid segment" style="margin-top:-1em;">
 		<div class="ui small pagination right floated secondary menu">
 			{%- for page in pagination.iter_pages() %}
 				{%- if page %}
 					{% if page != pagination.page %}
-				<a class="item" href="{{ url_for('.index', page=page)}}">{{page}}</a>
+				<a class="item" href="{{ url_for('.product', page=page)}}">{{page}}</a>
 					{% else %}
-				<a class="active item" href="{{ url_for('.index', page=page)}}">{{page}}</a>
+				<a class="active item" href="{{ url_for('.product', page=page)}}">{{page}}</a>
 					{% endif %}
 				{% else %}
 					<div class="disabled item">...</div>
@@ -70,7 +80,11 @@
 			{%- endfor %}
 		</div>
 	</div>
-	<div class="my-fixed-cart"><a><i class="cart icon"></i></a> </div>
+	#}
+	<div class="my-fixed-cart">
+		<i class="cart icon"></i>
+		<div class="floating ui orange tiny circular label" id="product-amount"></div>
+	</div>
 <div style="padding-bottom: 3.8em;"></div>
 {#
 				  <p>
@@ -85,22 +99,31 @@
 				  </p>
 				#}
 <!--main content end-->
+{% include "includes/cart.html" %}
 {% endblock %}
 {% block bottom_nav_section %}
 {% include "includes/bottom_fixed.html" %}
 {% endblock %}
 {% block special_script_section %}{% endblock %}
 {% block inline_script_section %}
+<script charset="UTF-8" src="{{url_for('static', filename='js/shop.js')}}"></script>
 <script>
+	$(document).ready(function() {
+		$.each($("img[data-src]"), function(index, value) {
+			var $img = $(value);
+			$img.attr('src', $img.data('src'));
+		});
+	});
 $(".ui.button").on("click", function(e){
-	var code = $(this).data('code');
-	var name = $(this).data('name');
-	var image = $(this).data('image');
-	var price = $(this).data('price');
-	var p = new Product(code, name, image, price, 1);
+	var p = {};
+	p.code = $(this).data('code');
+	p.name = $(this).data('name');
+	p.image = $(this).data('image');
+	p.price = $(this).data('price');
+	p.spec = $(this).data('spec');
 
-	var cart = new Cart('cart', 'session');
-	cart.addProduct(p);
+	//var cart = new Cart('cart', 'session');
+	//cart.addProduct(p);
 });
 
 $('.ui.right.floated.small.icon.orange.button').click(function(e){
@@ -109,7 +132,7 @@ $('.ui.right.floated.small.icon.orange.button').click(function(e){
 	var name = _.data('name');
 	var image = _.data('image');
 	var price = _.data('price');
-	//$('.ui.popup').popup('show');
+	//$('.ui.popup').popup('show')
 	//var obj = $("#banner-image").clone();
 	var obj = $('<img src="' + image + '" class="ui mini image">');
 	//obj.removeAttr('id');
@@ -137,9 +160,9 @@ $('.ui.right.floated.small.icon.orange.button').click(function(e){
 	//obj.offset({top: e.pageX, left: e.pageY, zIndex: 10});
 });
 
-$bottom_menu = $('.bottom.fixed.menu');
+//$bottom_menu = $('.bottom.fixed.menu');
 //$bottom_menu.children().removeClass('active');
-var href = "{{url_for('.index', shoppoint=shoppoint.code)}}";
-$bottom_menu.children('[href=' + href + ']').addClass('active');
+//var href = "{{url_for('.products', shoppoint=shoppoint.code)}}";
+//$bottom_menu.children('[href=' + href + ']').addClass('active');
 </script>
 {% endblock %}

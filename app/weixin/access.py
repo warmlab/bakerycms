@@ -61,7 +61,7 @@ def store_weixin_picture(url, name):
 
 def get_member_info(openid, language='zh-CN'):
     token = Shoppoint.query.first().access_token
-    info = _access_weixin_api('https://api.weixin.qq.com/cgi-bin/user/info?%s', access_token=token, openid=openid, lang=language)
+    info = _access_weixin_api(url)
     #if 'errcode' in info:
     #    errcode = info.get('errcode')
     #    errmsg = info.get('errmsg')

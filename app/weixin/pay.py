@@ -8,7 +8,7 @@ from flask import json
 from xml.etree import ElementTree as etree
 
 
-def generate_sign(params, key=None):
+def generate_pay_sign(params, key):
     """
     签名生成函数
        
@@ -28,6 +28,27 @@ def generate_sign(params, key=None):
 
     print('&'.join(param_list))
     return hashlib.md5('&'.join(param_list).encode('utf8')).hexdigest().upper(), 'MD5' # TODO 考虑HMAC-SHA256
+
+def generate_sign(params, key=None):
+    """
+    签名生成函数
+       
+    :param params: 参数，dict 对象
+    :param key: API 密钥
+    :return: sign string
+    """
+    param_list = []
+    for k,v in params.items():
+        if v:
+            param_list.append('='.join([k.lower(), str(v)]))
+
+    param_list.sort()
+    #if key:
+    #    param_list.append('='.join(['key', key]))
+    print(param_list)
+
+    print('&'.join(param_list))
+    return hashlib.sha1('&'.join(param_list).encode('utf8')).hexdigest().upper(), 'SHA1' # TODO 考虑HMAC-SHA256
 
 def convert_to_xml_cdata(data):
     return data.join(['<![CDATA[',']]>'])
@@ -80,7 +101,7 @@ def unified_order(ticket, appid, mch_id, key, user, notify_url, device_info='WEB
         return
 
     data['out_trade_no'] = ticket.code
-    data['body'] = '卡诺烘焙-只用100%天然乳脂奶油' # 商品简单描述
+    data['body'] = '小麦芬烘焙工作室-只用100%天然乳脂奶油' # 商品简单描述
     data['total_fee'] = int(ticket.real_price * 100) # 转换成分
     data['trade_type'] = trade_type
     data['openid'] = user.member.weixin_openid
@@ -97,7 +118,8 @@ def unified_order(ticket, appid, mch_id, key, user, notify_url, device_info='WEB
     #data['detail'] = _make_goods_info(ticket.products)
 
     # 签名
-    data['sign'], sign_type = generate_sign(data, key)
+    data['sign'], sign_type = generate_pay_sign(data, key)
+    print(data['sign'])
     xml = parse_dict_to_xml(data)
 
     #startTimeStamp = int(time())
@@ -111,12 +133,16 @@ def unified_order(ticket, appid, mch_id, key, user, notify_url, device_info='WEB
         return parse_xml_to_dict(result)
     #self.reportCostTime($url, $startTimeStamp, $result); #上报请求花费时间
 
-def unified_order_js_config(appid, key):
-    params = {'timeStamp': int(time()),
+def unified_order_js_config(appid, ticket, url, key):
+    params = {'timestamp': int(time()),
               'nonceStr': uuid4().hex,
-              'appId': appid,
+              'jsapi_ticket': ticket,
+              #'appId': appid,
+              'url': url,
              }
 
     params['signature'], sign_type = generate_sign(params, key)
+    params['appId'] = appid;
+    # TODO remove url jsapi_ticket
 
     return params

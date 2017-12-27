@@ -48,6 +48,8 @@ class Shoppoint(db.Model):
     weixin_aeskey = db.Column(db.String(128)) # 服务器配置中的EncodingAESKey
     weixin_access_token = db.Column(db.String(256))
     weixin_expires_time = db.Column(db.BigInteger) # timestamp
+    weixin_jsapi_ticket = db.Column(db.String(256))
+    weixin_jsapi_expires_time = db.Column(db.BigInteger) # timestamp
 
     def __repr__(self):
         return self.name
@@ -81,10 +83,36 @@ class Shoppoint(db.Model):
                 raise AccessTokenGotError(errcode, errmsg)
 
             self.weixin_access_token = info.get('access_token')
-            self.weixin_expires_time = int(time()) + info.get('expires_in') - 5
+            self.weixin_expires_time = int(time()) + info.get('expires_in') - 30
             db.session.commit()
 
             return self.weixin_access_token
+
+    @property
+    def jsapi_ticket(self, provider='weixin'):
+        if self.weixin_jsapi_ticket and self.weixin_jsapi_expires_time \
+           and self.weixin_jsapi_expires_time > int(time()):
+            return self.weixin_jsapi_ticket
+
+        print ('Get token from weixin jsapi ticket or cannot get jsapi ticket')
+
+        params = {'access_token': self.access_token, 'type': 'jsapi'}
+        url_param = urllib.parse.urlencode(params).encode('utf-8')
+        with urllib.request.urlopen("https://api.weixin.qq.com/cgi-bin/ticket/getticket?%s", url_param) as f:
+            result = f.read().decode('utf-8')
+            print (result)
+            info = json.loads(result)
+
+            if 'ticket' not in info or 'expires_in' not in info:
+                errcode = info.get('errcode')
+                errmsg = info.get('errmsg')
+                raise AccessTokenGotError(errcode, errmsg)
+
+            self.weixin_jsapi_ticket = info.get('ticket')
+            self.weixin_jsapi_expires_time = int(time()) + info.get('expires_in') - 30
+            db.session.commit()
+
+            return self.weixin_jsapi_ticket
 
 
 class Address(db.Model):
@@ -481,6 +509,7 @@ class Ticket(db.Model):
     pending_time = db.Column(db.DateTime) # 挂单时间
     occurred_time = db.Column(db.DateTime, default=datetime.utcnow) # 订单时间
     required_datetime = db.Column(db.DateTime) # 使用日期和时间
+    candle = db.Column(db.String(64)) # 蜡烛
 
     shoppoint_id = db.Column(db.Integer, db.ForeignKey('shoppoint.id'), nullable=True)
     shoppoint = db.relationship('Shoppoint',
