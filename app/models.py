@@ -319,6 +319,11 @@ class ProductCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), unique=True, index=True)
     english_name = db.Column(db.String(128), unique=True, index=True, nullable=False)
+    slug = db.Column(db.String(128), unique=True, index=True, nullable=False)
+    is_available_on_web = db.Column(db.Boolean, default=True) # web端显示标志
+    is_available_on_pos = db.Column(db.Boolean, default=True) # POS端显示标志
+    is_deleted = db.Column(db.Boolean, default=False) # 删除标志
+    to_point = db.Column(db.Boolean, default=False) # 是否参与积分
     description = db.Column(db.Text)
 
     def __init__(self, name, english_name, description=None):
@@ -335,6 +340,12 @@ class ProductCategory(db.Model):
                 "description": self.description
                 }
 
+class ProductSubCategory(db.Model):
+    __tablename__ = 'product_subcategory'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(128), unique=True, index=True)
+    english_name = db.Column(db.String(128), unique=True, index=True, nullable=False)
+
 
 class Product(db.Model):
     __tablename__ = 'product'
@@ -346,6 +357,9 @@ class Product(db.Model):
     pinyin = db.Column(db.String(128), unique=True, index=True)
     category_id = db.Column(db.Integer, db.ForeignKey('product_category.id'))
     category = db.relationship('ProductCategory',
+                         backref=db.backref('products', lazy="dynamic"))
+    subcategory_id = db.Column(db.Integer, db.ForeignKey('product_subcategory.id'))
+    subcategory = db.relationship('ProductSubCategory',
                          backref=db.backref('products', lazy="dynamic"))
     shoppoint_id = db.Column(db.Integer, db.ForeignKey('shoppoint.id'))
     shoppoint = db.relationship('Shoppoint',

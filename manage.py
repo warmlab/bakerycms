@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-import os
+#!/usr/bin/env python3
+import os, click
 COV = None
 if os.environ.get('FLASK_COVERAGE'):
     import coverage
@@ -14,23 +14,22 @@ if os.path.exists('.env'):
             os.environ[var[0]] = var[1]
 
 from app import create_app, db
-from app.models import Member
-from app.models import Product, ProductImage
-from flask_script import Manager, Shell
-#from flask_migrate import Migrate, MigrateCommand
+#from app.models import Member
+#from app.models import Product, ProductImage
+#from flask_script import Manager, Shell
+from flask_migrate import Migrate
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
-manager = Manager(app)
-#migrate = Migrate(app, db)
+#manager = Manager(app)
+migrate = Migrate(app, db)
 
+@app.shell_context_processor
 def make_shell_context():
     return dict(app=app, db=db, Member=Member,
                 Product=Product, ProductImage=ProductImage)
-manager.add_command("shell", Shell(make_context=make_shell_context))
-#manager.add_command('db', MigrateCommand)
 
-
-@manager.command
+@app.cli.command()
+@click.option('--coverage/--no-coverage', default=False, help='Enable code coverage')
 def test(coverage=False):
     """Run the unit tests."""
     if coverage and not os.environ.get('FLASK_COVERAGE'):
@@ -51,17 +50,17 @@ def test(coverage=False):
         print('HTML version: file://%s/index.html' % covdir)
         COV.erase()
 
-
-@manager.command
-def profile(length=25, profile_dir=None):
+@app.cli.command()
+@click.option('--length', default=25, help='Profile stack length')
+@click.option('--profile-dir', default=None, help='Profile directory')
+def profile(length, profile_dir):
     """Start the application under the code profiler."""
     from werkzeug.contrib.profiler import ProfilerMiddleware
     app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[length],
                                       profile_dir=profile_dir)
     app.run()
 
-
-@manager.command
+@app.cli.command()
 def deploy():
     """Run deployment tasks."""
     #from flask_migrate import upgrade
@@ -75,7 +74,3 @@ def deploy():
 
     # create self-follows for all users
     #Member.add_self_follows()
-
-
-if __name__ == '__main__':
-    manager.run()
