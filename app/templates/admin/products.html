@@ -1,0 +1,57 @@
+{%- extends "admin/my-base.html" -%}
+{%- block body %}
+<div class="ui basic segment">
+	<h2 class="ui header">
+		<i class="list layout icon"></i>
+		<div class="content">
+			Product
+			<div class="sub header">Manage your products.</div>
+		</div>
+	</h2>
+	<table class="ui six column table">
+		<thead>
+			<tr>
+				<th>
+		<div class="ui checkbox" id="select-all">
+				<input tabindex="0" class="hidden" type="checkbox">
+			</div></th>
+				<th></th>
+				<th>Code</th>
+				<th>Name</th>
+				<th>Price</th>
+				<th>Stock</th>
+				<th>Category</th>
+			</tr>
+		</thead>
+		<tbody>
+	{% for p in data %}
+	<tr>
+		<td><div class="ui checkbox">
+				<input tabindex="0" class="hidden" type="checkbox">
+			</div>
+		</td>
+		<td>
+			<a href="/admin/product/edit/?id={{p.id}}&url=/admin/product"><i class="edit icon"></i></a>
+			<a href="/admin/product/delete/?id={{p.id}}&url=/admin/product"><i class="remove red icon"></i></a>
+		</td>
+		<td>{{ p.code }}</td>
+		<td>{{ p.name }}</td>
+		<td>{{ p.price }}</td>
+		<td>{{ p.stock }}</td>
+		<td>{{ p.category }}</td>
+	</tr>
+	{% endfor %}
+	</tbody>
+	<tfoot>
+	<tr>
+		<th>{{data|length}} Products</th>
+		<th></th>
+		<th></th>
+		<th></th>
+		<th></th>
+		<th></th>
+	</tr>
+	</tfoot>
+	</table>
+</div>
+{%- endblock -%}

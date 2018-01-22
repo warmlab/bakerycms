@@ -1,0 +1,133 @@
+{% macro my_extra() %}
+  {% if admin_view.can_create %}
+  <input name="_add_another" type="submit" class="ui button" value="{{ _gettext('Save and Add Another') }}" />
+  {% endif %}
+  {% if admin_view.can_edit %}
+  <input name="_continue_editing" type="submit" class="ui button" value="{{ _gettext('Save and Continue Editing') }}" />
+  {% endif %}
+{% endmacro %}
+{% macro render_my_field(form, field, kwargs={}, caller=None) %}
+  {% set direct_error = h.is_field_error(field.errors) %}
+  <div class="inline field{{ ' error' if direct_error else '' }}">
+    <label for="{{ field.id }}">{{ field.label.text }}
+        {% if h.is_required_form_field(field) %}
+          <strong style="color: red">&#42;</strong>
+        {%- else -%}
+          &nbsp;
+        {%- endif %}
+    </label>
+	{% if field.type in ('QuerySelectField', 'SelectField') %}
+	  {{ field(**kwargs)|safe }}
+	{% elif field.type in ('QuerySelectMultipleField', 'SelectMultipleField') %}
+		{% if kwargs.get('element-type') == 'image' %}
+			  <a id="product-image-new" href="javascript:void(0)"><i class="plus icon"></i></a>
+			  <div class="ui six doubling cards" id="product-images">
+				{% for item in field.data %}
+				<div class="card">
+					<div class="blurring dimmable image">
+						<div class="ui dimmer">
+							<div class="content">
+								<div class="center">
+									<div class="ui"><i class="huge remove icon"></i></div>
+								</div>
+							</div>
+						</div>
+						<img src="/gallery/media/{{item.image.name}}.{{item.image.ext}}">
+					</div>
+				</div>
+				{% endfor %}
+			  </div>
+		{% else %}
+	  {% for opt in field.iter_choices() %}
+		{% set is_checked = is_attribute_checked(opt[0], field.data, 'target_id') %}
+		<div class="{{kwargs.get('class', 'ui dropdown')}}{% if is_checked %} checked{%endif%}">
+			  <input name="{{field.name}}" class="hidden" type="checkbox" value="{{opt[0]}}"{%if is_checked %} checked{%endif%}>
+			  <label>{{opt[1]}}</label>
+		</div>
+	  {% endfor %}
+		{% endif %}
+	{% elif field.type == 'AjaxSelectMultipleField' %}
+	  {{ field(**kwargs)|safe }}
+	{% else %}
+		{% if field.widget.input_type == 'text' %}
+			{{ field(**kwargs)|safe }}
+		{% elif field.widget.input_type == 'checkbox' %}
+	<div class="ui checkbox">
+		{{ field(**kwargs)|safe }}
+	</div>
+		{% elif field.widget.input_type == 'radio' %}
+	<div class="ui raido checkbox">
+		{{ field(**kwargs)|safe }}
+  </div>
+    {% else %}
+		{{ field(**kwargs)|safe }}
+		{% endif %}
+	{% endif %}
+	{% if field.description %}
+	<p class="help-block">{{ field.description|safe }}</p>
+	{% endif %}
+	{% if direct_error %}
+	<ul class="help-block input-errors">
+	{% for e in field.errors if e is string %}
+	  <li>{{ e }}</li>
+	{% endfor %}
+	</ul>
+	{% endif %}
+    {% if caller %}
+      {{ caller(form, field, direct_error, kwargs) }}
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{% macro render_my_form_fields(form, form_opts=None) %}
+    {% if form.hidden_tag is defined %}
+        {{ form.hidden_tag() }}
+    {% else %}
+        {% if csrf_token %}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        {% endif %}
+        {% for f in form if f.widget.input_type == 'hidden' %}
+            {{ f }}
+        {% endfor %}
+    {% endif %}
+
+    {% if form_opts and form_opts.form_rules %}
+        {% for r in form_opts.form_rules %}
+            {{ r(form, form_opts=form_opts) }}
+        {% endfor %}
+    {% else %}
+        {% for f in form if f.widget.input_type != 'hidden' %}
+          {% if form_opts %}
+            {% set kwargs = form_opts.widget_args.get(f.short_name, {}) %}
+          {% else %}
+            {% set kwargs = {} %}
+          {% endif %}
+          {{ render_my_field(form, f, kwargs) }}
+        {% endfor %}
+    {% endif %}
+{% endmacro %}
+
+{% macro render_my_form_buttons(cancel_url, extra=None, is_modal=False) %}
+  <div class="ui divider"></div>
+  <div class="col-md-offset-2 col-md-10 submit-row">
+    {%- if cancel_url -%}
+    <a href="{{ cancel_url }}" class="ui negative button" role="button" {% if is_modal %}data-dismiss="modal" {% endif %}>{{ _gettext('Cancel') }}</a>
+    {%- endif -%}
+    <input type="submit" class="ui positive button" value="{{ _gettext('Save') }}" />
+    {%- if extra %} {{ extra }} {% endif -%}
+  </div>
+  </div>
+{% endmacro %}
+
+{% macro my_form_tag(form=None, action=None) %}
+    <form action="{{ action or '' }}" method="POST" role="form" class="ui form" enctype="multipart/form-data">
+      {{ caller() }}
+    </form>
+{% endmacro %}
+
+{% macro render_my_form(form, cancel_url, extra=None, form_opts=None, action=None, is_modal=False) -%}
+    {% call my_form_tag(action=action) %}
+        {{ render_my_form_fields(form, form_opts=form_opts) }}
+        {{ render_my_form_buttons(cancel_url, extra, is_modal) }}
+    {% endcall %}
+{% endmacro %}

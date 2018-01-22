@@ -1,0 +1,151 @@
+{%- extends "admin/my-base.html" -%}
+{%- import "admin/utils.html" as utils with context -%}
+{%- block body -%}
+<div class="ui basic segment">
+	<h2 class="ui dividing header">
+		<i class="edit icon"></i>
+		<div class="content">
+			<div class="sub header">Edit your product.</div>
+		</div>
+    </h2>
+{% block edit_form %}
+    {{ utils.render_my_form(form, return_url, utils.my_extra(), form_opts) }}
+{% endblock %}
+  <div id="image-selector" class="ui large modal">
+	  <i class="close icon"></i>
+	  <div class="header"><i class="image icon"></i>Product Image Selector</div>
+	  <div class="image content">
+		  <div class="ui six special cards">
+			{%- for pk,image in form['images']._get_object_list() -%}
+			<div class="card">
+				<div class="blurring dimmable image" data-name="{{image.name}}" data-src="/gallery/media/{{image.name}}.{{image.ext}}">
+				  <div class="ui dimmer">
+					  <div class="content">
+						  <div class="center">
+							  <div class="ui inverted"><i class="checkmark huge icon"></i></div>
+						  </div>
+					  </div>
+				  </div>
+					<img src="/gallery/media/{{image.name}}.{{image.ext}}">
+				</div>
+				<div class="extra center aligned">{{image.upload_name}}</div>
+			</div>
+			{% endfor %}
+		  </div>
+	  </div>
+	  <div class="actions">
+		  <div class="ui buttons">
+			  <div class="ui cancel red basic button">
+				  <i class="remove icon"></i>
+				  No
+			  </div>
+			  <div class="ui ok green basic button">
+				  <i class="checkmark icon"></i>
+				  Yes
+			  </div>
+		  </div>
+	  </div>
+  </div>
+</div>
+{%- endblock -%}
+{% block tail_js %}
+<script src="http://cdn.ckeditor.com/4.8.0/standard/ckeditor.js"></script>
+<script>
+PRODUCT = {
+	setParameters: function(category_id, selected_option, option_values, options, price, stock) {
+		console.log(category_id);
+		var htmlString = '<div class="inline field"><select name="parameter-' + category_id + '" class="ui dropdown">';
+		for (var index in options) {
+			var option_html = '<option value="' +  option_values[index] + '"';
+			if (option_values[index] == selected_option)
+				option_html += ' selected'
+			option_html += '>' + options[index] +'</option>';
+			htmlString += option_html;
+		}
+		htmlString += '</select>';
+		htmlString += '<input name="inputparameter-' + category_id + '-price" type="text" value="' + price +'" placeholder="价格">';
+		htmlString += '<input name="inputparameter-' + category_id + '-stock" type="text" value="' + stock +'" placeholder="库存">';
+		htmlString += '<button class="mini circular ui icon orange button" type="button" onclick="javascript:remove_line(this)"><i class="icon remove"></i></button></div>';
+		$("#parameters-" + category_id).append(htmlString);
+		$('select.dropdown').dropdown();
+	}
+};
+
+function remove_line(line) {
+	var this_line = line.parentNode;
+	this_line.parentNode.removeChild(this_line);
+}
+
+var images = [];
+var images_add = [];
+{%- for pk,image in form['images']._get_object_list() -%}
+images["{{image.name}}"] = "/gallery/media/{{image.name}}.{{image.ext}}";
+{% endfor -%}
+var show_product_image = function(){
+	var imageHtml = $("#product-images").html();
+	//for (var name in images){
+	//	imageHtml += '<div class="card"><div class="blurring dimmable image"><div class="ui dimmer"><div class="content"><div class="center"><div class="ui inverted"><i class="remove huge icon"></i></div></div></div></div><img src="'  + images[name] + '"><input type="hidden" value="' + name +'" name="product-image"></div></div>';
+	//}
+	for (var name in images_add){
+		imageHtml += '<div class="card"><div class="blurring dimmable image"><div class="ui dimmer"><div class="content"><div class="center"><div class="ui inverted"><i class="remove huge icon"></i></div></div></div></div><img src="'  + images_add[name] + '"><input type="hidden" value="' + name +'" name="product-image"></div></div>';
+	}
+	$("#product-images").html(imageHtml);
+
+	$('#product-images .image').dimmer({
+		on: 'click'
+	}).click(function(){
+		console.log(imageHtml);
+		if ($(this).dimmer("is active")){
+			console.log('active');
+			$(this).find("input[type=hidden]").attr('name', 'product-image');
+		} else {
+			console.log('not active');
+			$(this).find("input[type=hidden]").attr('name', 'product-image-remove');
+		}
+	});
+}
+
+$(document).ready(function(){
+	$("#product-image-new").click(function(){
+		$('#image-selector').modal({
+			closable: false,
+			onApprove: show_product_image
+		})
+		.modal('show');
+	});
+
+	$('.ui.dropdown').dropdown();
+	$('.ui.checkbox').checkbox();
+	$('.ui.doubling.cards .image').dimmer({on: 'click'}).click(function() {
+		if ($(this).dimmer("is active")){
+			console.log('active');
+			$(this).find("input[type=hidden]").attr('name', 'product-image');
+		} else {
+			console.log('not active');
+			$(this).find("input[type=hidden]").attr('name', 'product-image-remove');
+		}
+	});
+
+	$('.special.cards .image').dimmer({
+		on: 'click'
+	}).click(function(){
+		if (!$(this).dimmer("is active")) {
+			console.log($(this).data('name'));
+			console.log($(this).data('src'));
+			images_add[$(this).data('name')] = $(this).data('src');
+			//imageHtml += '<img src="' + imageSrc + '"><input type="hidden" value="' + imageName +'" name="product-image">';
+		} else {
+			console.log('pop');
+			//images.pop(($(this).data('name'));
+			//var index = images_add.indexOf($(this).data('name'));
+			//console.log(index);
+			//images_add.splice(index, 1);
+			delete images_add[$(this).data('name')];
+		}
+	});
+
+	$('.ui.checkbox').checkbox();
+	$('.ui.dropdown').dropdown();
+});
+</script>
+{% endblock %}

@@ -1,6 +1,7 @@
 flask
+flask-admin
 flask-sqlalchemy
-flask-script
+flask-migrate
 flask-login
 flask-wtf
 psycopg2

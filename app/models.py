@@ -10,11 +10,14 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app#, url_for
 from flask import json, jsonify
 
+from flask_sqlalchemy import SQLAlchemy
+
 from sqlalchemy import or_
 from .exceptions import AccessTokenGotError
-from . import db, login_manager
+from .extensions import login_manager
 from flask_login import UserMixin, AnonymousUserMixin
 
+db = SQLAlchemy()
 
 class Shoppoint(db.Model):
     __tablename__ = 'shoppoint'
@@ -319,7 +322,7 @@ class ProductCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), unique=True, index=True)
     english_name = db.Column(db.String(128), unique=True, index=True, nullable=False)
-    slug = db.Column(db.String(128), unique=True, index=True, nullable=False)
+    slug = db.Column(db.String(128), unique=True, index=True, nullable=True)
     is_available_on_web = db.Column(db.Boolean, default=True) # web端显示标志
     is_available_on_pos = db.Column(db.Boolean, default=True) # POS端显示标志
     is_deleted = db.Column(db.Boolean, default=False) # 删除标志
@@ -340,12 +343,39 @@ class ProductCategory(db.Model):
                 "description": self.description
                 }
 
-class ProductSubCategory(db.Model):
-    __tablename__ = 'product_subcategory'
+class Tag(db.Model):
+    __tablename__ = 'tag'
     id = db.Column(db.Integer, primary_key=True)
+
     name = db.Column(db.String(128), unique=True, index=True)
     english_name = db.Column(db.String(128), unique=True, index=True, nullable=False)
+    sequence = db.Column(db.SmallInteger)
+    show_in_home = db.Column(db.Boolean, default=False)
+    description = db.Column(db.Text)
 
+    products = db.relationship('ProductTag', back_populates='tag')
+
+    def __repr__(self):
+        return self.name
+
+class ProductTag(db.Model):
+    __tablename__ = 'product_tag'
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), primary_key=True)
+    tag_id = db.Column(db.Integer, db.ForeignKey('tag.id'), primary_key=True)
+
+    product = db.relationship("Product", back_populates="tags")
+    tag = db.relationship("Tag", back_populates="products")
+
+    #@property
+    #def id(self):
+    #    return (self.product_id, self.tag_id)
+
+    @property
+    def target_id(self):
+        return self.tag_id
+
+    def __repr__(self):
+        return self.product.name + ':' +self.tag.name
 
 class Product(db.Model):
     __tablename__ = 'product'
@@ -357,9 +387,6 @@ class Product(db.Model):
     pinyin = db.Column(db.String(128), unique=True, index=True)
     category_id = db.Column(db.Integer, db.ForeignKey('product_category.id'))
     category = db.relationship('ProductCategory',
-                         backref=db.backref('products', lazy="dynamic"))
-    subcategory_id = db.Column(db.Integer, db.ForeignKey('product_subcategory.id'))
-    subcategory = db.relationship('ProductSubCategory',
                          backref=db.backref('products', lazy="dynamic"))
     shoppoint_id = db.Column(db.Integer, db.ForeignKey('shoppoint.id'))
     shoppoint = db.relationship('Shoppoint',
@@ -379,6 +406,9 @@ class Product(db.Model):
     summary = db.Column(db.Text)
     description = db.Column(db.Text)
 
+    #tag_id = db.Column(db.Integer, db.ForeignKey('product_tag.id'))
+    tags = db.relationship('ProductTag',
+                         back_populates='product')
     suppliers = db.relationship('ProductSupplier',
                         back_populates='product')
     parameters = db.relationship('ProductParameter',
@@ -486,8 +516,12 @@ class ProductParameter(db.Model):
     product = db.relationship("Product", back_populates="parameters")
     parameter = db.relationship('Parameter', back_populates='products')
 
+    @property
+    def target_id(self):
+        return self.parameter_id
+
     def __repr__(self):
-        return str(self.plus_price)
+        return ': '.join([self.parameter.name, str(self.plus_price)])
 
     def to_json(self):
         return {
@@ -505,6 +539,10 @@ class ProductSupplier(db.Model):
 
     product = db.relationship("Product", back_populates="suppliers")
     supplier = db.relationship("Supplier", back_populates="products")
+
+    @property
+    def target_id(self):
+        return self.supplier_id
 
 
 # order table
@@ -612,6 +650,14 @@ class Payment(db.Model):
     def __repr__(self):
         return self.name
 
+class GalleryCategory(db.Model):
+    __tablename__ = 'gallery_category'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(128))
+    description = db.Column(db.Text) # 图片分类详细描述
+
+    def __repr__(self):
+        return self.name
 
 class Image(db.Model):
     __tablename__ = 'image'
@@ -622,9 +668,9 @@ class Image(db.Model):
     directory = db.Column(db.String(2048)) # 存储在系统上的相对路径
     ext = db.Column(db.String(8)) # 图片的扩展名，不带.
     title = db.Column(db.String(128)) # 图片主题
-    #category_id = db.Column(db.Integer, db.ForeignKey('gallery_category.id'))
-    #category = db.relationship('GalleryCategory',
-    #                     backref=db.backref('images', lazy="dynamic"))
+    category_id = db.Column(db.Integer, db.ForeignKey('gallery_category.id'))
+    category = db.relationship('GalleryCategory',
+                         backref=db.backref('images', lazy="dynamic"))
     added_date = db.Column(db.DateTime, default=datetime.utcnow)
     description = db.Column(db.Text) # 图片详细描述
 
@@ -635,7 +681,7 @@ class Image(db.Model):
                         back_populates='image')
 
     def __repr__(self):
-        return self.url
+        return self.name
 
 # N:N relationship
 class ProductImage(db.Model):
@@ -648,6 +694,10 @@ class ProductImage(db.Model):
 
     product = db.relationship("Product", back_populates="images")
     image = db.relationship('Image', back_populates='products')
+
+    @property
+    def target_id(self):
+        return self.image_id
 
     def __repr__(self):
         return "%s - %s" % (self.product_id, self.image_id)

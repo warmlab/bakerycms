@@ -1,23 +1,18 @@
 from flask import Flask
 #from flask_mail import Mail
 #from flask.ext.moment import Moment
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
 #from flask_pagedown import PageDown
 from config import config
 
+#from .admin.product import ProductView
+from .models import db
+
 from .filters import weixin_authorize
 
-#bootstrap = Bootstrap()
-#mail = Mail()
-#moment = Moment()
-db = SQLAlchemy()
-#api = APIManager()
-#pagedown = PageDown()
+from .admin.views import init_admin
+from .extensions import admin, login_manager
 
-login_manager = LoginManager()
-login_manager.session_protection = 'strong'
-login_manager.login_view = 'auth.login'
+from .templates import init_my_templates
 
 def create_app(config_name):
     app = Flask(__name__)
@@ -29,6 +24,9 @@ def create_app(config_name):
     #moment.init_app(app)
     db.init_app(app)
     login_manager.init_app(app)
+    admin.init_app(app)
+    init_my_templates(app)
+    init_admin()
     #pagedown.init_app(app)
 
     if not app.debug and not app.testing and not app.config['SSL_DISABLE']:
@@ -37,8 +35,8 @@ def create_app(config_name):
 
     app.jinja_env.filters['weixin_authorize'] = weixin_authorize
 
-    from .product import product as product_blueprint
-    app.register_blueprint(product_blueprint, url_prefix='/manage')
+    #from .product import product as product_blueprint
+    #app.register_blueprint(product_blueprint, url_prefix='/manage')
 
     #from .bakery import bakery as bakery_blueprint
     #app.register_blueprint(bakery_blueprint, url_prefix='/manage/bakery')

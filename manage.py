@@ -13,9 +13,10 @@ if os.path.exists('.env'):
         if len(var) == 2:
             os.environ[var[0]] = var[1]
 
-from app import create_app, db
-#from app.models import Member
-#from app.models import Product, ProductImage
+from app import create_app
+from app.models import db
+from app.models import Member
+from app.models import Product, ProductImage, Tag, ProductTag
 #from flask_script import Manager, Shell
 from flask_migrate import Migrate
 
@@ -26,7 +27,7 @@ migrate = Migrate(app, db)
 @app.shell_context_processor
 def make_shell_context():
     return dict(app=app, db=db, Member=Member,
-                Product=Product, ProductImage=ProductImage)
+                Product=Product, ProductImage=ProductImage, Tag=Tag, ProductTag=ProductTag)
 
 @app.cli.command()
 @click.option('--coverage/--no-coverage', default=False, help='Enable code coverage')

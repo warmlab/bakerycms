@@ -3,13 +3,19 @@
 {% endblock %}
 {% block main_content_section %}
 <div class="ui basic segment">
-	<h2 class="ui dividing header">
-		<i class="photo icon"></i>
+    <h2 class="ui dividing header">
+        <i class="photo icon"></i>
         <div class="content">{{image.upload_name}}
-		<div class="sub header">Modify image meta data.</div>
+        <div class="sub header">Modify image meta data.</div>
       </div>
-	</h2>
+    </h2>
     <form class="ui form" method="POST" action="/gallery/image/{{image.name}}">
+        <div class="inline field">
+        <label for="inputcategory">图片分类</label>
+        <select name="inputcategory" class="ui dropdown">
+              {% for c in categories %}<option value="{{ c.id }}"{%if c.id == image.category_id %} selected{%endif%}>{{ c }}</option>{% endfor %}
+          </select>
+        </div>
         <div class="inline field">
             <label for="inputname">图片名称</label>
             <input id="inputname" name="inputname" placeholder="Image name" type="text" value="{{ image.upload_name }}">
@@ -30,4 +36,4 @@
 <div class="ui segment">
     <img class="ui big image" src="/gallery/media/{{image.name}}.{{image.ext}}">
 </div>
-{% endblock %}
+{%- endblock %}

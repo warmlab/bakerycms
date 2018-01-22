@@ -5,99 +5,93 @@
 {% block main_content_section %}
 <!--main content start-->
 {#<header class="my-segment">
-	<img class="ui huge image" src="/static/img/caro.jpg">
-	<div class="ui items">
-		<div class="item">
-			<div class="content">
-				<div class="header">卡诺烘焙 CAROBakery</div>
-				<div class="meta">
-					<span>卡诺烘焙只用100%天然乳脂奶油</span>
-				</div>
-				<div class="description"><p><i class="marker icon"></i>青岛市李沧区九水路227号宝龙城市广场一层南门卡诺烘焙</p></div>
-				<div class="extra"><span class="cinema"><i class="call icon"></i>13370836021</span></div>
-				<div class="ui divider"></div>
-				<div class="extra">
-					<span class="ui basic icon label">
-						<i class="heart icon"></i>{{products.count()}}
-						<div class="detail">Products</div>
-					</span>
-					<span class="ui basic label right floated"><i class="registered icon"></i>Since August 2014</span>
-				</div>
-			</div>
-		</div>
-	</div>
+    <img class="ui huge image" src="/static/img/caro.jpg">
+    <div class="ui items">
+        <div class="item">
+            <div class="content">
+                <div class="header">卡诺烘焙 CAROBakery</div>
+                <div class="meta">
+                    <span>卡诺烘焙只用100%天然乳脂奶油</span>
+                </div>
+                <div class="description"><p><i class="marker icon"></i>青岛市李沧区九水路227号宝龙城市广场一层南门卡诺烘焙</p></div>
+                <div class="extra"><span class="cinema"><i class="call icon"></i>13370836021</span></div>
+                <div class="ui divider"></div>
+                <div class="extra">
+                    <span class="ui basic icon label">
+                        <i class="heart icon"></i>{{products.count()}}
+                        <div class="detail">Products</div>
+                    </span>
+                    <span class="ui basic label right floated"><i class="registered icon"></i>Since August 2014</span>
+                </div>
+            </div>
+        </div>
+    </div>
 </header>#}
+<div class="ui list" id="banner">
+    <a href="/"><img class="ui fluid image" src="/static/img/banner2.jpg"></a>
+    <a href="/"><img class="ui fluid image" src="/static/img/banner3.jpg"></a>
+    <a href="/"><img class="ui fluid image" src="/static/img/banner4.jpg"></a>
+</div>
+<div class="banner" id="banner-item">
+    <span class="banner-item" data-index="0"></span>
+    <span class="banner-item" data-index="1"></span>
+    <span class="banner-item" data-index="2"></span>
+</div>
 <header class="my-segment">
-	<div class="ui secondary pointing three item menu">
-		<a class="active item">奶油蛋糕</a>
-		<a class="item">慕斯蛋糕</a>
-		<a class="item">面包</a>
-		{#<a class="item"><i class="student icon"></i>课堂</a>#}
-	</div>
+    <div class="row">
+    <div class="ui center aligned three column padded grid">
+        <a class="column" href="/products/cake" style="color:#322418">蛋糕</a>
+        <a class="column" href="/products/bread" style="color:#322418">面包</a>
+        <a class="column" href="/products/slice" style="color:#322418">小切块</a>
+        {#<a class="item"><i class="student icon"></i>课堂</a>#}
+    </div></div>
 </header>
-	<div class="my-segment">
-		<div class="ui my-cards">
-	{% for product in products %}
-		<section class="my-card">
-			<a class="ui medium image" href="{{url_for('.product_detail', shoppoint=shoppoint.code, code=product.code, _method='GET')}}">
-				<img data-src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}">
-			</a>
-			<div class="content">
-				<div class="header">{{ product.english_name }}</div>
-				<div class="header">{{ product.name }}</div>
-				<div class="description"><i class="tag icon"></i>{%if product.summary %}{{product.summary}}{%else%}100%天然乳脂奶油{%endif%}</div>
-				<div class="meta">
-					<span class="price">￥{%if product.parameters%}{{product.price+product.parameters[0].plus_price}}/{{product.parameters[0].parameter.name}}{%else%}{{product.price}}{%endif%}</span>
-					{%- if product.parameters %}
-					<span class="addtocart" data-code="{{product.code}}" data-name="{{product.name}}"
-						data-spec="{{product.parameters[0].parameter.id}}" data-image="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" data-price="{{product.price}}"><i class="icon add to cart"></i></span>
-					{%- else %}
-					<span class="addtocart" data-code="{{product.code}}" data-name="{{product.name}}"
-						data-image="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" data-price="{{product.price}}"><i class="icon add to cart"></i></span>
-					{% endif -%}
-				</div>
-			</div>
-		</section>{#
-		<div class="ui right floated small icon orange button" data-code="{{product.code}}" data-name="{{product.name}}" data-spec="{{product.parameters[0]}}" data-image="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" data-price="{{product.price}}">
-			<i class="add to cart icon"></i>
-    </div>#}
-	{% endfor %}
-		</div>
-	</div>
-	{#
-	<div class="ui basic fluid segment" style="margin-top:-1em;">
-		<div class="ui small pagination right floated secondary menu">
-			{%- for page in pagination.iter_pages() %}
-				{%- if page %}
-					{% if page != pagination.page %}
-				<a class="item" href="{{ url_for('.product', page=page)}}">{{page}}</a>
-					{% else %}
-				<a class="active item" href="{{ url_for('.product', page=page)}}">{{page}}</a>
-					{% endif %}
-				{% else %}
-					<div class="disabled item">...</div>
-				{%- endif %}
-			{%- endfor %}
-		</div>
-	</div>
-	#}
-	<div class="my-fixed-cart">
-		<i class="cart icon"></i>
-		<div class="floating ui orange tiny circular label" id="product-amount"></div>
-	</div>
+    {%- for tag in tags if tag.products and tag.show_in_home %}
+    <div class="my-segment">
+        <div class="ui mini circular label" style="background:#f4ebe2;color:#322418;margin-bottom:.3em;margin-top:1em;">&nbsp;{{tag.name}}&nbsp;</div>
+    {%- for pt in tag.products %}
+        {% if loop.index0 is lt(3) %}
+    <div class="ui one link cards">
+        <section class="card">
+            <a href="{{url_for('.product_detail', shoppoint=shoppoint.code, code=pt.product.code, _method='GET')}}">
+                {%- for pi in pt.product.images %}
+                {%- if pi.image.category.name == 'banner' %}
+                <img src="/gallery/media/{{pi.image.name}}.{{pi.image.ext}}">
+                {%- endif %}
+                {%- endfor %}
+            <div class="content">
+                <div class="header">{{ pt.product.name }}</div>
+                <div class="description"><i class="tag icon"></i>{%if pt.product.summary %}{{pt.product.summary}}{%else%}100%天然乳脂奶油{%endif%}</div>
+                <div class="meta">
+                    <span class="price">￥{%if pt.product.parameters%}{{pt.product.price+pt.product.parameters[0].plus_price}}/{{pt.product.parameters[0].parameter.name}}{%else%}{{pt.product.price}}{%endif%}</span>
+                    {%- if pt.product.parameters %}
+                    <span class="addtocart" data-code="{{pt.product.code}}" data-name="{{pt.product.name}}"
+                        data-spec="{{pt.product.parameters[0].parameter.id}}" data-image="/gallery/media/{{pt.product.images[0].image.name}}.{{pt.product.images[0].image.ext}}" data-price="{{pt.product.price}}"><i class="icon add to cart"></i></span>
+                    {%- else %}
+                    <span class="addtocart" data-code="{{pt.product.code}}" data-name="{{pt.product.name}}"
+                        data-image="/gallery/media/{{pt.product.images[0].image.name}}.{{pt.product.images[0].image.ext}}" data-price="{{pt.product.price}}"><i class="icon add to cart"></i></span>
+                    {% endif -%}
+                </div>
+            </div>
+        </section>
+    </div>
+        {%- endif %}
+    {%- endfor %}
+    </div>
+    {%- endfor %}
 <div style="padding-bottom: 3.8em;"></div>
 {#
-				  <p>
-	<p class="lead">这是我的故事，或许也有你的影子，因为我们都是善良的……</p>
-	<p class="lead">大学毕业后，和老公开始了北漂的生活，漂着漂着，买了房子，买了车子，有了两个可爱的孩子，就这样在北京生活了十来年，朋友啊，工作啊，挺好挺满足。</p>
-	<p class="lead">可或许因为思乡情结一直隐藏在心底的某个地方，亦或者因为两个孩子受雾霾影响频繁的生病，亦或者考虑到父母们为了帮我们照顾孩子留守北京所感受的他乡的孤单陌生，不知道到底为了什么，就在某个时间，我们搬家了，带着那么多的北京记忆彻底的搬到了青岛，开始了新的生活。</p>
-	<p class="lead">做HR的我，做IT的老公，回青岛后并没有找到合适的工作，心底里想自己闯闯的小想法慢慢萌芽，其实没有经过太多的深思熟虑，就破土而出了。</p>
-	<p class="lead">2015年2月，我的烘焙店，卡诺烘焙，开业了。</p>
-	<p class="lead">用做给自己家人吃的健康新鲜原料，做给你吃，这是我的坚持，不是苦苦的坚持，是心甘情愿的幸福坚持着，只为了你和孩子吃时，我问心无愧。</p>
-	<p class="lead">一年啦，卡诺烘焙赢得了很多顾客的信任和喜爱，做为青岛烘焙市场100%使用天然乳脂奶油的倡导者，太多顾客爱上了这种天然健康的味道。</p>
-	<p class="lead">2016年，我们将开始实现在线下单免费配送的模式，希望你和你的伙伴们能够喜欢并享受天然奶油蛋糕送到家的幸福感……</p>
-				  </p>
-				#}
+                  <p>
+    <p class="lead">这是我的故事，或许也有你的影子，因为我们都是善良的……</p>
+    <p class="lead">大学毕业后，和老公开始了北漂的生活，漂着漂着，买了房子，买了车子，有了两个可爱的孩子，就这样在北京生活了十来年，朋友啊，工作啊，挺好挺满足。</p>
+    <p class="lead">可或许因为思乡情结一直隐藏在心底的某个地方，亦或者因为两个孩子受雾霾影响频繁的生病，亦或者考虑到父母们为了帮我们照顾孩子留守北京所感受的他乡的孤单陌生，不知道到底为了什么，就在某个时间，我们搬家了，带着那么多的北京记忆彻底的搬到了青岛，开始了新的生活。</p>
+    <p class="lead">做HR的我，做IT的老公，回青岛后并没有找到合适的工作，心底里想自己闯闯的小想法慢慢萌芽，其实没有经过太多的深思熟虑，就破土而出了。</p>
+    <p class="lead">2015年2月，我的烘焙店，卡诺烘焙，开业了。</p>
+    <p class="lead">用做给自己家人吃的健康新鲜原料，做给你吃，这是我的坚持，不是苦苦的坚持，是心甘情愿的幸福坚持着，只为了你和孩子吃时，我问心无愧。</p>
+    <p class="lead">一年啦，卡诺烘焙赢得了很多顾客的信任和喜爱，做为青岛烘焙市场100%使用天然乳脂奶油的倡导者，太多顾客爱上了这种天然健康的味道。</p>
+    <p class="lead">2016年，我们将开始实现在线下单免费配送的模式，希望你和你的伙伴们能够喜欢并享受天然奶油蛋糕送到家的幸福感……</p>
+                  </p>
+                #}
 <!--main content end-->
 {% include "includes/cart.html" %}
 {% endblock %}
@@ -108,61 +102,96 @@
 {% block inline_script_section %}
 <script charset="UTF-8" src="{{url_for('static', filename='js/shop.js')}}"></script>
 <script>
-	$(document).ready(function() {
-		$.each($("img[data-src]"), function(index, value) {
-			var $img = $(value);
-			$img.attr('src', $img.data('src'));
-		});
-	});
-$(".ui.button").on("click", function(e){
-	var p = {};
-	p.code = $(this).data('code');
-	p.name = $(this).data('name');
-	p.image = $(this).data('image');
-	p.price = $(this).data('price');
-	p.spec = $(this).data('spec');
+$(document).ready(function() {
+    var $banners = $('#banner > a');
+    var $banner_items = $('#banner-item > span');
+    var $cur_banner = $banners.first();
+    var $cur_banner_item = $banner_items.first();
+    var $next_banner, $next_banner_item;
+    $banners.hide();
+    $cur_banner.show();
+    $cur_banner_item.addClass('banner-item-active');
 
-	//var cart = new Cart('cart', 'session');
-	//cart.addProduct(p);
+    console.log($banner_items);
+    var carousel_fn = function() {
+        $next_banner = $cur_banner.next();
+        $next_banner_item = $cur_banner_item.next();
+        if ($next_banner.length === 0 || $next_banner_item.length === 0) {
+            $next_banner = $banners.first();
+            $next_banner_item = $banner_items.first();
+        }
+
+        $cur_banner.fadeOut(function() {
+            $next_banner.fadeIn();
+            $cur_banner_item.removeClass('banner-item-active');
+            $next_banner_item.addClass('banner-item-active');
+            $cur_banner = $next_banner;
+            $cur_banner_item = $next_banner_item;
+        });
+    };
+    var carousel_interval = setInterval(carousel_fn, 5000);
+
+    $banner_items.on('click', function(e) {
+        var index = parseInt($(this).data('index'));
+        clearInterval(carousel_interval);
+        $cur_banner.hide();
+        $cur_banner_item.removeClass('banner-item-active');
+        $cur_banner = $banners.first();
+        while (index) {
+            $cur_banner = $cur_banner.next();
+            index--;
+        }
+        //$cur_banner = $banners.indexof(index);
+        $cur_banner_item = $(this);
+        $cur_banner.show();
+        $cur_banner_item.addClass('banner-item-active');
+
+        carousel_interval = setInterval(carousel_fn, 5000);
+    });
+});
+
+$(".ui.button").on("click", function(e){
+    var p = {};
+    p.code = $(this).data('code');
+    p.name = $(this).data('name');
+    p.image = $(this).data('image');
+    p.price = $(this).data('price');
+    p.spec = $(this).data('spec');
+
+    //var cart = new Cart('cart', 'session');
+    //cart.addProduct(p);
 });
 
 $('.ui.right.floated.small.icon.orange.button').click(function(e){
-	var _ = $(this);
-	var code = _.data('code');
-	var name = _.data('name');
-	var image = _.data('image');
-	var price = _.data('price');
-	//$('.ui.popup').popup('show')
-	//var obj = $("#banner-image").clone();
-	var obj = $('<img src="' + image + '" class="ui mini image">');
-	//obj.removeAttr('id');
-	//obj.removeClass('huge').addClass('mini');
-	//obj.insertBefore(_).fadeTo(10, 0.5);
-	obj.insertAfter(_).fadeTo(10, 0.9);
+    var _ = $(this);
+    var code = _.data('code');
+    var name = _.data('name');
+    var image = _.data('image');
+    var price = _.data('price');
+    //$('.ui.popup').popup('show')
+    //var obj = $("#banner-image").clone();
+    var obj = $('<img src="' + image + '" class="ui mini image">');
+    //obj.removeAttr('id');
+    //obj.removeClass('huge').addClass('mini');
+    //obj.insertBefore(_).fadeTo(10, 0.5);
+    obj.insertAfter(_).fadeTo(10, 0.9);
 
-	obj.css({
-		position: 'absolute',
-		left: e.pageX,
-		top: e.pageY,
-		zIndex: 1
-	}).animate({
-		top: $('#cart').offset().top,
-		left: $('#cart').offset().left + $('#cart').width() / 2
-	}, 1000, function(){
-		obj.remove();
-		// add product to cart
-		var p = new Product(code, name, image, price, 1);
+    obj.css({
+        position: 'absolute',
+        left: e.pageX,
+        top: e.pageY,
+        zIndex: 1
+    }).animate({
+        top: $('#cart').offset().top,
+        left: $('#cart').offset().left + $('#cart').width() / 2
+    }, 1000, function(){
+        obj.remove();
+        // add product to cart
+        var p = new Product(code, name, image, price, 1);
 
-		var cart = new Cart('cart', 'session');
-		cart.addProduct(p);
-	});
-
-	//obj.offset({top: e.pageX, left: e.pageY, zIndex: 10});
+        var cart = new Cart('cart', 'session');
+        cart.addProduct(p);
+    });
 });
-
-//$bottom_menu = $('.bottom.fixed.menu');
-//$bottom_menu.children().removeClass('active');
-//var href = "{{url_for('.products', shoppoint=shoppoint.code)}}";
-//$bottom_menu.children('[href=' + href + ']').addClass('active');
 </script>
 {% endblock %}

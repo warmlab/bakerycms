@@ -15,7 +15,7 @@ from werkzeug.utils import secure_filename
 from . import gallery
 from .. import db
 
-from ..models import Image
+from ..models import Image, GalleryCategory
 from ..decorators import staff_required
 
 def __generate_filename(filename):
@@ -33,13 +33,21 @@ def __generate_filename(filename):
 @staff_required
 def image_list():
     images = Image.query.all()
-    return render_template('gallery/images.html', images=images)
+    category = GalleryCategory.query.all()
+    return render_template('gallery/images.html', images=images, category=category)
 
 @gallery.route('/image/<name>', methods=['GET', 'POST'])
 @login_required
 @staff_required
 def image_detail(name):
     if request.method == 'POST':
+        category_id = request.form.get('inputcategory')
+        print('category id: ', category_id)
+        if not category_id:
+            abort(404)
+        category = GalleryCategory.query.get(category_id)
+        if not category:
+            abort(404)
         upload_name = request.form.get('inputname')
         title = request.form.get('inputtitle')
         description = request.form.get('inputdesc')
@@ -47,9 +55,11 @@ def image_detail(name):
         image.upload_name = upload_name
         image.title = title
         image.description = description
+        image.category = category
     else:
         image = Image.query.filter_by(name=name).first()
-    return render_template('gallery/image.html', image=image)
+    categories = GalleryCategory.query.all()
+    return render_template('gallery/image.html', image=image, categories=categories)
 
 @gallery.route('/image-upload', methods=['POST'])
 @login_required

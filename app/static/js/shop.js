@@ -140,7 +140,7 @@ function update_product_amount() {
     }
 }
 
-$("span.addtocart").on('click', function(e) {
+var add_to_card = function(e) {
     var clicked_obj = $(this);
     var original_price = parseFloat($(this).data('price'));
     //$("#pre-cart-title").html("￥" + original_price);
@@ -191,7 +191,10 @@ $("span.addtocart").on('click', function(e) {
     //$('#pre-cart').data('price', $(this).data('price'));
     //$('#pre-cart').data('name', $(this).data('name'));
     $("#pre-cart").modal('show');
-});
+};
+
+$("span.addtocart").on('click', add_to_card);
+$("div.add-cart-button").on('click', add_to_card);
 
 var update_amount_fn = function($parent, amount) {
     var code = $parent.data('code');

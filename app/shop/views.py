@@ -15,7 +15,8 @@ from .. import db
 
 from ..decorators import member_required
 
-from ..models import Shoppoint, Product, Address, ParameterCategory, Parameter, ProductParameter
+from ..models import Shoppoint, Address, ParameterCategory, Parameter, Tag
+from ..models import Product, ProductParameter, ProductTag, ProductCategory
 from ..models import Member, UserAuth
 from ..models import Ticket, TicketProduct, TicketAddress
 
@@ -43,16 +44,22 @@ def home():
     sp = Shoppoint.query.first()
     if not sp:
         abort(404)
-    return render_template('shop/popular.html', shoppoint=sp)
+    products = Product.query.filter_by(is_available_on_web=True)
+    product_tags = ProductTag.query.all()
+    tags = Tag.query.order_by('sequence')
+    return render_template('shop/popular.html', tags=tags, products=products, product_tags=product_tags, shoppoint=sp)
 
-@shop.route('/products', methods=['GET'])
-def products():
+@shop.route('/products/<slug>', methods=['GET'])
+def products(slug):
     sp = Shoppoint.query.first()
     if not sp:
         abort(404)
 
     #page = request.args.get('page', type=int, default=1)
-    products = Product.query.filter_by(is_available_on_web=True)
+    category = ProductCategory.query.filter_by(slug=slug).first()
+    if not category:
+        abort(404)
+    products = Product.query.filter_by(category_id=category.id, is_available_on_web=True).all()
     parameter_categories = ParameterCategory.query.all()
     parameters = Parameter.query.all()
     #pagination = products.paginate(page=page, per_page=8, error_out=False)
@@ -86,7 +93,8 @@ def product_detail(code):
             ppc[pp.parameter.category].append(pp)
     #logger.debug(ppc)
     message = request.args.get('added');
-    return render_template('shop/detail.html', product=product, parameter_categories=ppc, message=message, shoppoint=sp)
+    parameters = Parameter.query.all()
+    return render_template('shop/detail.html', product=product, parameter_categories=ppc, parameters=parameters, message=message, shoppoint=sp)
 
 def _get_userinfo_from_weixin(weixin_code):
     sp = Shoppoint.query.first()

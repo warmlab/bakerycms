@@ -1,0 +1,68 @@
+{%- extends "admin/model/list.html" -%}
+<head>
+	{%- block title %}小麦芬烘焙工作室{%- endblock -%}
+	{%- block head_meta -%}
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
+    <meta name="description" content="用心做，不做作">
+    <meta name="author" content="bzip@qq.com">
+	{%- endblock -%}
+	{%- block head_css -%}
+	<!-- Semantic UI core CSS -->
+	<link href="{{ url_for('static', filename='css/semantic.min.css') }}" rel="stylesheet">
+	{%- endblock -%}
+	{%- block head_tail -%}
+	{%- block head -%}
+	{%- endblock -%}
+	<script src="{{url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{url_for('static', filename='js/semantic.min.js')}}"></script>
+	{%- endblock -%}
+</head>
+<body>
+	{%- block page_body -%}
+	{%- block brand -%}
+	{%- endblock -%}
+	{%- block main_menu -%}
+	<div class="ui secondary pointing menu">
+		{%- for item in admin_view.admin.menu() -%}
+			{%- if item.is_category() -%}
+				{% set children = item.get_children() %}
+				{%- if children %}
+		<div class="ui dropdown item">
+			{{item.name}}<i class="dropdown icon"></i>
+			<div class="menu">
+					{%- for child in children -%}
+				{#<a class="{% if item.is_active(admin_view) %}active {%endif%}item" href="{{ child.get_url() }}"{% if child.target %} target="{{ child.target }}"{% endif %}>{{ child.name }}</a> #}
+				<a class="item" href="{{ child.get_url() }}"{% if child.target %} target="{{ child.target }}"{% endif %}>{{ child.name }}</a>
+					{%- endfor %}
+			</div>
+		</div>
+				{%- endif -%}
+			{%- else -%}
+				{%- if item.is_accessible() and item.is_visible() -%}
+        <a class="{%if item.is_active(admin_view)%}active {%endif%}item" href="{{ item.get_url() }}" {% if item.target %} target="{{ item.target }}"{% endif %}>{{ item.name }}</a>
+				{%- endif -%}
+			{% endif -%}
+		{%- endfor %}
+			<div class="right menu">
+			  <a class="ui item">
+				Logout
+			  </a>
+			</div>
+		  </div>
+	{%- endblock %}
+	{%- block menu_links %}
+	{%- endblock %}
+	<!--main content end-->
+	{%- block body %}{% endblock -%}
+{%- endblock -%}
+	{% block tail_js -%}
+	<script>
+	$('.ui.checkbox').checkbox();
+	$('.ui.dropdown').dropdown();
+	</script>
+	{%- endblock -%}
+	{%- block tail -%}
+	{%- endblock -%}
+</body>

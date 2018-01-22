@@ -1,180 +1,191 @@
 {% extends "base-user.html" %}
+{% block external_css %}
+<link href="{{url_for('static', filename='css/shop.css')}}" rel="stylesheet">
+{% endblock %}
 {% block main_content_section %}
 <div class="ui basic segment">
-	{% if message %}
-	<div class="ui info icon message">
-		<i class="info icon"></i>
-		<div class="content">
-		<div class="header">
-			{{product.name}}
-		</div>
-		<p>加入到购物车，请到购物车查看</p>
-		</div>
-	</div>
-	{% endif %}
-	<img id="banner-image" class="ui big image" src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}"><p/>
-    <div class="ui tiny images">
-		{%- for pi in product.images %}
-        <img src="/gallery/media/{{pi.image.name}}.{{pi.image.ext}}">
-        {% endfor -%}
-    </div>
-    <h3 class="ui header">
+    {% if message %}
+    <div class="ui info icon message">
+        <i class="info icon"></i>
         <div class="content">
-			{{product.name}}
-          <div class="sub header" id="product-price">
-              ￥{{product.price}}
-          </div>
+        <div class="header">
+            {{product.name}}
         </div>
-    </h3>
-    {%if product.description%}<p>{{product.description}}</p>{%endif%}{#
-    <div class="ui labeled mini input">
-        <div class="ui label">购买数量</div>
-        <input id="amount" value="1" maxlength="5" size="6" placeholder="1" type="text">
+        <p>加入到购物车，请到购物车查看</p>
+        </div>
     </div>
-    <div class="ui mini buttons">
-        <button class="ui icon button" type="button">
-            <i class="minus icon"></i>
-        </button>
-        <button class="ui icon orange button" type="button">
-            <i class="plus icon"></i>
-        </button>
-    </div>#}
-	<input type="hidden" name="product-code" value="{{product.code}}">
-	{% if parameter_categories %}
-	{% for key,values in parameter_categories.items() %}
-	<h4 class="ui sub header">
-		<div class="content">
-			选择{{key}}
-		</div>
-	</h4>
-	<span id="product-parameters">
-	{% for value in values %}
-	<div class="ui basic toggle button" data-code="{{value.parameter_id}}" data-price="{{value.plus_price}}">{{value.parameter}}</div>
-	{% endfor %}
-	</span>
-	{% endfor %}
-	{% endif %}
-	<h4 class="ui sub header"></h4>
-	<div class="ui fluid orange right labeled icon huge button">
-		<i class="add to cart icon"></i>添加到购物车
-	</div>
+    {% endif %}
+    <img id="banner-image" class="ui big image" src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}"><p/>
+    <div class="ui items">
+		<div class="item">
+			<div class="content">
+                <a class="header">{{ product.english_name }}</a>
+            </div>
+            <div class="content">
+				<a class="ui sub header">{{ product.name }}</a>
+				<div class="meta">
+					<span class="price">￥{%if product.parameters%}{{product.price+product.parameters[0].plus_price}}/{{product.parameters[0].parameter.name}}{%else%}{{product.price}}{%endif%}</span>
+				</div>
+                <div class="description"><i class="tag icon"></i>{%if product.summary %}{{product.summary}}{%else%}100%天然乳脂奶油{%endif%}</div>
+                <div class="extra">
+                    <div class="ui circular labels">
+                    {%- for pt in product.tags %}
+                        <div class="ui label" style="background:#f4ebe2;color:#322418;">{{pt.tag.name}}</div>
+                    {%- endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="ui divider"></div>
+    <ul class="store-info">
+        <li>
+            <img src="/static/img/sweet.png">
+            <span>参考甜度</span>
+            <span class="sweet-degree">
+                <i class="active"></i>
+                <i class="active"></i>
+                <i class="active"></i>
+                <i></i>
+                <i></i>
+            </span>
+        </li>
+        <li>
+            <img src="/static/img/snow.png">
+            <span>保鲜条件</span>
+            <span>0-4℃保藏12小时，5℃食用为佳</span>
+        </li>
+    </ul>
+    <h6 class="ui horizontal divider header">
+        <i class="announcement icon"></i>郑重承诺
+    </h6>
+    <ul class="announce-info">
+        <li>不使用植物奶油或植混奶油</li>
+        <li>尽量使用应季新鲜水果</li>
+        <li>新西兰纯乳脂奶油</li>
+        <li>小麦芬配方，现场烤制蛋糕胚</li>
+    </ul>
+    {{product.detail|safe}}
+    <h6 class="ui horizontal divider header">
+        <i class="shopping bag icon"></i>包装配件
+    </h6>
+    <ul class="announce-info">
+        <li>餐盘，餐刀，餐叉，生日蜡烛</li>
+        <li>与蛋糕同时配送</li>
+    </ul>
+	<div class="my-fixed-cart">
+		<i class="cart icon"></i>
+		<div class="floating ui orange tiny circular label" id="product-amount"></div>
+    </div>
+    <div style="padding-bottom: 3.8em;"></div>
 </div>
-{% include "includes/delivery.html" %}
-<div class="ui dimmer">
-	<div class="content">
-		<div class="center">
-			<h2 class="ui inverted icon header">
-			<i class="thumbs up icon"></i>
-			成功将 {{product.name}} 加到购物车
-			</h2>
-		</div>
-	</div>
-</div>
-<div style="padding-bottom: 40px;"></div>
+    <div class="add-cart-button" data-code="{{product.code}}" data-name="{{product.name}}"
+						data-spec="{{product.parameters[0].parameter.id}}" data-image="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" data-price="{{product.price}}">添加到购物车</div>
+{% include "includes/cart.html" %}
 {% endblock %}
-{% block bottom_nav_section %}
-{% include "includes/bottom_fixed.html" %}
+{%- block bottom_nav_section %}
 {% endblock %}
-{% block special_script_section %}
+{%- block special_script_section %}
 <script src="{{url_for('static', filename='js/shop.js')}}"></script>
 {% endblock %}
 {% block inline_script_section %}
-<script>
+<script>{#
 $(document).ready(function(){
-	var $toggle = $('div.toggle.button');
-	var $active = 'orange';
-	var $notice_message = $('div.floating.message');
-	var $button_dimmer = $('div.dimmer');
-	var parameters = [];
-	var $price = {{product.price}};
-	handler = {
-		activate: function(){
-			if ($(this).hasClass($active)) {
-				$(this).removeClass($active).addClass('basic');
-				parameters.pop();
-			} else {
-				$(this).addClass($active).removeClass('basic')
-					.siblings().removeClass($active).addClass('basic');
+    var $toggle = $('div.toggle.button');
+    var $active = 'orange';
+    var $notice_message = $('div.floating.message');
+    var $button_dimmer = $('div.dimmer');
+    var parameters = [];
+    var $price = {{product.price}};
+    handler = {
+        activate: function(){
+            if ($(this).hasClass($active)) {
+                $(this).removeClass($active).addClass('basic');
+                parameters.pop();
+            } else {
+                $(this).addClass($active).removeClass('basic')
+                    .siblings().removeClass($active).addClass('basic');
 
-				parameters.push({code: $(this).data('code'), name: $(this).html()});
-			}
-			$toggle.each(function() {
-				if ($(this).hasClass($active)) {
-					$price += parseFloat($(this).data('price'));
-				}
-			});
-			$('#product-price').html('￥' + $price);
-		}
-	};
-	$notice_message.hide();
-	$button_dimmer.dimmer('hide');
-	$toggle.click(handler.activate);
-	$banner = $("#banner-image");
-	$(".ui.tiny.images img").click(function(){
-		var src = $(this).attr('src');
-		if ($banner.attr('src') != src) {
-			$banner.fadeOut('fast', function(){
-				$banner.attr('src', src);
-			});
-			$banner.fadeIn('fast');
-		}
-	});
+                parameters.push({code: $(this).data('code'), name: $(this).html()});
+            }
+            $toggle.each(function() {
+                if ($(this).hasClass($active)) {
+                    $price += parseFloat($(this).data('price'));
+                }
+            });
+            $('#product-price').html('￥' + $price);
+        }
+    };
+    $notice_message.hide();
+    $button_dimmer.dimmer('hide');
+    $toggle.click(handler.activate);
+    $banner = $("#banner-image");
+    $(".ui.tiny.images img").click(function(){
+        var src = $(this).attr('src');
+        if ($banner.attr('src') != src) {
+            $banner.fadeOut('fast', function(){
+                $banner.attr('src', src);
+            });
+            $banner.fadeIn('fast');
+        }
+    });
 
-	// IndexedDB
-	window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
-	var $db;
-	var request = window.indexedDB.open('ShoppingCart', 1);
-	request.onerror = function(event) {
-		console.log('open indexeddb failed');
-	};
-	request.onupgradeneeded = function (event) {
-		$db = event.target.result;
-		$db.createObjectStore("products", {keyPath: ["code", "parameters"], indexNames: ["name", "image", "amouont", "price"]});
-	};
+    // IndexedDB
+    window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+    var $db;
+    var request = window.indexedDB.open('ShoppingCart', 1);
+    request.onerror = function(event) {
+        console.log('open indexeddb failed');
+    };
+    request.onupgradeneeded = function (event) {
+        $db = event.target.result;
+        $db.createObjectStore("products", {keyPath: ["code", "parameters"], indexNames: ["name", "image", "amouont", "price"]});
+    };
 
-	request.onsuccess = function(event) {
-		$db = event.target.result;
-		console.log('open indexeddb successfully');
-	};
+    request.onsuccess = function(event) {
+        $db = event.target.result;
+        console.log('open indexeddb successfully');
+    };
 
-	$('.ui.fluid.button').click(function(e){
-		// add product to cart
-		var code = "{{product.code}}";
-		var image = "/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}";
-		parameters.sort(function(v1, v2){ return v1.code.localeCompare(v2.code);});
-		var parameter_string = JSON.stringify(parameters);
+    $('.ui.fluid.button').click(function(e){
+        // add product to cart
+        var code = "{{product.code}}";
+        var image = "/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}";
+        parameters.sort(function(v1, v2){ return v1.code.localeCompare(v2.code);});
+        var parameter_string = JSON.stringify(parameters);
 
-		var trans = $db.transaction("products", "readwrite");
-		trans.oncomplete  = function(event) {
-			console.log("All done!");
-		};
-		trans.onerror = function(event) {
-			console.log("transaction failed");
-		};
-		var objectStore = trans.objectStore("products");
+        var trans = $db.transaction("products", "readwrite");
+        trans.oncomplete  = function(event) {
+            console.log("All done!");
+        };
+        trans.onerror = function(event) {
+            console.log("transaction failed");
+        };
+        var objectStore = trans.objectStore("products");
 
-		var item = objectStore.get([code, parameter_string]);
-		item.onsuccess = function() {
-			if (item.result === undefined) {
-				objectStore.add({code: code, parameters: parameter_string,
-								 name: "{{product.name}}", image: image,
-								 amount: 1, price: $price});
-			} else {
-				product = item.result;
-				product.amount += 1;
-				objectStore.put(product);
-				console.log(product);
-			}
+        var item = objectStore.get([code, parameter_string]);
+        item.onsuccess = function() {
+            if (item.result === undefined) {
+                objectStore.add({code: code, parameters: parameter_string,
+                                 name: "{{product.name}}", image: image,
+                                 amount: 1, price: $price});
+            } else {
+                product = item.result;
+                product.amount += 1;
+                objectStore.put(product);
+                console.log(product);
+            }
 
-			$button_dimmer.dimmer('show');
-			setTimeout(function(){
-					$button_dimmer.dimmer('hide');
-				}, 800);
-		};
-		item.onerror = function() {
-			console.log("Failed in getting item from objectStore!");
-		};
-	});
+            $button_dimmer.dimmer('show');
+            setTimeout(function(){
+                    $button_dimmer.dimmer('hide');
+                }, 800);
+        };
+        item.onerror = function() {
+            console.log("Failed in getting item from objectStore!");
+        };
+    });
 });
+#}
 </script>
 {% endblock %}

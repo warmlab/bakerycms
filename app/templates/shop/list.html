@@ -29,9 +29,9 @@
 </header>#}
 <header class="my-segment">
 	<div class="ui secondary pointing three item menu">
-		<a class="active item">奶油蛋糕</a>
-		<a class="item">慕斯蛋糕</a>
-		<a class="item">面包</a>
+        <a class="active item" href="/products/cake" style="color:#322418">蛋糕</a>
+        <a class="item" href="/products/bread" style="color:#322418">面包</a>
+        <a class="item" href="/products/slice" style="color:#322418">小切块</a>
 		{#<a class="item"><i class="student icon"></i>课堂</a>#}
 	</div>
 </header>
@@ -162,7 +162,7 @@ $('.ui.right.floated.small.icon.orange.button').click(function(e){
 
 //$bottom_menu = $('.bottom.fixed.menu');
 //$bottom_menu.children().removeClass('active');
-//var href = "{{url_for('.products', shoppoint=shoppoint.code)}}";
+//var href = "{{url_for('.products', slug='cake', shoppoint=shoppoint.code)}}";
 //$bottom_menu.children('[href=' + href + ']').addClass('active');
 </script>
 {% endblock %}
