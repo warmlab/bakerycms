@@ -16,13 +16,11 @@
     </div>
     {% endif %}
     <img id="banner-image" class="ui big image" src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}"><p/>
-    <div class="ui items">
+    <div class="ui items" style="margin-top: -1em;">
 		<div class="item">
 			<div class="content">
-                <a class="header">{{ product.english_name }}</a>
-            </div>
-            <div class="content">
-				<a class="ui sub header">{{ product.name }}</a>
+                <a class="header">{{ product.english_name }}</a><br>
+				<a class="header" style="font-size:1.1em;">{{ product.name }}</a>
 				<div class="meta">
 					<span class="price">￥{%if product.parameters%}{{product.price+product.parameters[0].plus_price}}/{{product.parameters[0].parameter.name}}{%else%}{{product.price}}{%endif%}</span>
 				</div>
@@ -30,14 +28,14 @@
                 <div class="extra">
                     <div class="ui circular labels">
                     {%- for pt in product.tags %}
-                        <div class="ui label" style="background:#f4ebe2;color:#322418;">{{pt.tag.name}}</div>
+                        <div class="my-tag ui label">{{pt.tag.name}}</div>
                     {%- endfor %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="ui divider"></div>
+    <div class="ui divider" style="margin-top: -1.5em;"></div>
     <ul class="store-info">
         <li>
             <img src="/static/img/sweet.png">
@@ -56,6 +54,8 @@
             <span>0-4℃保藏12小时，5℃食用为佳</span>
         </li>
     </ul>
+    <div class="ui divider"></div>
+    <div class="ui image">{{product.description|safe}}</div>
     <h6 class="ui horizontal divider header">
         <i class="announcement icon"></i>郑重承诺
     </h6>

@@ -22,7 +22,7 @@
 		{% if kwargs.get('element-type') == 'image' %}
 			  <a id="product-image-new" href="javascript:void(0)"><i class="plus icon"></i></a>
 			  <div class="ui six doubling cards" id="product-images">
-				{% for item in field.data %}
+        {# {% for item in field.data %}
 				<div class="card">
 					<div class="blurring dimmable image">
 						<div class="ui dimmer">
@@ -33,9 +33,10 @@
 							</div>
 						</div>
 						<img src="/gallery/media/{{item.image.name}}.{{item.image.ext}}">
+            <input name="{{field.name}}" class="hidden" type="hidden" value="{{item.image_id}}">
 					</div>
 				</div>
-				{% endfor %}
+        {% endfor %}#}
 			  </div>
 		{% else %}
 	  {% for opt in field.iter_choices() %}

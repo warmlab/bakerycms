@@ -175,3 +175,31 @@
 	color: #fff;
 	line-height: 3em;
 }
+
+.my-tag {
+	background:#f4ebe2 !important;
+	color:#322418 !important;
+	font-size:.8em !important;
+}
+
+.my-popular-tag {
+	background:#f4ebe2 !important;
+	color:#322418 !important;
+	margin-bottom:.8em !important;
+	margin-top:1em !important;
+}
+
+.my-margin {
+	margin-bottom: 0 !important;
+	margin-top:.5em !important;
+}
+
+.my-tags {
+	margin-top: -2.3em !important;
+}
+
+.my-no-padding {
+	margin-bottom: 0 !important;
+	padding-bottom:0 !important;
+	padding-top:0 !important;
+}

@@ -37,7 +37,7 @@
     <span class="banner-item" data-index="1"></span>
     <span class="banner-item" data-index="2"></span>
 </div>
-<header class="my-segment">
+<header class="ui basic segment my-no-padding">
     <div class="row">
     <div class="ui center aligned three column padded grid">
         <a class="column" href="/products/cake" style="color:#322418">蛋糕</a>
@@ -47,12 +47,12 @@
     </div></div>
 </header>
     {%- for tag in tags if tag.products and tag.show_in_home %}
-    <div class="my-segment">
-        <div class="ui mini circular label" style="background:#f4ebe2;color:#322418;margin-bottom:.3em;margin-top:1em;">&nbsp;{{tag.name}}&nbsp;</div>
+    <div class="ui basic segment my-tags">
+        <div class="ui mini circular my-popular-tag label">&nbsp;{{tag.name}}&nbsp;</div>
+    <div class="ui one link cards">
     {%- for pt in tag.products %}
         {% if loop.index0 is lt(3) %}
-    <div class="ui one link cards">
-        <section class="card">
+        <section class="my-margin card">
             <a href="{{url_for('.product_detail', shoppoint=shoppoint.code, code=pt.product.code, _method='GET')}}">
                 {%- for pi in pt.product.images %}
                 {%- if pi.image.category.name == 'banner' %}
@@ -73,13 +73,14 @@
                     {% endif -%}
                 </div>
             </div>
+            </a>
         </section>
-    </div>
         {%- endif %}
     {%- endfor %}
     </div>
+    </div>
     {%- endfor %}
-<div style="padding-bottom: 3.8em;"></div>
+<div style="padding-bottom: 2.3em;"></div>
 {#
                   <p>
     <p class="lead">这是我的故事，或许也有你的影子，因为我们都是善良的……</p>
