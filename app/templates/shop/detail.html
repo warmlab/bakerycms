@@ -15,8 +15,14 @@
         </div>
     </div>
     {% endif %}
-    <img id="banner-image" class="ui big image" src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}"><p/>
-    <div class="ui items" style="margin-top: -1em;">
+    <div class="ui list" id="banner">
+        {#<a href="/"><img class="ui fluid image" src="/static/img/banner2.jpg"></a>
+        <a href="/"><img class="ui fluid image" src="/static/img/banner3.jpg"></a>
+        <a href="/"><img class="ui fluid image" src="/static/img/banner4.jpg"></a>#}
+    </div>
+    <div class="banner" id="banner-item"></div>
+    {#<img id="banner-image" class="ui big image" src="/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}"><p/>#}
+    <div class="ui items">
 		<div class="item">
 			<div class="content">
                 <a class="header">{{ product.english_name }}</a><br>
@@ -79,8 +85,13 @@
     </div>
     <div style="padding-bottom: 3.8em;"></div>
 </div>
+    {%- if product.parameters %}
     <div class="add-cart-button" data-code="{{product.code}}" data-name="{{product.name}}"
-						data-spec="{{product.parameters[0].parameter.id}}" data-image="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" data-price="{{product.price}}">添加到购物车</div>
+                        data-spec="{{product.parameters[0].parameter.id}}" data-image="/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" data-price="{{product.price}}">添加到购物车</div>
+    {%- else -%}
+    <div class="add-cart-button" data-code="{{product.code}}" data-name="{{product.name}}"
+                        data-price="{{product.price}}" data-src="/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}">添加到购物车</div>
+    {%- endif -%}
 {% include "includes/cart.html" %}
 {% endblock %}
 {%- block bottom_nav_section %}
@@ -89,7 +100,7 @@
 <script src="{{url_for('static', filename='js/shop.js')}}"></script>
 {% endblock %}
 {% block inline_script_section %}
-<script>{#
+<script>
 $(document).ready(function(){
     var $toggle = $('div.toggle.button');
     var $active = 'orange';
@@ -97,6 +108,7 @@ $(document).ready(function(){
     var $button_dimmer = $('div.dimmer');
     var parameters = [];
     var $price = {{product.price}};
+
     handler = {
         activate: function(){
             if ($(this).hasClass($active)) {
@@ -116,19 +128,31 @@ $(document).ready(function(){
             $('#product-price').html('￥' + $price);
         }
     };
+
     $notice_message.hide();
     $button_dimmer.dimmer('hide');
     $toggle.click(handler.activate);
-    $banner = $("#banner-image");
-    $(".ui.tiny.images img").click(function(){
-        var src = $(this).attr('src');
-        if ($banner.attr('src') != src) {
-            $banner.fadeOut('fast', function(){
-                $banner.attr('src', src);
-            });
-            $banner.fadeIn('fast');
-        }
-    });
+    //$banner = $("#banner-image");
+    //$(".ui.tiny.images img").click(function(){
+    //    var src = $(this).attr('src');
+    //    if ($banner.attr('src') != src) {
+    //        $banner.fadeOut('fast', function(){
+    //            $banner.attr('src', src);
+    //        });
+    //        $banner.fadeIn('fast');
+    //    }
+    //});
+
+    var $banner = $('#banner');
+    var $banner_item = $('#banner-item');
+    {%- for pi in product.images %}
+    console.log("{{pi.image.category.name}}");
+    {%- if pi.image.category.name != 'banner' -%}
+    $banner.append($('<a href="/"><img class="ui fluid image" src="/media/{{pi.image.name}}.{{pi.image.ext}}"></a>'));
+    $banner_item.append($('<span class="banner-item" data-index="{{loop.index0}}"></span>'));
+    {%- endif -%}
+    {%- endfor %}
+    carousel();
 
     // IndexedDB
     window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
@@ -150,9 +174,11 @@ $(document).ready(function(){
     $('.ui.fluid.button').click(function(e){
         // add product to cart
         var code = "{{product.code}}";
-        var image = "/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}";
+        var image = "/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}";
         parameters.sort(function(v1, v2){ return v1.code.localeCompare(v2.code);});
         var parameter_string = JSON.stringify(parameters);
+
+        console.log(parameter_string);
 
         var trans = $db.transaction("products", "readwrite");
         trans.oncomplete  = function(event) {
@@ -186,6 +212,5 @@ $(document).ready(function(){
         };
     });
 });
-#}
 </script>
 {% endblock %}

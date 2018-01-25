@@ -18,7 +18,7 @@
 		  <div class="ui six special cards">
 			{%- for pk,image in form['images']._get_object_list() -%}
 			<div class="card">
-				<div class="blurring dimmable image" data-id="{{image.id}}" data-src="/gallery/media/{{image.name}}.{{image.ext}}">
+				<div class="blurring dimmable image" data-id="{{image.id}}" data-src="/media/{{image.name}}.{{image.ext}}">
 				  <div class="ui dimmer">
 					  <div class="content">
 						  <div class="center">
@@ -26,7 +26,7 @@
 						  </div>
 					  </div>
 				  </div>
-					<img src="/gallery/media/{{image.name}}.{{image.ext}}">
+					<img src="/media/{{image.name}}.{{image.ext}}">
 				</div>
 				<div class="extra center aligned">{{image.upload_name}}</div>
 			</div>
@@ -79,10 +79,10 @@ function remove_line(line) {
 var images = [];
 var images_add = [];
 {%- for pk,image in form['images']._get_object_list() -%}
-images["{{image.id}}"] = "/gallery/media/{{image.name}}.{{image.ext}}";
+images["{{image.id}}"] = "/media/{{image.name}}.{{image.ext}}";
 {% endfor -%}
 {%- for pi in form.images.data -%}
-images_add["{{pi.image_id}}"] = "/gallery/media/{{pi.image.name}}.{{pi.image.ext}}";
+images_add["{{pi.image_id}}"] = "/media/{{pi.image.name}}.{{pi.image.ext}}";
 {% endfor -%}
 
 var image_clicked = function(e) {

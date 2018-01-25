@@ -145,11 +145,16 @@ var add_to_card = function(e) {
     var original_price = parseFloat($(this).data('price'));
     //$("#pre-cart-title").html("￥" + original_price);
     var $size_buttons = $('#size-buttons');
+    if ($(this).data('spec') === undefined) {
+        add_product_to_card.call(clicked_obj, $(this));
+        return;
+    }
     // get size info from server
-    console.log(clicked_obj);
     $.get('/product/parameters/'+clicked_obj.data('code'), function(data, status) {
         if (status != 'success')
             return;
+
+        console.log('parameter from server', data);
 
         $size_buttons.html('');
         for (var i in data) {
@@ -233,8 +238,10 @@ $(".my-fixed-cart").on('click', function(e) {
             else
                 $product_detail += '<a class="header"><i class="square outline icon"></i>'+p.name+'</a>';
             $product_detail += '<div class="meta">\
-                            <span class="price">￥' + p.price + '/' + p.spec_name + '<span>\
-                        </div>\
+                            <span class="price">￥' + p.price;
+            if (p.spec_name)
+                $product_detail += '/' + p.spec_name + '<span>';
+            $product_detail += '</div>\
                         <div class="extra">\
                             <div class="ui mini labeled action input" data-code="' + p.code +'" data-spec="'+ p.spec +'">\
                                 <div class="ui label"><i class="cube icon"></i>' + p.amount +'</div>\
@@ -283,7 +290,7 @@ $(".my-fixed-cart").on('click', function(e) {
     $('#shop-cart').modal('show');
 });
 
-$('#pre-add-to-cart').on('click', function(e) {
+var add_product_to_card = function($target) {
     $('#pre-cart').modal('hide');
     $('.my-fixed-cart').animate({bottom: '3em'}, 200, 'swing', function() {
         $('.my-fixed-cart').animate({bottom: '3.5em'}, 100, 'swing', function() {
@@ -292,22 +299,29 @@ $('#pre-add-to-cart').on('click', function(e) {
     });
 
     var $selected_size = $('#size-buttons > .brown');
-    console.log($selected_size);
-    if ($selected_size === undefined)
-        return;
 
-    var $pre_obj = $('#pre-cart-title');
+    console.log($target);
+    var $pre_obj = $target;
 
     var p = {};
     p.checked = true;
     p.code = $pre_obj.data('code');
     p.name = $pre_obj.data('name');
-    p.image = $('#pre-cart-image').data('src');
-    p.price = parseFloat($selected_size.data('price')) + parseFloat($pre_obj.data('price'));
-    p.spec = $selected_size.data('spec');
-    p.spec_name = $selected_size.html();
+    console.log($pre_obj.data('src'));
+    if ($pre_obj.data('src') !== undefined)
+        p.image = $pre_obj.data('src');
+    else
+        p.image = $('#pre-cart-image').data('src');
+    if ($selected_size === undefined || $selected_size.length === 0) {
+        p.price = parseFloat($pre_obj.data("price"));
+        p.spec = '[]';
+    } else {
+        p.price = parseFloat($selected_size.data("price")) + parseFloat($pre_obj.data("price"));
+        p.spec = $selected_size.data('spec');
+        p.spec_name = $selected_size.html();
+    }
     p.amount = 1;
-    console.log(p);
+    console.log('add the following product to cart', p);
     if (mycart.products === undefined) {
         mycart.products = [p];
         update_product(p, 1);
@@ -334,7 +348,8 @@ $('#pre-add-to-cart').on('click', function(e) {
 
     //print_cart();
     display_db();
-});
+};
+$('#pre-add-to-cart').on('click', function() {add_product_to_card($('#pre-cart-title'))});
 
 //$('#pay-action-button').on('click', function(e) {
 //    console.log(e);
@@ -343,3 +358,51 @@ $('#pre-add-to-cart').on('click', function(e) {
 //    console.log("{{url_for('.checkout', _external=True)|weixin_authorize('snsapi_userinfo')|safe}}");
 //    //location.href="{{url_for('.checkout', _external=True)|weixin_authorize('snsapi_userinfo')|safe}}";
 //});
+
+var carousel = function() {
+    var $banners = $('#banner > a');
+    var $banner_items = $('#banner-item > span');
+    var $cur_banner = $banners.first();
+    var $cur_banner_item = $banner_items.first();
+    var $next_banner, $next_banner_item;
+    $banners.hide();
+    $cur_banner.show();
+    $cur_banner_item.addClass('banner-item-active');
+
+    console.log($banner_items);
+    var carousel_fn = function() {
+        $next_banner = $cur_banner.next();
+        $next_banner_item = $cur_banner_item.next();
+        if ($next_banner.length === 0 || $next_banner_item.length === 0) {
+            $next_banner = $banners.first();
+            $next_banner_item = $banner_items.first();
+        }
+
+        $cur_banner.fadeOut(function() {
+            $next_banner.fadeIn();
+            $cur_banner_item.removeClass('banner-item-active');
+            $next_banner_item.addClass('banner-item-active');
+            $cur_banner = $next_banner;
+            $cur_banner_item = $next_banner_item;
+        });
+    };
+    var carousel_interval = setInterval(carousel_fn, 5000);
+
+    $banner_items.on('click', function(e) {
+        var index = parseInt($(this).data('index'));
+        clearInterval(carousel_interval);
+        $cur_banner.hide();
+        $cur_banner_item.removeClass('banner-item-active');
+        $cur_banner = $banners.first();
+        while (index) {
+            $cur_banner = $cur_banner.next();
+            index--;
+        }
+        //$cur_banner = $banners.indexof(index);
+        $cur_banner_item = $(this);
+        $cur_banner.show();
+        $cur_banner_item.addClass('banner-item-active');
+
+        carousel_interval = setInterval(carousel_fn, 5000);
+    });
+};

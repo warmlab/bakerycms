@@ -1,7 +1,5 @@
-{% extends "base.html"%}
-{% block external_css %}
-{% endblock %}
-{% block main_content_section %}
+{% extends "admin/my-base.html"%}
+{% block body %}
 <div class="ui basic segment">
 	<h2 class="ui header">
 		<i class="block layout icon"></i>
@@ -9,7 +7,7 @@
             <div class="sub header">Manage your images.</div>
         </div>
 	</h2>
-	<form action="/gallery/image-upload" method="POST" enctype="multipart/form-data">
+	<form action="{{upload_action}}" method="POST" enctype="multipart/form-data">
 		<div class="ui input" id="file-selector-div">
 			<input type="file" style="display:none;">
 		</div>
@@ -20,18 +18,18 @@
 			<i class="upload icon"></i>开始上传
 		</button>
 		<div id="upload-files"></div>
-		<div id="upload-files-preview" class="ui six doubling cards"></div>
+		<div id="upload-files-preview" class="ui six doubling cards" style="margin-top:.1em;"></div>
 	</form>
 </div>
 <div class="ui basic segment">
     <h4 class="ui horizontal divider header">
       <i class="block layout icon"></i>图册
     </h4>
-    <div class="ui four stackable cards">
-        {% for image in images %}
+    <div class="ui six stackable cards">
+        {% for image in data %}
 		<div class="card" id="card-{{image.name}}">
             <div class="image">
-                <img src="/gallery/media/{{image.name}}.{{image.ext}}">
+                <img src="/media/{{image.name}}.{{image.ext}}">
             </div>
             <div class="content">
                 <div class="header">{{image.upload_name}}</div>
@@ -45,7 +43,7 @@
             <div class="extra content">
                 <div class="ui two buttons">
                     <div class="ui basic negative button" href="/gallery/image/{{image.name}}" data-show="{{image.upload_name}}" data-name="{{image.name}}" data-ext="{{image.ext}}">删除</div>
-                <a class="ui basic positive button" href="/gallery/image/{{image.name}}">编辑</a>
+                <a class="ui basic positive button" href="{{url_for('.image_detail', image_name=image.name)}}">编辑</a>
                 </div>
             </div>
         </div>
@@ -72,9 +70,7 @@
 	</div>
 </div>
 {% endblock %}
-{% block special_script_section %}
-{% endblock %}
-{% block inline_script_section %}
+{% block tail_js %}
 <script>
 $('#file-selector').click(function(e) {
 	$('div.input input:file').click();
@@ -103,7 +99,7 @@ $('div.negative.button').click(function(e){
 			closable: false,
 			allowMultiple: true,
 			onApprove: function(){
-                //$.post('{{url_for(".image_delete")}}', {name: '"' + $('#modal-name').html() + '"'}, dataType='json')
+                {#//$.post('{{url_for(".image_delete")}}', {name: '"' + $('#modal-name').html() + '"'}, dataType='json')
                 $.post('{{url_for(".image_delete")}}', {name: $('#modal-name').html()})
                     .done(function(result){
                         if (result.errcode == 0)
@@ -111,10 +107,14 @@ $('div.negative.button').click(function(e){
                     })
                     .fail(function(result){
 						$('#error-message').modal('show');
-                    });
+                    });#}
 			}
 		})
 		.modal('show');
+});
+$(document).ready(function(){
+	$('.ui.checkbox').checkbox();
+	$('.ui.dropdown').dropdown();
 });
 </script>
 {% endblock %}

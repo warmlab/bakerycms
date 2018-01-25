@@ -30,17 +30,6 @@
         购物车
     </div>
     <div class="image content" id="cart-form">
-    {#<form id="cart-form" method="POST" action="{{url_for('.checkout')}}">#}
-        {#<div class="ui relaxed list">
-            <div class="item">
-                <img class="ui avatar image" src="/images/avatar/small/daniel.jpg">
-                <div class="content">
-                <a class="header">Daniel Louise</a>
-                <div class="description">Last seen watching <a><b>Arrested Development</b></a> just now.</div>
-                </div>
-            </div>
-        </div>#}
-    {#</form>#}
     </div>
     <div class="actions">
         <a class="ui brown button" href="{{url_for('.confirm', _external=True)|weixin_authorize('snsapi_base')|safe}}">去支付</a>

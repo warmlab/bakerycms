@@ -1,3 +1,4 @@
+{%- import 'admin/lib.html' as lib with context -%}
 {%- extends "admin/my-base.html" -%}
 {%- block body %}
 <div class="ui basic segment">
@@ -8,6 +9,50 @@
 			<div class="sub header">Manage your products.</div>
 		</div>
 	</h2>
+{%- block model_menu_bar -%}
+<div class="ui menu">
+	<a class="active item" href="javascript:void(0)">{{ _gettext('List') }}{% if count %}<div class="ui brown label">{{ count }}</div>{% endif %}</a>
+	{% if admin_view.can_create %}
+		{%- if admin_view.create_modal -%}
+		{{ lib.add_modal_button(url=get_url('.create_view', url=return_url, modal=True), title=_gettext('Create New Record'), content=_gettext('Create')) }}
+		{% else %}
+		<a class="item" href="{{ get_url('.create_view', url=return_url) }}" title="{{ _gettext('Create New Record') }}">{{ _gettext('Create') }}</a>
+		{%- endif -%}
+	{% endif %}
+	{#
+	{% if admin_view.can_export %}
+		{{ model_layout.export_options() }}
+	{% endif %}
+
+	{% block model_menu_bar_before_filters %}{% endblock %}
+
+	{% if filters %}
+	<li class="dropdown">
+		{{ model_layout.filter_options() }}
+	</li>
+	{% endif %}
+
+	{% if can_set_page_size %}
+	<li class="dropdown">
+		{{ model_layout.page_size_form(page_size_url) }}
+	</li>
+	{% endif %}
+
+	{% if actions %}
+	<li class="dropdown">
+		{{ actionlib.dropdown(actions) }}
+	</li>
+	{% endif %}
+
+	{% if search_supported %}
+	<li>
+		{{ model_layout.search_form() }}
+	</li>
+	{% endif %}
+	{% block model_menu_bar_after_filters %}{% endblock %}
+	#}
+</div>
+{%- endblock -%}
 	<table class="ui six column table">
 		<thead>
 			<tr>

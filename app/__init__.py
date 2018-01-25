@@ -1,4 +1,5 @@
 from flask import Flask
+from flask import send_from_directory
 #from flask_mail import Mail
 #from flask.ext.moment import Moment
 #from flask_pagedown import PageDown
@@ -47,8 +48,8 @@ def create_app(config_name):
     from .sale import sale as sale_blueprint
     app.register_blueprint(sale_blueprint, url_prefix="/sale")
 
-    from .gallery import gallery as gallery_blueprint
-    app.register_blueprint(gallery_blueprint, url_prefix='/gallery')
+    #from .gallery import gallery as gallery_blueprint
+    #app.register_blueprint(gallery_blueprint, url_prefix='/gallery')
 
     from .weixin import weixin as weixin_blueprint
     app.register_blueprint(weixin_blueprint, url_prefix='/weixin')
@@ -58,5 +59,10 @@ def create_app(config_name):
 
     from .api import api as api_blueprint
     app.register_blueprint(api_blueprint, url_prefix='/api')
+
+    @app.route('/media/<path:filename>', methods=['GET'])
+    def media(filename):
+        return send_from_directory(app.config['UPLOAD_FOLDER'],
+                               filename, as_attachment=False)
 
     return app

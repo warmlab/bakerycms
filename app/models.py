@@ -206,6 +206,7 @@ class UserAuth(db.Model, UserMixin):
     #reset_password_token = db.Column(db.String(128), nullable=False)
     confirmed_at = db.Column(db.DateTime)
     active = db.Column(db.Boolean, default=False)
+    #authenticated = db.Column(db.Boolean, default=False)
 
     # Relationships
     staff_id = db.Column(db.Integer, db.ForeignKey('staff.id', ondelete='CASCADE'))
@@ -233,6 +234,14 @@ class UserAuth(db.Model, UserMixin):
             return True
         return False
 
+    @property
+    def is_anonymous(self):
+        return False
+
+    @property
+    def is_staff(self):
+        return self.staff_id is not None
+
     def get_id(self):
         return self.openid if self.openid else self.mobile if self.mobile else self.email
 
@@ -240,11 +249,8 @@ class UserAuth(db.Model, UserMixin):
         return self.active
 
     def is_authenticated(self):
+        #return self.authenticated
         return True
-
-    @property
-    def is_anonymous(self):
-        return False
 
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
@@ -737,6 +743,8 @@ class ShoppingCart(db.Model):
 
 @login_manager.user_loader
 def user_loader(condition):
+    if not condition:
+        return None
     user = UserAuth.query.filter(or_(UserAuth.email==condition,
                                      UserAuth.mobile==condition,
                                      UserAuth.openid==condition)).first()

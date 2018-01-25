@@ -53,12 +53,13 @@
     {%- for pt in tag.products %}
         {% if loop.index0 is lt(3) %}
         <section class="my-margin card">
-            <a href="{{url_for('.product_detail', shoppoint=shoppoint.code, code=pt.product.code, _method='GET')}}">
+            <a class="image" href="{{url_for('.product_detail', shoppoint=shoppoint.code, code=pt.product.code, _method='GET')}}">
                 {%- for pi in pt.product.images %}
                 {%- if pi.image.category.name == 'banner' %}
-                <img src="/gallery/media/{{pi.image.name}}.{{pi.image.ext}}">
+                <img src="/media/{{pi.image.name}}.{{pi.image.ext}}">
                 {%- endif %}
                 {%- endfor %}
+                {#-
             <div class="content">
                 <div class="header">{{ pt.product.name }}</div>
                 <div class="description"><i class="tag icon"></i>{%if pt.product.summary %}{{pt.product.summary}}{%else%}100%天然乳脂奶油{%endif%}</div>
@@ -66,13 +67,14 @@
                     <span class="price">￥{%if pt.product.parameters%}{{pt.product.price+pt.product.parameters[0].plus_price}}/{{pt.product.parameters[0].parameter.name}}{%else%}{{pt.product.price}}{%endif%}</span>
                     {%- if pt.product.parameters %}
                     <span class="addtocart" data-code="{{pt.product.code}}" data-name="{{pt.product.name}}"
-                        data-spec="{{pt.product.parameters[0].parameter.id}}" data-image="/gallery/media/{{pt.product.images[0].image.name}}.{{pt.product.images[0].image.ext}}" data-price="{{pt.product.price}}"><i class="icon add to cart"></i></span>
+                        data-spec="{{pt.product.parameters[0].parameter.id}}" data-image="/media/{{pt.product.images[0].image.name}}.{{pt.product.images[0].image.ext}}" data-price="{{pt.product.price}}"><i class="icon add to cart"></i></span>
                     {%- else %}
                     <span class="addtocart" data-code="{{pt.product.code}}" data-name="{{pt.product.name}}"
-                        data-image="/gallery/media/{{pt.product.images[0].image.name}}.{{pt.product.images[0].image.ext}}" data-price="{{pt.product.price}}"><i class="icon add to cart"></i></span>
+                        data-image="/media/{{pt.product.images[0].image.name}}.{{pt.product.images[0].image.ext}}" data-price="{{pt.product.price}}"><i class="icon add to cart"></i></span>
                     {% endif -%}
                 </div>
             </div>
+            -#}
             </a>
         </section>
         {%- endif %}
@@ -103,53 +105,7 @@
 {% block inline_script_section %}
 <script charset="UTF-8" src="{{url_for('static', filename='js/shop.js')}}"></script>
 <script>
-$(document).ready(function() {
-    var $banners = $('#banner > a');
-    var $banner_items = $('#banner-item > span');
-    var $cur_banner = $banners.first();
-    var $cur_banner_item = $banner_items.first();
-    var $next_banner, $next_banner_item;
-    $banners.hide();
-    $cur_banner.show();
-    $cur_banner_item.addClass('banner-item-active');
-
-    console.log($banner_items);
-    var carousel_fn = function() {
-        $next_banner = $cur_banner.next();
-        $next_banner_item = $cur_banner_item.next();
-        if ($next_banner.length === 0 || $next_banner_item.length === 0) {
-            $next_banner = $banners.first();
-            $next_banner_item = $banner_items.first();
-        }
-
-        $cur_banner.fadeOut(function() {
-            $next_banner.fadeIn();
-            $cur_banner_item.removeClass('banner-item-active');
-            $next_banner_item.addClass('banner-item-active');
-            $cur_banner = $next_banner;
-            $cur_banner_item = $next_banner_item;
-        });
-    };
-    var carousel_interval = setInterval(carousel_fn, 5000);
-
-    $banner_items.on('click', function(e) {
-        var index = parseInt($(this).data('index'));
-        clearInterval(carousel_interval);
-        $cur_banner.hide();
-        $cur_banner_item.removeClass('banner-item-active');
-        $cur_banner = $banners.first();
-        while (index) {
-            $cur_banner = $cur_banner.next();
-            index--;
-        }
-        //$cur_banner = $banners.indexof(index);
-        $cur_banner_item = $(this);
-        $cur_banner.show();
-        $cur_banner_item.addClass('banner-item-active');
-
-        carousel_interval = setInterval(carousel_fn, 5000);
-    });
-});
+$(document).ready(carousel());
 
 $(".ui.button").on("click", function(e){
     var p = {};

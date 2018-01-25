@@ -1,7 +1,5 @@
-{% extends "base.html"%}
-{% block external_css %}
-{% endblock %}
-{% block main_content_section %}
+{% extends "admin/my-base.html"%}
+{% block body %}
 <div class="ui basic segment">
     <h2 class="ui dividing header">
         <i class="photo icon"></i>
@@ -9,24 +7,24 @@
         <div class="sub header">Modify image meta data.</div>
       </div>
     </h2>
-    <form class="ui form" method="POST" action="/gallery/image/{{image.name}}">
+    <form class="ui form" method="POST" action="{{url_for('.image_detail', image_name=image.name)}}">
         <div class="inline field">
-        <label for="inputcategory">图片分类</label>
-        <select name="inputcategory" class="ui dropdown">
+        <label for="category">图片分类</label>
+        <select name="category" class="ui dropdown">
               {% for c in categories %}<option value="{{ c.id }}"{%if c.id == image.category_id %} selected{%endif%}>{{ c }}</option>{% endfor %}
           </select>
         </div>
         <div class="inline field">
-            <label for="inputname">图片名称</label>
-            <input id="inputname" name="inputname" placeholder="Image name" type="text" value="{{ image.upload_name }}">
+            <label for="name">图片名称</label>
+            <input id="name" name="name" placeholder="Image name" type="text" value="{{ image.upload_name }}">
         </div>
         <div class="inline field">
             <label for="inputtitle">图片标题</label>
-            <input id="inputtitle" name="inputtitle" placeholder="Image title" type="text" value="{{ image.title }}">
+            <input id="title" name="title" placeholder="Image title" type="text" value="{{ image.title }}">
         </div>
         <div class="inline field">
-            <label for="inputdesc">描述</label>
-            <textarea id="inputdesc" name="inputdesc" rows="3">{{ image.description }}</textarea>
+            <label for="desc">描述</label>
+            <textarea id="desc" name="desc" rows="3">{{ image.description }}</textarea>
         </div>
         <div class="inline field">
             <button type="submit" class="ui fluid positive button">保存</button>
@@ -34,6 +32,6 @@
     </form>
 </div>
 <div class="ui segment">
-    <img class="ui big image" src="/gallery/media/{{image.name}}.{{image.ext}}">
+    <img class="ui big image" src="/media/{{image.name}}.{{image.ext}}">
 </div>
 {%- endblock %}
