@@ -33,16 +33,16 @@
             </div>
             <div class="content">
                 <div class="header">{{image.upload_name}}</div>
-                {% if image.title %}
+                {%- if image.title -%}
                 <div class="meta">{{image.title}}</div>
-                {%endif%}
-                {% if image.description %}
+                {%- endif -%}
+                {%- if image.description -%}
                 <div class="description">{{image.description}}</div>
-                {%endif%}
+                {%- endif -%}
             </div>
             <div class="extra content">
                 <div class="ui two buttons">
-                    <div class="ui basic negative button" href="/gallery/image/{{image.name}}" data-show="{{image.upload_name}}" data-name="{{image.name}}" data-ext="{{image.ext}}">删除</div>
+                    <div class="ui basic negative button" href="/image/{{image.name}}" data-show="{{image.upload_name}}" data-name="{{image.name}}" data-ext="{{image.ext}}">删除</div>
                 <a class="ui basic positive button" href="{{url_for('.image_detail', image_name=image.name)}}">编辑</a>
                 </div>
             </div>
@@ -99,7 +99,7 @@ $('div.negative.button').click(function(e){
 			closable: false,
 			allowMultiple: true,
 			onApprove: function(){
-                {#//$.post('{{url_for(".image_delete")}}', {name: '"' + $('#modal-name').html() + '"'}, dataType='json')
+                //$.post('{{url_for(".image_delete")}}', {name: '"' + $('#modal-name').html() + '"'}, dataType='json')
                 $.post('{{url_for(".image_delete")}}', {name: $('#modal-name').html()})
                     .done(function(result){
                         if (result.errcode == 0)
@@ -107,7 +107,7 @@ $('div.negative.button').click(function(e){
                     })
                     .fail(function(result){
 						$('#error-message').modal('show');
-                    });#}
+                    });
 			}
 		})
 		.modal('show');

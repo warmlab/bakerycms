@@ -12,10 +12,10 @@
 		</div>
 	</div>
 	{% endif %}
-	<img id="banner-image" class="ui big image" src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}"><p/>
+	<img id="banner-image" class="ui big image" src="/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}"><p/>
     <div class="ui tiny images">
 		{%- for pi in product.images %}
-        <img src="/gallery/media/{{pi.image.name}}.{{pi.image.ext}}">
+        <img src="/media/{{pi.image.name}}.{{pi.image.ext}}">
         {% endfor -%}
     </div>
     <h3 class="ui header">
@@ -140,7 +140,7 @@ $(document).ready(function(){
 	$('.ui.fluid.button').click(function(e){
 		// add product to cart
 		var code = "{{product.code}}";
-		var image = "/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}";
+		var image = "/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}";
 		parameters.sort(function(v1, v2){ return v1.code.localeCompare(v2.code);});
 		var parameter_string = JSON.stringify(parameters);
 

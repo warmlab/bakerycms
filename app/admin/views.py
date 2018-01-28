@@ -19,6 +19,7 @@ from ..extensions import admin
 
 from .forms import CKTextAreaField
 from .forms import ImageForm
+from .utils import clear_product_notchecked
 
 from ..models import db
 from ..models import UserAuth
@@ -115,13 +116,6 @@ class ProductView(BakeryModelView):
             }
         }
 
-    form_ajax_refs = {
-        }
-
-    form_extra_fields = {
-            #'tags': Select2TagsField()
-        }
-
     #tags = Tag.query.all()
     #print (tags)
     #form_choices = {'tags': {
@@ -133,6 +127,8 @@ class ProductView(BakeryModelView):
     #            )
     #        
     #    }
+
+    can_delete = True
 
     list_template = 'admin/products.html'
     create_template = 'admin/product.html'
@@ -153,9 +149,10 @@ class ProductView(BakeryModelView):
                     field.populate_obj(model, name)
 
             # multiple choices fieldsfield.populate_obj
-            tags = [t.id for t in form.tags.data]
             # delete not checked tags
-            ProductTag.query.filter(ProductTag.product_id==model.id, ~ProductTag.tag_id.in_(tags)).delete(synchronize_session=False)
+            #ProductTag.query.filter(ProductTag.product_id==model.id, ~ProductTag.tag_id.in_(tags)).delete(synchronize_session=False)
+            clear_product_notchecked(self.session, 'product_tag', model.id, 'tag_id', ",".join([str(t.id) for t in form.tags.data]))
+
             #product_tags = ProductTag.query.filter_by(product=model).all()
             for tag in form.tags.data:
                 pt = ProductTag.query.get((model.id, tag.id))
@@ -167,8 +164,9 @@ class ProductView(BakeryModelView):
                     self.session.add(pt)
 
             # parameters
-            params = [p.id for p in form.parameters.data]
-            ProductParameter.query.filter(ProductParameter.product_id==model.id, ~ProductParameter.parameter_id.in_(params)).delete(synchronize_session=False)
+            #params = [p.id for p in form.parameters.data]
+            #ProductParameter.query.filter(ProductParameter.product_id==model.id, ~ProductParameter.parameter_id.in_(params)).delete(synchronize_session=False)
+            clear_product_notchecked(self.session, 'product_parameter', model.id, 'parameter_id', ",".join([str(p.id) for p in form.parameters.data]))
             for param in form.parameters.data:
                 pp = ProductParameter.query.get((model.id, param.id))
                 if not pp:
@@ -179,8 +177,9 @@ class ProductView(BakeryModelView):
                     self.session.add(pp)
 
             # images
-            images = [i.id for i in form.images.data]
-            ProductImage.query.filter(ProductImage.product_id==model.id, ~ProductImage.image_id.in_(images)).delete(synchronize_session=False)
+            #images = [i.id for i in form.images.data]
+            clear_product_notchecked(self.session, 'product_image', model.id, 'image_id', ",".join([str(p.id) for p in form.images.data]))
+            #ProductImage.query.filter(ProductImage.product_id==model.id, ~ProductImage.image_id.in_(images)).delete(synchronize_session=False)
             for image in form.images.data:
                 pi = ProductImage.query.get((model.id, image.id))
                 if not pi:
@@ -206,6 +205,26 @@ class ProductView(BakeryModelView):
 
     def update_model(self, form, model):
         return self._update_product(form, model)
+
+    def delete_model(self, model):
+        for t in model.tags:
+            model.tags.remove(t)
+            self.session.delete(t)
+        for s in model.suppliers:
+            model.suppliers.remove(s)
+            self.session.delete(s)
+        for p in model.parameters:
+            model.parameters.remove(p)
+            self.session.delete(p)
+        #db.session.delete(model.tickets)
+        for i in model.images:
+            model.images.remove(i)
+            self.session.delete(i)
+
+        self.session.delete(model)
+        self.session.commit();
+
+        return True
 
 class ImageView(BakeryView):
     @expose('/')
@@ -262,7 +281,7 @@ class ImageView(BakeryView):
         return redirect(url_for('.gallery'))
 
     @expose('/image-delete', methods=['POST'])
-    def image_delete():
+    def image_delete(self):
         if request.method != 'POST':
             abort(405)
 
@@ -275,7 +294,7 @@ class ImageView(BakeryView):
 
         image = Image.query.filter_by(name=name).first()
         if image.products:
-            message = {"errcode": 1, "errmsg": "Image was used by product."}
+            message = {"errcode": 1, "errmsg": "Image was used by product"}
             return jsonify(message), 403
 
         try:

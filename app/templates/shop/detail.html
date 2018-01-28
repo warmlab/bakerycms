@@ -148,7 +148,7 @@ $(document).ready(function(){
     {%- for pi in product.images %}
     console.log("{{pi.image.category.name}}");
     {%- if pi.image.category.name != 'banner' -%}
-    $banner.append($('<a href="/"><img class="ui fluid image" src="/media/{{pi.image.name}}.{{pi.image.ext}}"></a>'));
+    $banner.append($('<a href="javascript:void(0)"><img class="ui fluid image" src="/media/{{pi.image.name}}.{{pi.image.ext}}"></a>'));
     $banner_item.append($('<span class="banner-item" data-index="{{loop.index0}}"></span>'));
     {%- endif -%}
     {%- endfor %}

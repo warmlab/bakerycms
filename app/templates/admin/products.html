@@ -56,11 +56,10 @@
 	<table class="ui six column table">
 		<thead>
 			<tr>
-				<th>
-		<div class="ui checkbox" id="select-all">
-				<input tabindex="0" class="hidden" type="checkbox">
-			</div></th>
-				<th></th>
+				<th><div class="ui checkbox" id="select-all">
+					<input tabindex="0" class="hidden" type="checkbox">
+				</div></th>
+				<th>Actions</th>
 				<th>Code</th>
 				<th>Name</th>
 				<th>Price</th>
@@ -68,35 +67,55 @@
 				<th>Category</th>
 			</tr>
 		</thead>
-		<tbody>
-	{% for p in data %}
-	<tr>
-		<td><div class="ui checkbox">
-				<input tabindex="0" class="hidden" type="checkbox">
-			</div>
-		</td>
-		<td>
-			<a href="/admin/product/edit/?id={{p.id}}&url=/admin/product"><i class="edit icon"></i></a>
-			<a href="/admin/product/delete/?id={{p.id}}&url=/admin/product"><i class="remove red icon"></i></a>
-		</td>
-		<td>{{ p.code }}</td>
-		<td>{{ p.name }}</td>
-		<td>{{ p.price }}</td>
-		<td>{{ p.stock }}</td>
-		<td>{{ p.category }}</td>
-	</tr>
-	{% endfor %}
-	</tbody>
-	<tfoot>
-	<tr>
-		<th>{{data|length}} Products</th>
-		<th></th>
-		<th></th>
-		<th></th>
-		<th></th>
-		<th></th>
-	</tr>
-	</tfoot>
+		<tbody id="list">
+		{%- for p in data -%}
+		<tr>
+			<td><div class="ui checkbox">
+					<input tabindex="0" class="hidden" type="checkbox">
+				</div>
+			</td>
+			<td>
+				<a href="/admin/product/edit/?id={{p.id}}&url=/admin/product"><i class="edit icon"></i></a>
+				<a href="javascript:void(0)" data-id="{{p.id}}" data-name="{{p.name}}"><i class="remove red icon"></i></a>
+			</td>
+			<td>{{ p.code }}</td><td>{{ p.name }}</td><td>{{ p.price }}</td><td>{{ p.stock }}</td><td>{{ p.category }}</td>
+		</tr>
+		{%- endfor -%}
+		</tbody>
 	</table>
 </div>
+<div class="ui mini modal">
+	<div class="header">Confirm?</div>
+	<div class="content" id="confirm-content"></div>
+	<div class="actions">
+		<div class="ui negative button">No</div>
+		<div class="ui positive right labeled icon button">Yes<i class="checkmark icon"></i></div>
+	</div>
+</div>
+{%- endblock -%}
+{%- block tail_js -%}
+<script>
+$(document).ready(function(){
+	$('a[data-id]').click(function(e) {
+		var $td = $(this);
+		console.log('want to delete product:', $td);
+		$('#confirm-content').html('<p>Are you sure to delete product: '+$td.data('name')+'?</p>');
+		$(".ui.mini.modal").modal({
+			closable: false,
+			onApprove: function() {
+				console.log('aaaaaaaaaaaaaaaaaaa');
+				$.post('/admin/product/delete/', {"id": $td.data('id'), "url": "{{url_for('.index_view')}}"})
+					.done(function(data) {
+						var $tr = $td.parent().parent();
+						console.log("successfully delete record", $tr);
+						$tr.remove();
+					});
+			}
+		}).modal('show');
+	});
+
+	$('.ui.checkbox').checkbox();
+	$('.ui.dropdown').dropdown();
+})
+</script>
 {%- endblock -%}

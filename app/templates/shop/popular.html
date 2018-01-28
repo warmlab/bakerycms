@@ -32,20 +32,22 @@
     <a href="/"><img class="ui fluid image" src="/static/img/banner3.jpg"></a>
     <a href="/"><img class="ui fluid image" src="/static/img/banner4.jpg"></a>
 </div>
-<div class="banner" id="banner-item">
+<div class="banner" id="banner-item" style="margin-bottom: 2em;">
     <span class="banner-item" data-index="0"></span>
     <span class="banner-item" data-index="1"></span>
     <span class="banner-item" data-index="2"></span>
-</div>
+</div>{#
 <header class="ui basic segment my-no-padding">
     <div class="row">
-    <div class="ui center aligned three column padded grid">
+    <div class="ui center aligned four column padded grid">
         <a class="column" href="/products/cake" style="color:#322418">蛋糕</a>
         <a class="column" href="/products/bread" style="color:#322418">面包</a>
+        <a class="column" href="/products/cookie" style="color:#322418">饼干</a>
         <a class="column" href="/products/slice" style="color:#322418">小切块</a>
-        {#<a class="item"><i class="student icon"></i>课堂</a>#}
-    </div></div>
-</header>
+        <a class="item"><i class="student icon"></i>课堂</a>
+    </div>
+    </div>
+</header>#}
     {%- for tag in tags if tag.products and tag.show_in_home %}
     <div class="ui basic segment my-tags">
         <div class="ui mini circular my-popular-tag label">&nbsp;{{tag.name}}&nbsp;</div>

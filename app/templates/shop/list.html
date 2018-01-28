@@ -28,9 +28,10 @@
 	</div>
 </header>#}
 <header class="my-segment">
-	<div class="ui secondary pointing three item menu">
-        <a class="active item" href="/products/cake" style="color:#322418">蛋糕</a>
+	<div class="ui secondary pointing four item menu" id="header-links">
+        <a class="item" href="/products/cake" style="color:#322418">蛋糕</a>
         <a class="item" href="/products/bread" style="color:#322418">面包</a>
+        <a class="item" href="/products/cookie" style="color:#322418">饼干</a>
         <a class="item" href="/products/slice" style="color:#322418">小切块</a>
 		{#<a class="item"><i class="student icon"></i>课堂</a>#}
 	</div>
@@ -40,7 +41,7 @@
 	{% for product in products %}
 		<section class="my-card">
 			<a class="ui medium image" href="{{url_for('.product_detail', shoppoint=shoppoint.code, code=product.code, _method='GET')}}">
-				<img data-src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}">
+				<img data-src="/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}">
 			</a>
 			<div class="content">
 				<div class="header">{{ product.english_name }}</div>
@@ -50,15 +51,15 @@
 					<span class="price">￥{%if product.parameters%}{{product.price+product.parameters[0].plus_price}}/{{product.parameters[0].parameter.name}}{%else%}{{product.price}}{%endif%}</span>
 					{%- if product.parameters %}
 					<span class="addtocart" data-code="{{product.code}}" data-name="{{product.name}}"
-						data-spec="{{product.parameters[0].parameter.id}}" data-image="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" data-price="{{product.price}}"><i class="icon add to cart"></i></span>
+						data-spec="{{product.parameters[0].parameter.id}}" data-src="/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" data-price="{{product.price}}"><i class="icon add to cart"></i></span>
 					{%- else %}
 					<span class="addtocart" data-code="{{product.code}}" data-name="{{product.name}}"
-						data-image="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" data-price="{{product.price}}"><i class="icon add to cart"></i></span>
+						data-src="/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" data-price="{{product.price}}"><i class="icon add to cart"></i></span>
 					{% endif -%}
 				</div>
 			</div>
 		</section>{#
-		<div class="ui right floated small icon orange button" data-code="{{product.code}}" data-name="{{product.name}}" data-spec="{{product.parameters[0]}}" data-image="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" data-price="{{product.price}}">
+		<div class="ui right floated small icon orange button" data-code="{{product.code}}" data-name="{{product.name}}" data-spec="{{product.parameters[0]}}" data-src="/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" data-price="{{product.price}}">
 			<i class="add to cart icon"></i>
     </div>#}
 	{% endfor %}
@@ -160,6 +161,10 @@ $('.ui.right.floated.small.icon.orange.button').click(function(e){
 	//obj.offset({top: e.pageX, left: e.pageY, zIndex: 10});
 });
 
+for (const item of $("#header-links").children()) {
+	if (location.href === item.href)
+		$(item).addClass('active');
+}
 //$bottom_menu = $('.bottom.fixed.menu');
 //$bottom_menu.children().removeClass('active');
 //var href = "{{url_for('.products', slug='cake', shoppoint=shoppoint.code)}}";

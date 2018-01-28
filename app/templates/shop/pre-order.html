@@ -5,7 +5,7 @@
 		{%- for item in items -%}
 		{%- set product = item[0] -%}{%- set amount = item[3] -%}
 		<div class="ui image middle aligned header">
-			<img src="/gallery/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" class="ui small image">
+			<img src="/media/{{product.images[0].image.name}}.{{product.images[0].image.ext}}" class="ui small image">
 			<input type="hidden" name="product" value="{{product.code}}">
 			<div class="content">
 				{{product.name}}

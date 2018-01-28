@@ -117,7 +117,7 @@
 		  <div class="ui four special cards">
 			{% for image in images %}
 			<div class="card">
-				<div class="blurring dimmable image" data-name="{{image.name}}" data-src="/gallery/media/{{image.name}}.{{image.ext}}">
+				<div class="blurring dimmable image" data-name="{{image.name}}" data-src="/media/{{image.name}}.{{image.ext}}">
 				  <div class="ui dimmer">
 					  <div class="content">
 						  <div class="center">
@@ -125,7 +125,7 @@
 						  </div>
 					  </div>
 				  </div>
-					<img src="/gallery/media/{{image.name}}.{{image.ext}}">
+					<img src="/media/{{image.name}}.{{image.ext}}">
 			  </div>
 				<div class="extra center aligned">{{image.upload_name}}</div>
 			</div>
@@ -212,7 +212,7 @@ $(document).ready(function(){
 		});
 	}
 	{% for pi in product.images %}
-	images["{{pi.image.name}}"] = "/gallery/media/{{pi.image.name}}.{{pi.image.ext}}";{% endfor %}
+	images["{{pi.image.name}}"] = "/media/{{pi.image.name}}.{{pi.image.ext}}";{% endfor %}
 	$("#product-image-new").click(function(){
 		$('#image-selector')
 		.modal({
