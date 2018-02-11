@@ -1,9 +1,12 @@
 import os
 
+from datetime import datetime, timedelta
+
 from flask import request, current_app
 from flask import flash, redirect, url_for, jsonify
 
 from flask_admin import BaseView, expose
+from flask_admin.base import AdminIndexView
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.contrib.sqla.ajax import QueryAjaxModelLoader
 from flask_admin.contrib.sqla.fields import QuerySelectMultipleField
@@ -15,16 +18,15 @@ from wtforms.validators import required
 from wtforms.widgets import CheckboxInput
 from wtforms.compat import iteritems
 
-from ..extensions import admin
+from sqlalchemy import text, bindparam
+from sqlalchemy import Integer, String
 
 from .forms import CKTextAreaField
 from .forms import ImageForm
-from .utils import clear_product_notchecked
 
 from ..models import db
 from ..models import UserAuth
-from ..models import Product, Tag, Parameter, Image
-from ..models import ProductParameter, ProductTag, ProductImage, ProductCategory
+from ..models import Product, Tag, Parameter, Image, Ticket
 from ..models import GalleryCategory
 
 def _get_tag_pk(obj):
@@ -128,7 +130,7 @@ class ProductView(BakeryModelView):
     #        
     #    }
 
-    can_delete = True
+    #can_delete = True
 
     list_template = 'admin/products.html'
     create_template = 'admin/product.html'
@@ -136,6 +138,15 @@ class ProductView(BakeryModelView):
 
     #def get_query(self):
     #    return self.session.query(self.model).filter(self.model.is_available_on_web==True)
+
+    # this method clear params include tags, parameters and images
+    def _clear_product_params(self, product_id, param_name, data):
+        values = ",".join([str(d.id) for d in data])
+        if values:
+            sql = 'DELETE FROM product_{0} WHERE product_id=:id AND {1}_id NOT IN (:values)'.format(param_name, param_name)
+            t = text(sql, bindparams=[bindparam('id', type_=Integer, required=True),
+                                     bindparam('values', type_=String, required=True)])
+            self.session.execute(t, {"id": product_id, "values": values})
 
     def _update_product(self, form, model=None):
         if not model:
@@ -151,7 +162,7 @@ class ProductView(BakeryModelView):
             # multiple choices fieldsfield.populate_obj
             # delete not checked tags
             #ProductTag.query.filter(ProductTag.product_id==model.id, ~ProductTag.tag_id.in_(tags)).delete(synchronize_session=False)
-            clear_product_notchecked(self.session, 'product_tag', model.id, 'tag_id', ",".join([str(t.id) for t in form.tags.data]))
+            self._clear_product_params(model.id, 'tag', form.tags.data)
 
             #product_tags = ProductTag.query.filter_by(product=model).all()
             for tag in form.tags.data:
@@ -166,7 +177,7 @@ class ProductView(BakeryModelView):
             # parameters
             #params = [p.id for p in form.parameters.data]
             #ProductParameter.query.filter(ProductParameter.product_id==model.id, ~ProductParameter.parameter_id.in_(params)).delete(synchronize_session=False)
-            clear_product_notchecked(self.session, 'product_parameter', model.id, 'parameter_id', ",".join([str(p.id) for p in form.parameters.data]))
+            self._clear_product_params(model.id, 'parameter', form.parameters.data)
             for param in form.parameters.data:
                 pp = ProductParameter.query.get((model.id, param.id))
                 if not pp:
@@ -178,7 +189,7 @@ class ProductView(BakeryModelView):
 
             # images
             #images = [i.id for i in form.images.data]
-            clear_product_notchecked(self.session, 'product_image', model.id, 'image_id', ",".join([str(p.id) for p in form.images.data]))
+            self._clear_product_params(model.id, 'image', form.images.data)
             #ProductImage.query.filter(ProductImage.product_id==model.id, ~ProductImage.image_id.in_(images)).delete(synchronize_session=False)
             for image in form.images.data:
                 pi = ProductImage.query.get((model.id, image.id))
@@ -285,9 +296,9 @@ class ImageView(BakeryView):
         if request.method != 'POST':
             abort(405)
 
-        print(request.headers)
-        print(request.args)
-        print(request.form)
+        #print(request.headers)
+        #print(request.args)
+        #print(request.form)
         name = request.form.get('name')
         if not name:
             abort(400)
@@ -321,20 +332,34 @@ class ImageView(BakeryView):
         else:
             return filename, str(time()), ''
 
-#class ImageView(BakeryModelView):
+class SaleView(AdminIndexView):
+    def _summary(self, begin_date, days=1):
+        tickets = Ticket.query.filter(Ticket.pay_time >= begin_date, Ticket.pay_time < begin_date+timedelta(days=days))
+
+        return self.render('admin/sale.summary.html', tickets=tickets)
+
+    @expose('/')
+    def index(self):
+        d = datetime.today().date()
+        return self._summary(d)
+
+    @expose('/summary')
+    def summary(self):
+        d = datetime.strptime(summary_date, '%Y%m%d').date()
+        return self._summary(d)
+
+    def is_accessible(self):
+        ua = login.current_user
+        if not getattr(ua, 'is_staff', None):
+            return False
+
+        return ua.is_active() and ua.is_authenticated()
+
+    def inaccessible_callback(self, name, **kwargs):
+        # redirect to login page if user doesn't have access
+        return redirect(url_for('auth.login', next=request.url))
 #    list_template = 'admin/gallery.html'
 #    edit_template = 'admin/image.html'
 #
 #    def _upload_image(self):
 #        pass
-
-def init_admin():
-    #product_models = [Product]
-
-    #for model in product_models:
-    admin.add_view(ProductView(Product, db.session, category="产品管理", name="产品"))
-    admin.add_view(BakeryModelView(Tag, db.session, category='产品管理', name="标签"))
-    admin.add_view(BakeryModelView(ProductCategory, db.session, category='产品管理', name="分类"))
-
-    admin.add_view(ImageView(category="素材管理", name='图片', url='gallery'))
-    #admin.add_view(ProductView(name='产品管理', endpoint='product'))

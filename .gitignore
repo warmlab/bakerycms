@@ -70,6 +70,7 @@ target/
 scripts/
 keys/
 media/
+.vscode/
 
 # IPython Notebook
 .ipynb_checkpoints

@@ -1,12 +1,6 @@
 {% extends "admin/my-base.html"%}
 {% block body %}
-<div class="ui basic segment">
-	<h2 class="ui header">
-		<i class="block layout icon"></i>
-		<div class="content">图片管理
-            <div class="sub header">Manage your images.</div>
-        </div>
-	</h2>
+<div class="ui basic segment" style="margin-top:3em">
 	<form action="{{upload_action}}" method="POST" enctype="multipart/form-data">
 		<div class="ui input" id="file-selector-div">
 			<input type="file" style="display:none;">

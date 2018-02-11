@@ -24,7 +24,7 @@
 	{%- block brand -%}
 	{%- endblock -%}
 	{%- block main_menu -%}
-	<div class="ui secondary pointing menu">
+	<div class="ui top fixed menu">
 		{%- for item in admin_view.admin.menu() -%}
 			{%- if item.is_category() -%}
 				{% set children = item.get_children() %}

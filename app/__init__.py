@@ -1,8 +1,5 @@
 from flask import Flask
 from flask import send_from_directory
-#from flask_mail import Mail
-#from flask.ext.moment import Moment
-#from flask_pagedown import PageDown
 from config import config
 
 #from .admin.product import ProductView
@@ -10,8 +7,8 @@ from .models import db
 
 from .filters import weixin_authorize
 
-from .admin.views import init_admin
-from .extensions import admin, login_manager
+from .admin import init_admin
+from .extensions import login_manager
 
 from .templates import init_my_templates
 
@@ -25,9 +22,8 @@ def create_app(config_name):
     #moment.init_app(app)
     db.init_app(app)
     login_manager.init_app(app)
-    admin.init_app(app)
     init_my_templates(app)
-    init_admin()
+    init_admin(app)
     #pagedown.init_app(app)
 
     if not app.debug and not app.testing and not app.config['SSL_DISABLE']:
@@ -45,8 +41,8 @@ def create_app(config_name):
     from .auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
 
-    from .sale import sale as sale_blueprint
-    app.register_blueprint(sale_blueprint, url_prefix="/sale")
+    #from .sale import sale as sale_blueprint
+    #app.register_blueprint(sale_blueprint, url_prefix="/sale")
 
     #from .gallery import gallery as gallery_blueprint
     #app.register_blueprint(gallery_blueprint, url_prefix='/gallery')

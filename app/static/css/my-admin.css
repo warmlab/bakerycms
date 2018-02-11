@@ -1,0 +1,82 @@
+.my-cell {
+    padding: 0.1em !important;
+    /*background-color: #c6cad6;*/
+    border-radius: 0.5em;
+}
+.my-panel {
+    border: none;
+    box-shadow: none;
+    /*margin-bottom: 1.25em;
+    padding-top:2em;
+    margin: 1em;*/
+    background-color: #fff;
+    border-radius: 0.5em;
+    width: 49.5%;
+    height: 6em;
+    min-width: 13em;
+    background-color: #c6cad6;
+    display: block;
+    float: left;
+    margin-bottom: .875em;
+}
+
+.my-margin {
+    margin-right: 1%;
+}
+
+.my-symbol {
+    width: 40%;
+    height: 100%;
+    /*padding: 1.786835em 1em;
+    padding-top:2em; */
+    border-radius: .5em 0 0 .5em;
+    display: inline-block;
+    text-align: center;
+    vertical-align: bottom;
+}
+
+.my-value {
+    display: inline-block;
+    text-align: center;
+    width: 58%;
+    height: 80%;
+    /*background-color: #fff;
+    padding-top: .09375em;
+    padding-bottom:1.25em;*/
+}
+
+.my-red {
+    background: #ff6c60;
+}
+
+.my-terques {
+    background: #6ccac9
+}
+
+.my-yellow {
+    background: #f8d347;
+}
+
+.my-blue {
+    background: #57c8f2;
+}
+
+.my-symbol i {
+    color: #fff;
+    font-size: 3.125em;
+    height: 100%;
+    padding-top: .65em;
+}
+
+.my-value h1 {
+    font-size: 2.25em;
+    font-weight: 300;
+    line-height: 1.1;
+}
+
+.my-value h1, .my-value p {
+    margin: 0;
+    padding: 0;
+    /*color: #c6cad6; */
+    color: #fff;
+}

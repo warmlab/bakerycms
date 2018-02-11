@@ -1,11 +1,12 @@
 from flask_login import LoginManager
-from flask_admin import Admin
 from flask_migrate import Migrate
+#from flask_mail import Mail
+#from flask_moment import Moment
+#from flask_pagedown import PageDown
 
 #bootstrap = Bootstrap()
 #mail = Mail()
 #moment = Moment()
-admin = Admin(name='小麦芬烘焙工作室', template_mode='bootstrap3')
 #api = APIManager()
 #pagedown = PageDown()
 
