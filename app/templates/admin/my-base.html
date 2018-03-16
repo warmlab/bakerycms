@@ -12,11 +12,12 @@
 	<!-- Semantic UI core CSS -->
 	<link href="{{ url_for('static', filename='css/semantic.min.css') }}" rel="stylesheet">
 	{%- endblock -%}
-	{%- block head_tail -%}
 	{%- block head -%}
 	{%- endblock -%}
+	{%- block head_tail -%}
 	<script src="{{url_for('static', filename='js/jquery.js')}}"></script>
 	<script src="{{url_for('static', filename='js/semantic.min.js')}}"></script>
+	<script src="https://d3js.org/d3.v4.min.js"></script>
 	{%- endblock -%}
 </head>
 <body>
@@ -62,6 +63,7 @@
 	$('.ui.checkbox').checkbox();
 	$('.ui.dropdown').dropdown();
 	</script>
+	<script src="{{url_for('static', filename='js/dataset.js')}}"></script>
 	{%- endblock -%}
 	{%- block tail -%}
 	{%- endblock -%}
