@@ -32,25 +32,27 @@ def categories():
     categories = ProductCategory.query.all()
     return jsonify([c.to_json() for c in categories])
 
-@api.route('/products', methods=['GET'])
-def products():
-    sp = Shoppoint.query.first()
+@api.route('/<shopname>/products', methods=['GET'])
+def products(shopname):
+    sp = Shoppoint.query.filter_by(name=shopname)
     if not sp:
         abort(404)
 
+    entities = [Product.id, Product.code, Product.name, Product.english_name, Product.price]
+
     #page = request.args.get('page', type=int, default=1)
-    products = Product.query.filter_by(is_available_on_web=True)
+    products = Product.query.filter_by(is_available_on_web=True)#.with_entities(*entities)
     #pagination = products.paginate(page=page, per_page=7, error_out=False)
     #return render_template('api/list.html', products=products, shoppoint=sp, pagination=pagination)
-    return '{"a":"b"}'
+    return jsonify([p.to_json() for p in products.all()])
 
-@api.route('/product', methods=['GET'])
-def product():
-    sp = Shoppoint.query.first()
+@api.route('/<shopname>/product/<code>', methods=['GET'])
+def product(shopname, code):
+    sp = Shoppoint.query.filter_by(name=shopname)
     if not sp:
         abort(404)
     #code = 1
-    #product = Product.query.filter_by(code=code).first()
+    p = Product.query.filter_by(code=code).first()
     #ppc = {}
     #for pp in product.parameters:
     #    if pp.parameter.category not in ppc:
@@ -60,7 +62,7 @@ def product():
     #logger.debug(ppc)
     #message = request.args.get('added');
     #return render_template('api/detail.html', product=product, parameter_categories=ppc, message=message, shoppoint=sp)
-    return '{"a":"b"}'
+    return jsonify(p.to_json())
 
 @api.route('/product/spec/<code>', methods=['GET'])
 def product_spec(code):
