@@ -53,6 +53,8 @@ class Shoppoint(db.Model):
     weixin_expires_time = db.Column(db.BigInteger) # timestamp
     weixin_jsapi_ticket = db.Column(db.String(256))
     weixin_jsapi_expires_time = db.Column(db.BigInteger) # timestamp
+    weixin_mini_appid = db.Column(db.String(32))
+    weixin_mini_appsecret = db.Column(db.String(64))
 
     def __repr__(self):
         return self.name
@@ -117,6 +119,20 @@ class Shoppoint(db.Model):
 
             return self.weixin_jsapi_ticket
 
+#class ThirdPartyConfigCategory(db.Model):
+#    __tablename__ = 'third_party_config_category'
+#    id = db.Column(db.Integer, primary_key=True)
+#    name = db.Column(db.String(64))
+#    prefix = db.Column(db.String(64))
+#
+#class ThirdPartyConfig(db.Model):
+#    __tablename__ = 'third_party_config'
+#    id = db.Column(db.Integer, primary_key=True)
+#    category = db.Column()
+#    #prefix = db.Column(db.String(64))
+#    suffix = db.Column(db.String(64))
+#    value = db.Column(db.String(256))
+
 
 class Address(db.Model):
     __tablename__ = 'address'
@@ -175,6 +191,8 @@ class Member(db.Model):
     weixin_refresh_token = db.Column(db.String(256))
     weixin_expires_time = db.Column(db.BigInteger)
     weixin_privilege = db.Column(db.String(128))
+
+    dragon_orders = db.relationship('DragonOrder', back_populates='member')
 
 class Staff(db.Model):
     __tablename__ = 'staff'
@@ -426,8 +444,27 @@ class Product(db.Model):
     #specifications = db.relationship('ProductSpecification',
     #                    back_populates='product')
 
+    dragons = db.relationship('DragonProduct', back_populates="product")
+
     def __repr__(self):
         return self.name
+
+    def to_json(self):
+        d = {
+                'id': self.id,
+                'code': self.code,
+                'name': self.name,
+                'english_name': self.english_name,
+                'original_price': float(self.original_price),
+                'price': float(self.price),
+                'stock': float(self.stock),
+                'image': self.images[0].image.name + '.' + self.images[0].image.ext,
+                'summary': self.summary,
+                'desc': self.description,
+                'tags': [pt.tag.name for pt in self.tags]
+                }
+
+        return d
 
 class BakeryCategory(db.Model):
     __tablename__ = 'bakery_category'
@@ -762,3 +799,173 @@ class WeixinConfigAdmin(db.Model):
     openid = db.Column(db.String(64), unique=True, nullable=True) # used in weixin
 
     config = db.relationship('WeixinConfig', backref=db.backref('WeixinConfig', lazy='dynamic'))
+
+
+dragon_address_relation = db.Table('dragon_address_relation', db.Model.metadata,
+        db.Column('dragon_id', db.Integer, db.ForeignKey('dragon.id')),
+        db.Column('dragon_address_id', db.Integer, db.ForeignKey('dragon_address.id'))
+    )
+
+class Dragon(db.Model):
+    __tablename__ = 'dragon'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), nullable=False) # used in weixin
+    bind_flag = db.Column(db.Boolean, default=True) # true-捆绑销售
+    member_flag = db.Column(db.Boolean, default=True) # true-允许使用会员卡
+    delivery_fee = db.Column(db.Numeric(5,2), default=0.0) # 最低基础运费
+    from_time = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    to_time = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    publish_time = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    description = db.Column(db.Text) # 详细描述
+
+    shoppoint_id = db.Column(db.Integer, db.ForeignKey('shoppoint.id'), nullable=True)
+    shoppoint = db.relationship('Shoppoint',
+                         backref=db.backref('dragons', lazy="dynamic"))
+
+    products = db.relationship('DragonProduct', back_populates="dragon")
+    addresses = db.relationship('DragonAddress', secondary=dragon_address_relation)
+    orders = db.relationship('DragonOrder', back_populates='dragon')
+
+    def __init__(self, name, products, products_bind_flag, member_card_flag, addresses, from_date, from_time, to_date, to_time,
+            publish_flag, publish_date, publish_time):
+        ft = datetime.strptime(' '.join([from_date, from_time]), '%Y-%m-%d %H:%M')
+        tt = datetime.strptime(' '.join([to_date, to_time]), '%Y-%m-%d %H:%M')
+
+        print(name, products, addresses, ft, tt)
+
+        self.name = name
+        self.bind_flag = products_bind_flag
+        self.member_flag = member_card_flag
+        #self.addresses = [dragon_address_relation(self.id, a.id) for a in addresses]
+        self.addresses = addresses
+        self.from_time = ft
+        self.to_time = tt
+        if publish_flag:
+            self.publish_time = datetime.strptime(' '.join([publish_date, publish_time]), '%Y-%m-%d %H:%M')
+        else:
+            self.publish_time = datetime.now()
+
+        self.products = []
+        for p in products:
+            product = Product.query.filter_by(code=p['code']).first()
+            if product:
+                dp = DragonProduct(self.id, product.id)
+                dp.price = p['price']
+                dp.total = p['amount']
+                self.products.append(dp)
+
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def to_json(self):
+        return {
+            'code': self.id,
+            'name': self.name,
+            'delivery_fee': float(self.delivery_fee),
+            'bind_flag': self.bind_flag,
+            'member_flag': self.member_flag,
+            #'from_date': self.from_time.strftime(''),
+            'from_time': self.from_time.strftime('%Y-%m-%d %H:%M'),
+            #'to_date': self.to_time.strftime('%Y-%m-%d'),
+            'to_time': self.to_time.strftime('%Y-%m-%d %H:%M'),
+            'products': [p.to_json() for p in self.products],
+            'addresses': [a.to_json() for a in self.addresses],
+            'description': self.description
+        }
+
+
+class DragonProduct(db.Model):
+    __tablename__ = 'dragon_product'
+
+    id = db.Column(db.Integer, primary_key=True)
+    dragon_id = db.Column(db.Integer, db.ForeignKey('dragon.id'))
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
+
+    price = db.Column(db.Numeric(7,2), default=0.0) # 现价
+    sold = db.Column(db.Integer, default=1) # 商品总数量
+    total = db.Column(db.Integer, default=1) # 商品总数量
+
+    product = db.relationship("Product", back_populates="dragons")
+    dragon = db.relationship("Dragon", back_populates="products")
+    orders = db.relationship('DragonOrderProduct', back_populates='product')
+
+    description = db.Column(db.Text) # 详细描述
+
+    __table_args__ = (db.UniqueConstraint('dragon_id', 'product_id', name='dragon_product_uc'),)
+
+    def __init__(self, dragon_id, product_id):
+        self.dragon_id = dragon_id
+        self.product_id = product_id
+
+        db.session.add(self)
+
+    def to_json(self):
+        d = self.product.to_json()
+        d['dragon_price'] = float(self.price)
+        d['dragon_sold'] = self.sold
+        d['dragon_total'] = self.total
+
+        return d
+
+class DragonOrder(db.Model):
+    __tablename__ = 'dragon_order'
+
+    code = db.Column(db.String(32), primary_key=True, index=True) # 订单编号
+    payment_code = db.Column(db.String(128), nullable=True) # 第三方支付平台订单编号
+    #cashier = models.ForeignKey(Staff) # 收银员
+    original_price = db.Column(db.Numeric(7,2), default=0) # 订单原始总价格
+    real_price = db.Column(db.Numeric(7,2), default=0) # 订单现在总价格
+
+    member_id = db.Column(db.Integer, db.ForeignKey('member.id'), nullable=True) # 会员消费
+
+    dragon_id = db.Column(db.Integer, db.ForeignKey('dragon.id'))
+
+    occurred_time = db.Column(db.DateTime, default=datetime.utcnow) # 订单时间
+    pay_time = db.Column(db.DateTime) # 支付时间
+
+    note = db.Column(db.Text)
+
+    dragon = db.relationship('Dragon', back_populates='orders')
+    member = db.relationship('Member', back_populates='dragon_orders')
+    products = db.relationship('DragonOrderProduct', back_populates='order')
+
+    def __repr__(self):
+        return self.code
+
+class DragonAddress(db.Model):
+    __tablename__ = 'dragon_address'
+
+    id = db.Column(db.Integer, primary_key=True)
+    address = db.Column(db.String(512))
+    is_default = db.Column(db.Boolean, default=False)
+    from_time = db.Column(db.String(8))
+    to_time = db.Column(db.String(8))
+
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def to_json(self):
+        return {'code': self.id,
+                'address': self.address,
+                'from_time': self.from_time,
+                'to_time': self.to_time,
+                'is_default': self.is_default
+                }
+
+    def __repr__(self):
+        return self.address
+
+
+class DragonOrderProduct(db.Model):
+    __tablename__ = 'dragon_order_product'
+
+    dragon_order_code = db.Column(db.String(32), db.ForeignKey('dragon_order.code'), primary_key=True)
+    dragon_product_id = db.Column(db.Integer, db.ForeignKey('dragon_product.id'), primary_key=True)
+
+    product = db.relationship('DragonProduct', back_populates='orders')
+    order = db.relationship('DragonOrder', back_populates='products')
+
+    amount = db.Column(db.Integer, default=1) # the number of products in order
