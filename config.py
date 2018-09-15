@@ -12,9 +12,9 @@ class Config:
     MAIL_USE_TLS = True
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    BAKERY_MAIL_SUBJECT_PREFIX = '[CAROBakery]'
-    BAKERY_MAIL_SENDER = 'CAROBakery Admin <warmlab@outlook.com>'
-    BAKERY_ADMIN = os.environ.get('CAROBAKERY_ADMIN')
+    BAKERY_MAIL_SUBJECT_PREFIX = '[MuffinsBakery]'
+    BAKERY_MAIL_SENDER = 'MuffinsBakery Admin <warmlab@outlook.com>'
+    BAKERY_ADMIN = os.environ.get('MuffinsBAKERY_ADMIN')
     #BAKERY_POSTS_PER_PAGE = 20
     #BAKERY_FOLLOWERS_PER_PAGE = 50
     #BAKERY_COMMENTS_PER_PAGE = 30

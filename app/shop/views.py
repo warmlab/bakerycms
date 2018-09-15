@@ -301,16 +301,15 @@ def unified_order():
 
     print(result)
     if result.get('return_code') == "SUCCESS":
-        if result.get('result_code') == "SUCCESS":
-            ticket.payment_code = result.get('prepay_id')
-            package = '='.join(['prepay_id', result.get('prepay_id')])
-            params = {'timeStamp': int(time()), 'appId': sp.weixin_appid, 'nonceStr': result.get('nonce_str'), 'package': package, 'signType': 'MD5'}
-            params['signature'], signType = weixin_pay.generate_pay_sign(params, sp.weixin_appsecret)
-            params['pack'] = [package]
+        ticket.payment_code = result.get('prepay_id')
+        package = '='.join(['prepay_id', result.get('prepay_id')])
+        params = {'timeStamp': int(time()), 'appId': sp.weixin_appid, 'nonceStr': result.get('nonce_str'), 'package': package, 'signType': 'MD5'}
+        params['signature'], signType = weixin_pay.generate_pay_sign(params, sp.weixin_appsecret)
+        params['pack'] = [package]
 
-            return json.dumps(params), 201
-        elif result.get('result_code') == 'FAIL' and result.get('err_code') == 'OUT_TRADE_NO_USED':
-            return result, 409
+        return json.dumps(params), 201
+    elif result.get('result_code') == 'FAIL' and result.get('err_code') == 'OUT_TRADE_NO_USED':
+        return result, 409
     return jsonify({"error-code": 1, "errMsg": result["return_msg"]}), 400 # TODO
 
 #@shop.route('/dopay', methods=['POST'])
